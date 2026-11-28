@@ -266,7 +266,7 @@ class TheAllowancesAndTheCache(unittest.TestCase):
 class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
     def test_the_documents_name_the_routes_and_the_numbers(self):
         server = read("docs", "SERVER.md")
-        replays = read("docs", "REPLAYS.md")
+        replays = read("docs", "private", "REPLAYS_SERVER.md")
         for needle in ("GET /history", "GET /history/<id>", "ants_history", "DELETE /history/<id>", "--no-history", "history_matches"):
             self.assertIn(needle, server + read("docker", "nginx.conf"), needle)
         for needle in ("The match history", "`GET /history`", "`GET /history/<id>`", "kept for good", "marker"):

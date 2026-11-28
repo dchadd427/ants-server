@@ -688,7 +688,7 @@ class Documents(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.workflow = read(os.path.join(REPO, "docs", "WORKFLOW.md"))
+        cls.workflow = read(os.path.join(REPO, "docs", "WORKFLOW.md")) + read(os.path.join(REPO, "docs", "private", "WORKFLOW_DEPLOY.md"))
         cls.agents = read(os.path.join(REPO, "AGENTS.md"))
         cls.testing = read(os.path.join(REPO, "docs", "TESTING.md"))
 

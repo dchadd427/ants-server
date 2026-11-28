@@ -365,7 +365,7 @@ class ThePictures(unittest.TestCase):
 
 class TheDocument(unittest.TestCase):
     def test_the_replays_page_describes_the_pages_the_stats_and_what_a_later_section_reads(self):
-        text = read("docs", "REPLAYS.md")
+        text = read("docs", "private", "REPLAYS_SERVER.md")
         self.assertIn("## The match pages", text)
         for needle in ("web/matches.html", "web/match.html", "web/history_page.js", "embed=1", "details", "Show replay", "/matches"):
             self.assertIn(needle, text, needle)

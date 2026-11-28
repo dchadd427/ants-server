@@ -110,7 +110,7 @@ class TheMarkup(unittest.TestCase):
 
 class TheDocuments(unittest.TestCase):
     def test_the_browser_page_and_the_network_notes_say_what_the_pages_do(self):
-        page = read(os.path.join(REPO, "docs", "PLAY_IN_BROWSER.md"))
+        page = read(os.path.join(REPO, "docs", "private", "PLAY_IN_BROWSER_HOME.md"))
         self.assertIn("`ants.guestname`", page)                                              # (the name that a guest typed: kept in this browser)
         self.assertIn("`ants.guest`", page)                                                  # (the one key of a name that the page keeps)
         self.assertIn("is not used", page)                                                   # (a name that an earlier version remembered, `ants.name`)
@@ -119,7 +119,7 @@ class TheDocuments(unittest.TestCase):
         self.assertIn("A line says what the server does with an online match", server)      # (the notice of the lobby's footer and of both name cards, and the step that has none)
         self.assertIn("not in the step of a game on this computer", server)
         self.assertIn("`who-notice`", server)      # (what an operator who changes the line must leave where it is)
-        notes = read(os.path.join(REPO, "docs", "NETWORK_PORT.md"))
+        notes = read(os.path.join(REPO, "docs", "NETWORK_PORT.md")) + read(os.path.join(REPO, "docs", "private", "NETWORK_PORT_SERVER.md"))
         self.assertIn("asksForName", notes)
         self.assertIn("no `name` parameter at all", notes)
 

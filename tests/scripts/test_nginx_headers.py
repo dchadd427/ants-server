@@ -183,7 +183,7 @@ class TheText(unittest.TestCase):
         self.assertEqual(found, ["= /whats_new.json"])                                             # (an exact location: the file or a plain 404, never the page of an address that is nothing)
 
     def test_the_documents_name_what_is_built(self):
-        text = stats.read("docs", "BUILD_AND_RUN.md")
+        text = stats.read("docs", "private", "BUILD_AND_RUN_DOCKER.md")
         for needle in ("Strict-Transport-Security", "ants_noquery", "gzip_static", "test_nginx_headers.py"):
             self.assertIn(needle, text, needle)
         self.assertIn("`Strict-Transport-Security: %s`" % HSTS, text)                              # (the time that the file sends is the one that the document names)

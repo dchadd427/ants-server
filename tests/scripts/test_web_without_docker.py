@@ -1063,7 +1063,7 @@ class TheCommandLine(Scratch):
         self.assertIn("docker build", err)
 
     def test_the_documents_name_the_tool(self):
-        for document in (("docs", "WORKFLOW.md"), ("AGENTS.md",)):
+        for document in (("docs", "private", "WORKFLOW_DEPLOY.md"), ("AGENTS.md",)):
             self.assertTrue("tools/web_without_docker.py" in read(*document), "%s does not name tools/web_without_docker.py" % os.path.join(*document))
 
 
