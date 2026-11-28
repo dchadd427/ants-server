@@ -2,7 +2,7 @@
 // of days (7, 30 or 90, or two dates) with the same range's earlier days for the changes. It is the page's third file (admin_page.js would pass its size otherwise), loaded before it, and uses the page's own helpers
 // (the one object `h` of make()): a word is made, a call is sent and a text is marked as data in one way in all of them. The numbers come from ONE call, POST /hub/admin/api/analytics {from, to}, with the hub's token;
 // everything else (the totals, the changes, the charts, the tables, the CSV files) is made here from that answer. Every text that came from a visitor's browser (a site that sent a visitor, the message of an error) is
-// put in as text with the page's mark (`typed`: data-untrusted), never as markup; the charts are SVG made from numbers. Days are Pacific days, as the page's other dates. ES5 and no module system, as the page:
+// put in as text with the page's mark (`typed`: data-untrusted), never as markup; the charts are SVG made from numbers. The counter's days are Pacific days (each is the sum of a day that the hub made and kept, so no other zone can be drawn from them) and are said so; every moment (when the counter began, when it last heard) is in the visitor's own time zone on a 12-hour clock (web/local_time.js, loaded before this file). ES5 and no module system, as the page:
 // a browser gets the global AntsAdminAnalytics, node gets module.exports (tests/scripts/web_admin_analytics_check.js runs it with a fake DOM).
 (function (root, factory) {
     var api = factory();
@@ -13,7 +13,7 @@
 
     var API = '/hub/admin/api/analytics';
     var SVG_NS = 'http://www.w3.org/2000/svg';
-    var TIME_ZONE = 'America/Los_Angeles';
+    var DAY_ZONE = 'America/Los_Angeles';                     // the zone of the counter's days: a day is a Pacific day whoever looks (hub/analytics_events.py pacific_day), so "today" here is the Pacific today
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     var PRESETS = [['7', '7 days', 7], ['30', '30 days', 30], ['90', '90 days', 90]];
@@ -31,7 +31,7 @@
 
     // ---- days (Pacific) ----------------------------------------------------------------------------------------------------------------
     function pacificDay(ms) {
-        var f = new Intl.DateTimeFormat('en-US', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }), p = {};
+        var f = new Intl.DateTimeFormat('en-US', { timeZone: DAY_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }), p = {};
         f.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
         return p.year + '-' + p.month + '-' + p.day;
     }
@@ -355,7 +355,7 @@
                 add(left, el('span', 'rlabel', 'Range'));
                 PRESETS.forEach(function (p) { add(left, chip(p[1], st.preset === p[0] && !st.custom, function () { setPreset(p[0]); })); });
                 add(left, chip('Custom', st.preset === 'custom' || st.custom, function () { st.custom = !st.custom; if (st.preset !== 'custom' && st.custom) { st.from = st.from || r.from; st.to = st.to || r.to; } drawBar(); }));
-                var d1 = el('div', 'rdates', rangeWords(r.from, r.to)), d2 = el('div', 'rsub', n ? n + ' days, last day is ' + (r.to === today ? 'today so far' : fullDay(r.to)) : '');
+                var d1 = el('div', 'rdates', rangeWords(r.from, r.to)), d2 = el('div', 'rsub', n ? n + ' days in Pacific time, last day is ' + (r.to === today ? 'today so far' : fullDay(r.to)) : '');
                 add(right, add(el('div', 'rwhen'), d1, d2));
                 if (st.data) add(right, exportMenu());
                 add(top, left, right);
@@ -453,18 +453,9 @@
                 else health(d);
                 var legal = el('a', null, 'Legal page');
                 legal.setAttribute('href', '/legal');
-                add(foot, doc.createTextNode((c.first_day ? 'Counted since ' + fullDay(c.first_day) + ' · ' : '') + FOOT + ' · Updated ' + updated(c.now) + ' · No cookies; no address or visitor id is kept (see the '), legal, doc.createTextNode(').'));
+                add(foot, doc.createTextNode((c.first_day ? 'Counted since ' + fullDay(c.first_day) + ' · ' : '') + FOOT + ' · Updated ' + whenWords(c.now) + ' · No cookies; no address or visitor id is kept (see the '), legal, doc.createTextNode(').'));
             }
-            function updated(seconds) { var p = pacificDay(seconds * 1000); return (p === today ? 'today' : shortDay(p)) + ', ' + clock(seconds); }
-            function clock(seconds) {
-                var f = new Intl.DateTimeFormat('en-US', { timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }), p = {};
-                f.formatToParts(new Date(seconds * 1000)).forEach(function (x) { p[x.type] = x.value; });
-                return p.hour + ':' + p.minute;
-            }
-            function whenWords(seconds) {                                                // "today at 09:12", "yesterday at 23:40", "14 Dec at 09:12" (Pacific time)
-                var day = pacificDay(seconds * 1000);
-                return (day === today ? 'today' : day === addDays(today, -1) ? 'yesterday' : shortDay(day)) + ' at ' + clock(seconds);
-            }
+            function whenWords(seconds) { return AntsTime.whenText(seconds, h.env.now(), true); }      // "today, 9:12 AM", "yesterday, 11:40 PM", "Dec 14, 9:12 AM": a moment, in the visitor's own time zone
             function nothingYet(d) { return !d.counter.first_day && !d.counter.last_at; }
 
             function tile(label, big, deltaNode, small, cls) {
@@ -501,7 +492,7 @@
                 }
                 add(body, el('p', 'anote', NOTE_TRACKED.replace(/^ /, '') + (nt ? ' Visits include the ' + thousands(nt) + ' from browsers that asked not to be tracked; they have no visitor count.' : '')));
                 var chart = el('section', 'panel'), legend = el('div', 'alegend');
-                add(chart, el('h2', null, 'Visitors per day'));
+                add(chart, el('h2', null, 'Visitors per day (Pacific time)'));
                 add(legend, add(el('span'), swatch('mint'), doc.createTextNode('Visitors')), add(el('span'), swatch('hat'), doc.createTextNode('Not tracked: visits that sent only a country')), add(el('span'), swatch('wk'), doc.createTextNode('Weekend')));
                 add(chart, legend);
                 var toggle = h.button(st.table ? 'Show the chart' : 'Show as a table', 'sm ghost', function () { st.table = !st.table; draw(); });
@@ -531,7 +522,7 @@
             function kvRow(k, v) { return add(el('div', 'tk'), el('span', null, k), el('span', null, v)); }
             function dayTable(days) {
                 var wrap = el('div', 'atable'), t = el('table');
-                add(t, add(el('thead'), add(el('tr'), el('th', null, 'Day'), el('th', 'nc', 'Visitors'), el('th', 'nc', 'Not tracked'), el('th', 'nc', 'Visits'))));
+                add(t, add(el('thead'), add(el('tr'), el('th', null, 'Day (Pacific time)'), el('th', 'nc', 'Visitors'), el('th', 'nc', 'Not tracked'), el('th', 'nc', 'Visits'))));
                 var tb = el('tbody');
                 days.slice().reverse().forEach(function (day) {
                     add(tb, add(el('tr'), el('td', null, longDay(day.day) + (day.day === today ? ' (so far)' : '')), el('td', 'nc', thousands(day.visitors)), el('td', 'nc', thousands(day.nt)), el('td', 'nc', thousands(day.visits + day.nt))));
@@ -618,7 +609,7 @@
                     add(p, add(el('p', 'hsum'), doc.createTextNode('Half under ' + seconds(mid) + '  '), el('small', null, 'slowest 1 in 20: ' + seconds(slow))), add(el('div', 'chartbox'), chart), el('p', 'ph', hint));
                     return p;
                 }
-                add(grid, timing('load', 'Page load', 'From pressing a link to a page that works.'), timing('game', 'Game download and start', 'From pressing Play to the first picture of the game. The first visit after a new version loads it all again.'));
+                add(grid, timing('load', 'Page load (days in Pacific time)', 'From pressing a link to a page that works.'), timing('game', 'Game download and start (days in Pacific time)', 'From pressing Play to the first picture of the game. The first visit after a new version loads it all again.'));
                 add(body, grid);
                 var marks = versions.length;
                 if (marks) add(body, el('p', 'anote', 'The dotted vertical lines are days a new version went live (' + marks + ' in this range): the first visit after one loads everything again, so the numbers go up that day.'));
@@ -628,7 +619,7 @@
                 var p = h.panel('Errors, grouped', null), total = d.errors.reduce(function (a, e) { return a + e.n; }, 0);
                 var h2 = p.querySelector ? p.querySelector('h2') : null;
                 if (h2) add(h2, doc.createTextNode(' '), el('span', 'n', plural(total, 'error', 'errors') + ', ' + plural(d.errors.length, 'kind', 'kinds')));
-                add(p, el('p', 'ph', 'Errors that the pages and the game caught in a visitor’s browser. Same message and same place count as one kind.'));
+                add(p, el('p', 'ph', 'Errors that the pages and the game caught in a visitor’s browser. Same message and same place count as one kind. First and last seen are days in Pacific time.'));
                 if (!d.errors.length) return add(p, el('p', 'none', 'No error in this range.'));
                 var list = el('div', 'elist'), shown = st.all ? d.errors : d.errors.slice(0, ERRORS_SHOWN);
                 add(list, add(el('div', 'erow ehead'), el('span', null, 'Where'), el('span', null, 'Message'), el('span', 'nc', 'Times'), el('span', 'nc', 'Visitors'), el('span', null, 'First seen'), el('span', null, 'Last seen')));
@@ -645,16 +636,15 @@
                 return add(p, foot);
             }
             function lastDay(day) { return day === today ? 'today' : day === addDays(today, -1) ? 'yesterday' : shortDay(day); }    // (an error keeps the day it was last seen, never the time)
-            function lastSeen(seconds) { var day = pacificDay(seconds * 1000); return day === today ? 'today, ' + clock(seconds) : day === addDays(today, -1) ? 'yesterday' : shortDay(day); }
-            function counterPanel(d) {
+                        function counterPanel(d) {
                 var c = d.counter, p = h.panel('The counter itself', 'Is the counting working?');
                 function kv(k, v, small) {
                     var r = el('div', 'kv'), vv = el('span', 'v', v);
                     if (small) add(vv, doc.createTextNode(' '), el('small', null, small));
                     return add(r, el('span', 'k', k), vv);
                 }
-                add(p, kv('Last event received', c.last_at ? lastSeen(c.last_at) : 'none yet'),
-                    kv('Events today', thousands(c.accepted_today), 'since midnight'),
+                add(p, kv('Last event received', c.last_at ? whenWords(c.last_at) : 'none yet'),
+                    kv('Events today', thousands(c.accepted_today), 'since midnight, Pacific time'),
                     kv('Events refused', thousands(c.refused_today) + ' today', 'too big or the wrong shape'),
                     kv('Crawlers left out', thousands(c.crawlers_today) + ' today', 'not counted'),
                     c.dropped_today ? kv('Over the day\u2019s limit', thousands(c.dropped_today) + ' today', 'dropped: a flood?') : null,

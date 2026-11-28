@@ -129,7 +129,7 @@ class TheChecksRun(unittest.TestCase):
 class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/web_analytics_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make a check fail, and the copy
     with nothing changed must pass"""
-    FILES = ["web/analytics.js", "web/admin_analytics.js", "tests/scripts/web_analytics_check.js", "tests/scripts/web_admin_analytics_check.js", "tests/scripts/web_mapmaker_fake_dom.js"]
+    FILES = ["web/analytics.js", "web/admin_analytics.js", "web/local_time.js", "tests/scripts/quiet_time.js", "tests/scripts/web_analytics_check.js", "tests/scripts/web_admin_analytics_check.js", "tests/scripts/web_mapmaker_fake_dom.js"]
 
     @classmethod
     def setUpClass(cls):

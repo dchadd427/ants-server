@@ -13,9 +13,7 @@
     var DAYS = [7, 30, 90], MAX_NAME = 40, ACTIVITY = 4, KINDS = [['edit', 'Look and edit', 'Read the map, change it (undo always works) and save a draft.'], ['read', 'Look only', 'Read the map and run the checks. It cannot change anything.']];
     var STATES_OFF = { ai_off: 'Connecting an AI is not switched on here yet.', login: 'Log in with Discord to connect an AI.', banned: 'This account cannot make keys.', rate: 'Too many tries: wait a moment and try again.' };
     var BYE = { replaced: 'Another tab took the AI\u2019s place, so this one is off.', idle: 'No call for an hour, so this tab was turned off.', 'logged out': 'You were logged out, so this tab was turned off.', 'the login ran out': 'Your login ran out, so this tab was turned off.', silent: 'The connection went quiet, so this tab was turned off.', 'the hub restarts': 'The site restarted, so this tab was turned off.' };
-    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    function dateText(seconds) { var d = new Date(seconds * 1000); return MONTHS[d.getMonth()] + ' ' + d.getDate(); }
     function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
     // "4 minutes ago", "6 days ago": how long since `then`, for a key's last use
     function ago(seconds) {
@@ -26,7 +24,7 @@
     }
     function short(seconds) { return seconds < 2 ? 'now' : seconds < 90 ? Math.round(seconds) + ' s ago' : Math.round(seconds / 60) + ' min ago'; }
     function clean(text) { return Array.from(String(text || '')).filter(function (c) { return c >= ' ' && c !== '\u007f'; }).slice(0, 60).join(''); }
-    function metaOf(key, now) { return 'Made ' + dateText(key.made) + ' \u00b7 stops working ' + dateText(key.ends) + ' \u00b7 ' + (key.calls ? 'used ' + ago(Math.max(0, now - key.used)) : 'not used yet'); }
+    function metaOf(key, now) { return 'Made ' + AntsTime.dateText(key.made, now * 1000) + ' \u00b7 stops working ' + AntsTime.dateText(key.ends, now * 1000) + ' \u00b7 ' + (key.calls ? 'used ' + ago(Math.max(0, now - key.used)) : 'not used yet'); }
 
     // The lines that tell a person how to put a key into an AI app: one for each kind of app (the key is in the text only while the sheet shows it)
     function commandFor(kind, origin, key) {
@@ -263,7 +261,7 @@
         function showMake() {
             var name = el('input'), scope = 'edit', days = 30, warn = el('div'), when = el('div', 'help');
             name.type = 'text'; name.id = 'aik-name'; name.maxLength = MAX_NAME; name.value = 'My AI'; name.setAttribute('autocomplete', 'off'); name.setAttribute('spellcheck', 'false');
-            function ends() { var t = new Date(Date.now() + days * 86400000); when.textContent = 'This key will stop working by itself on ' + MONTHS[t.getMonth()] + ' ' + t.getDate() + '. There is no key that never ends.'; }
+            function ends() { var t = Date.now() + days * 86400000; when.textContent = 'This key will stop working by itself on ' + AntsTime.dateText(t / 1000, Date.now()) + '. There is no key that never ends.'; }
             open({
                 title: 'Make a key', cls: 'aikey', focus: '#aik-name',
                 build: function (body) {
@@ -412,5 +410,5 @@
         };
     }
 
-    return { create: create, commandFor: commandFor, ago: ago, metaOf: metaOf, dateText: dateText };
+    return { create: create, commandFor: commandFor, ago: ago, metaOf: metaOf };
 });

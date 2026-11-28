@@ -7,6 +7,8 @@
 'use strict';
 const path = require('path');
 const { makeDocument } = require('./web_mapmaker_fake_dom.js');
+process.env.TZ = 'America/Los_Angeles';       // (the moments of the tab are the visitor's own: Pacific here, so that the days of the check are fixed facts; the tab is run in other zones below)
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times: web/local_time.js)
 const A = require(path.resolve(process.argv[2] || path.join(__dirname, '..', '..', 'web', 'admin_analytics.js')));
 
 let checks = 0, failures = 0;
@@ -130,7 +132,8 @@ const view = async (p, name) => { await press(p.app, name); };
         await p.open();
         same('it asks once for the last 30 days, with a POST', p.calls, [{ method: 'POST', url: '/hub/admin/api/analytics', body: { from: '2026-11-15', to: TODAY } }]);
         same('the three views and the range bar', [texts(p.app, '.anav .chip'), texts(p.app, '.arange .rlabel'), texts(p.app, '.arange .chip'), texts(p.app, '.rdates'), texts(p.app, '.rsub')],
-            [['Overview', 'Visitors', 'Health'], ['Range'], ['7 days', '30 days', '90 days', 'Custom'], ['15 Nov – 14 Dec 2026'], ['30 days, last day is today so far']]);
+            [['Overview', 'Visitors', 'Health'], ['Range'], ['7 days', '30 days', '90 days', 'Custom'], ['15 Nov – 14 Dec 2026'], ['30 days in Pacific time, last day is today so far']]);
+        same('the chart of the days says that its days are Pacific days (the days are sums that the hub made for each Pacific day: another zone cannot be drawn from them)', texts(p.app, '.abody .panel h2'), ['Visitors per day (Pacific time)']);
         same('the 30 days is the chosen one', texts(p.app, '.arange .chip.on'), ['30 days']);
         for (const [label, from] of [['7 days', '2026-12-08'], ['90 days', '2026-09-16'], ['30 days', '2026-11-15']]) {
             await press(p.app, label);
@@ -216,7 +219,7 @@ const view = async (p, name) => { await press(p.app, name); };
         all(p.app, '.chartbox')[0].fire('mouseleave', {});
         check('and it goes when the pointer leaves', all(p.app, '.tip')[0].hidden === true);
         await press(p.app, 'Show as a table');
-        same('as a table: newest day first, the last day marked as so far', [texts(p.app, '.atable th'), all(p.app, '.atable tbody tr').slice(0, 2).map((r) => r.children[0].textContent), all(p.app, '.atable tbody tr').length, all(p.app, 'svg').length], [['Day', 'Visitors', 'Not tracked', 'Visits'], ['Mon 14 Dec (so far)', 'Sun 13 Dec'], 30, 0]);
+        same('as a table: newest day first, the last day marked as so far', [texts(p.app, '.atable th'), all(p.app, '.atable tbody tr').slice(0, 2).map((r) => r.children[0].textContent), all(p.app, '.atable tbody tr').length, all(p.app, 'svg').length], [['Day (Pacific time)', 'Visitors', 'Not tracked', 'Visits'], ['Mon 14 Dec (so far)', 'Sun 13 Dec'], 30, 0]);
         await press(p.app, 'Show the chart');
         check('and back to the chart', all(p.app, 'svg').length === 1 && all(p.app, '.atable').length === 0);
     }
@@ -230,7 +233,7 @@ const view = async (p, name) => { await press(p.app, name); };
         p.report = empty;
         await p.open();
         const q = p;
-        same('before the first event: zero tiles that say nothing is counted, and one card that says so', [texts(q.app, '.tile .tb'), texts(q.app, '.tile .tt')[0], texts(q.app, '.aempty h2'), texts(q.app, '.achecks li'), all(q.app, 'svg').length], [['0', '0', '0', '0'], 'nothing counted yet', ['Nothing counted yet'], ['The counter is on, since today at 09:23', 'No event received yet'], 0]);
+        same('before the first event: zero tiles that say nothing is counted, and one card that says so', [texts(q.app, '.tile .tb'), texts(q.app, '.tile .tt')[0], texts(q.app, '.aempty h2'), texts(q.app, '.achecks li'), all(q.app, 'svg').length], [['0', '0', '0', '0'], 'nothing counted yet', ['Nothing counted yet'], ['The counter is on, since today, 9:23 AM', 'No event received yet'], 0]);
         check('no change is told against nothing', texts(q.app, '.tile .td').every((t) => t === ''));
         await view(q, 'Visitors');
         same('the other views say it too', texts(q.app, '.abody .aload'), ['Nothing counted yet.']);
@@ -272,7 +275,7 @@ const view = async (p, name) => { await press(p.app, name); };
         await p.open();
         await view(p, 'Health');
         const panels = texts(p.app, '.panel h2').map((t) => t.replace(/\s+/g, ' '));
-        same('the panels', panels, ['Page load', 'Game download and start', 'Errors, grouped 48 errors, 3 kinds', 'The counter itself']);
+        same('the panels', panels, ['Page load (days in Pacific time)', 'Game download and start (days in Pacific time)', 'Errors, grouped 48 errors, 3 kinds', 'The counter itself']);
         const charts = all(p.app, 'svg');
         same('two line charts, each with three lines (p50, p75, p95) and their names at the end', [charts.length, charts.map((c) => all(c, 'path').length), charts.map((c) => texts(c, 'text').filter((t) => /^p\d\d$/.test(t)))], [2, [3, 3], [['p50', 'p75', 'p95'], ['p50', 'p75', 'p95']]]);
         const gamePaths = all(charts[1], 'path').map((n) => n.getAttribute('d'));
@@ -287,8 +290,21 @@ const view = async (p, name) => { await press(p.app, name); };
         same('first and last seen in words', rows.map((r) => r.children.slice(4).map((c) => c.textContent)), [['14 Dec', 'today'], ['13 Dec', 'today'], ['20 Nov', 'yesterday']]);
         same('a new kind is tagged New (the one that came today and yesterday, not the old ones)', rows.map((r) => all(r, '.tg.warn').length), [1, 1, 0]);
         check('what came from a browser is text with the mark of data, and no element is made of it', rows.every((r) => all(r, '[data-untrusted]').length >= 1) && all(p.app, 'img').length === 0 && texts(p.app, '.etext').indexOf('Error: <img src=x onerror=alert(1)>') >= 0);
-        same('the counter itself', all(p.app, '.kv').map((r) => [texts(r, '.k')[0], texts(r, '.v')[0]]), [['Last event received', 'today, 11:19'], ['Events today', '1,184 since midnight'], ['Events refused', '3 today too big or the wrong shape'], ['Crawlers left out', '7 today not counted'], ['Raw events kept', '30 days back to 14 Nov'], ['Daily totals kept', 'since 1 Sep 2026'], ['Country list', 'DB-IP Lite updated 2026-12']]);
-        check('the foot says since when, the days and where the Legal page is', /^Counted since 1 Sep 2026 · Days run from midnight to midnight, Pacific time · Updated today, 11:20 · No cookies; no address or visitor id is kept \(see the Legal page\)\.$/.test(texts(p.app, '.afoot')[0]) && all(p.app, '.afoot a')[0].getAttribute('href') === '/legal', texts(p.app, '.afoot')[0]);
+        same('the counter itself', all(p.app, '.kv').map((r) => [texts(r, '.k')[0], texts(r, '.v')[0]]), [['Last event received', 'today, 11:19 AM'], ['Events today', '1,184 since midnight, Pacific time'], ['Events refused', '3 today too big or the wrong shape'], ['Crawlers left out', '7 today not counted'], ['Raw events kept', '30 days back to 14 Nov'], ['Daily totals kept', 'since 1 Sep 2026'], ['Country list', 'DB-IP Lite updated 2026-12']]);
+        check('the foot says since when, the days and where the Legal page is', /^Counted since 1 Sep 2026 · Days run from midnight to midnight, Pacific time · Updated today, 11:20 AM · No cookies; no address or visitor id is kept \(see the Legal page\)\.$/.test(texts(p.app, '.afoot')[0]) && all(p.app, '.afoot a')[0].getAttribute('href') === '/legal', texts(p.app, '.afoot')[0]);
+        {   // the moments are the visitor's own and the days are Pacific days, in any zone: the same tab in New York and in Tokyo (11:20 AM Pacific is 2:20 PM in New York, 4:20 AM the next day in Tokyo)
+            const zones = {};
+            for (const zone of ['America/New_York', 'Asia/Tokyo']) {
+                process.env.TZ = zone;
+                const q = page(); await q.open(); await view(q, 'Health');
+                zones[zone] = [texts(q.app, '.afoot')[0].replace(/ \u00b7 No cookies.*$/, ''), all(q.app, '.kv').map((r) => texts(r, '.v')[0])[0]];
+            }
+            process.env.TZ = 'America/Los_Angeles';
+            same('the counter\'s moments are in the visitor\'s own zone on a 12-hour clock, and its days stay Pacific days whoever looks', zones, {
+                'America/New_York': ['Counted since 1 Sep 2026 \u00b7 Days run from midnight to midnight, Pacific time \u00b7 Updated today, 2:20 PM', 'today, 2:19 PM'],
+                'Asia/Tokyo': ['Counted since 1 Sep 2026 \u00b7 Days run from midnight to midnight, Pacific time \u00b7 Updated today, 4:20 AM', 'today, 4:19 AM']
+            });
+        }
     }
     {
         const many = []; for (let i = 0; i < 60; i++) many.push({ kind: 'Page', msg: 'Error: number ' + i, src: 'a.js:' + i, n: 100 - i, visitors: 1, first: '2026-11-20', last: TODAY });

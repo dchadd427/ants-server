@@ -8,6 +8,7 @@ const path = require('path');
 const { makeDocument } = require('./web_mapmaker_fake_dom.js');
 // the section "Bot matches" is the page's second file, loaded before it: the page finds it as the global AntsAdminBots (a broken copy of it is checked by naming it as the third argument)
 // (and the list of the server's maps that it uses, the page's other file: admin_map_pick.js, loaded before it; a broken copy of that is the fourth argument)
+global.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times: web/local_time.js, loaded before the page's own files)
 global.AntsAdminMapPick = require(process.argv[4] ? path.resolve(process.argv[4]) : path.join(__dirname, '..', '..', 'web', 'admin_map_pick.js'));
 global.AntsAdminBots = require(process.argv[3] ? path.resolve(process.argv[3]) : path.join(__dirname, '..', '..', 'web', 'admin_bots.js'));
 global.AntsAdminAnalytics = require(process.argv[5] ? path.resolve(process.argv[5]) : path.join(__dirname, '..', '..', 'web', 'admin_analytics.js'));      // (the section "Analytics", the page's third file: a broken copy of it is the fifth argument; the section's own checks are web_admin_analytics_check.js)
@@ -21,23 +22,15 @@ function same(label, got, want) { const a = JSON.stringify(got), b = JSON.string
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 async function settle() { for (let i = 0; i < 14; i++) await tick(); }
 
-
 const ANALYTICS_REPORT = require('./web_analytics_fixture.js').small;                                // (what the hub answers to the Analytics tab: made up, one day)
 
-// ---- the time as the pictures write it (Pacific) -----------------------------------------------------------------------------------------------------------------------------------------------------
+// ---- the time as the pictures write it: the visitor's own zone and a 12-hour clock (web/local_time.js; this run's zone is Pacific so that the days are fixed facts, and the page is run again in others below) ----
+process.env.TZ = 'America/Los_Angeles';
 const NOW = Date.UTC(2026, 9, 18, 20, 0, 0);            // 2026-10-18 13:00 Pacific
 const at = (iso) => Date.parse(iso) / 1000;
-same('today with the time', A.when(at('2026-10-18T16:41:00Z'), NOW), 'today, 09:41');
-same('yesterday has no time', A.when(at('2026-10-17T16:41:00Z'), NOW), 'yesterday');
-same('an older day is the day and the month', A.when(at('2026-10-12T16:41:00Z'), NOW), '12 Oct');
-same('the day is the Pacific day: 02:00 UTC is the evening before', A.when(at('2026-10-18T02:00:00Z'), NOW), 'yesterday');
-same('after midnight in Pacific time it is today', A.when(at('2026-10-18T07:30:00Z'), NOW), 'today, 00:30');
-same('the winter hour is another offset', A.when(at('2026-12-05T18:05:00Z'), Date.UTC(2026, 11, 5, 20, 0, 0)), 'today, 10:05');
-same('a year ago is the day and the month too', A.when(at('2025-10-18T16:00:00Z'), NOW), '18 Oct');
-same('a time that is not a number is no words, and throws nothing', [A.when('x', NOW), A.when(undefined, NOW), A.when(NaN, NOW), A.untilWords(null, NOW), A.leftWords('7', NOW)], ['', '', '', '', '']);
-same('the end of a mute: today, tomorrow, another day (Pacific)', [A.untilWords(at('2026-10-18T22:51:00Z'), NOW), A.untilWords(at('2026-10-19T16:00:00Z'), NOW), A.untilWords(at('2026-10-25T18:40:00Z'), NOW)], ['today, 15:51', 'tomorrow, 09:00', '25 Oct, 11:40']);
-same('the time that is left of a mute', [A.leftWords(at('2026-10-18T20:00:30Z'), NOW), A.leftWords(at('2026-10-18T20:45:00Z'), NOW), A.leftWords(at('2026-10-18T21:31:00Z'), NOW), A.leftWords(at('2026-10-19T04:00:00Z'), NOW), A.leftWords(at('2026-10-19T20:00:00Z'), NOW), A.leftWords(at('2026-10-25T20:00:00Z'), NOW)],
-    ['1 min left', '45 min left', '1 h 31 min left', '8 h left', '1 day left', '7 days left']);
+same('the time that is left of a mute (and a time that is not a number is no words)', [A.leftWords('7', NOW), A.leftWords(undefined, NOW), A.leftWords(at('2026-10-18T20:00:30Z'), NOW), A.leftWords(at('2026-10-18T20:45:00Z'), NOW), A.leftWords(at('2026-10-18T21:31:00Z'), NOW), A.leftWords(at('2026-10-19T04:00:00Z'), NOW), A.leftWords(at('2026-10-19T20:00:00Z'), NOW), A.leftWords(at('2026-10-25T20:00:00Z'), NOW)],
+    ['', '', '1 min left', '45 min left', '1 h 31 min left', '8 h left', '1 day left', '7 days left']);
+same('the times of a schedule in a line of the log (the server wrote them in 24 hours) are said in 12; any other detail, a map named like a time and a time that is none are left as they are', [['bot_schedule_added', 'at 18:00, 20:00, 22:00 (Pacific) \u00b7 4 matches'], ['bot_schedule_changed', 'at 00:30 (Pacific)'], ['bot_schedule_added', 'every 60 minutes, 4 matches'], ['bot_started', 'at 18:00 (Pacific)'], ['bot_schedule_added', 'at 25:00 (Pacific)'], ['bot_started', '2 matches, Time 12:30.LVL']].map((x) => AntsAdminBots.logDetail({ action: x[0], detail: x[1] })), ['at 6:00 PM, 8:00 PM, 10:00 PM (Pacific time) \u00b7 4 matches', 'at 12:30 AM (Pacific time)', 'every 60 minutes, 4 matches', 'at 18:00 (Pacific)', 'at 25:00 (Pacific)', '2 matches, Time 12:30.LVL']);
 // a username box: a name, a name of digits (written with an @), and the refusals (nothing, spaces, a number as long as an id)
 same('a username is taken as it is, without the blanks around it', [A.accountOf('  clover.4782 ').account, A.accountOf('  clover.4782 ').shown], ['clover.4782', 'clover.4782']);
 same('a username of digits is written with an @ for the hub', [A.accountOf('12345').account, A.accountOf('12345').shown, A.accountOf('@abc').account], ['@12345', '12345', '@abc']);
@@ -586,13 +579,20 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         same('admin page: the lead of the tab and its foot', [texts(app, '.alead'), texts(app, '.qfoot')], [['Maps players sent that wait for you. Approve puts a map in the lobby list.'], ['Declining asks for a short reason that the maker can read. Nothing is deleted.']]);
         const rows = all(app, '.arow');
         same('admin page: two rows, names and tags', [rows.length, texts(app, '.t1')], [2, ['TreasureClassic mapPlayer text', 'Big LakeExtended mapNew version onlyPlayer text']]);
-        same('admin page: the meta lines (Pacific time)', texts(app, '.am'), ['By Mia Player text · 34 x 34 · Sent today, 09:41', 'By Sam Player text · 300 x 400 · Sent yesterday']);
+        same('admin page: the meta lines (the visitor\'s zone: Pacific here, a 12-hour clock)', texts(app, '.am'), ['By Mia Player text · 34 x 34 · Sent today, 9:41 AM', 'By Sam Player text · 300 x 400 · Sent yesterday, 9:00 AM']);
         same('admin page: three buttons for each', rows.map((r) => Array.from(r.querySelectorAll('button')).map((b) => b.textContent)), [['Approve', 'Rename and approve', 'Decline'], ['Approve', 'Rename and approve', 'Decline']]);
         same('admin page: the picture is the admin route of the map', all(app, '.arow img')[0].src, '/admin/api/maps/' + 'a'.repeat(32) + '/picture');
         same('admin page: the maker\'s note is a quote', texts(app, '.quote'), ['my first map']);
         same('admin page: the tabs are a tablist with the chosen one marked', [all(app, '.chips')[0].getAttribute('role'), all(app, '.chip').map((c) => c.getAttribute('aria-selected'))], ['tablist', ['true', 'false', 'false', 'false']]);
         noMarkup('admin page', app);
         same('admin page: only the list and the count of the bot matches were asked for', w.calls.map((c) => c.url), ['/admin/api/me', '/admin/api/maps?state=waiting', '/admin/api/bot-matches']);
+    }
+    {   // the same maps in two other zones: the visitor's own, whoever the maintainer is, and a 12-hour clock in both (the zone of the check, Pacific, is above)
+        const lines = {};
+        for (const zone of ['America/New_York', 'Asia/Tokyo']) { process.env.TZ = zone; lines[zone] = texts((await open(world())).app, '.am'); }
+        process.env.TZ = 'America/Los_Angeles';
+        same('admin page: the meta lines are in the visitor\'s own zone (13:00 Pacific is 4:00 PM in New York and 5:00 AM the next day in Tokyo)', lines, { 'America/New_York': ['By Mia Player text \u00b7 34 x 34 \u00b7 Sent today, 12:41 PM', 'By Sam Player text \u00b7 300 x 400 \u00b7 Sent yesterday, 12:00 PM'],
+            'Asia/Tokyo': ['By Mia Player text \u00b7 34 x 34 \u00b7 Sent today, 1:41 AM', 'By Sam Player text \u00b7 300 x 400 \u00b7 Sent yesterday, 1:00 AM'] });
     }
     // ---- Approve sends the call with the token; the list is asked again
     {
@@ -672,7 +672,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         const w = world();
         const { app, doc } = await open(w);
         await press(app, 'Approved (1)');
-        same('approved: the lead, the row (the approved name, not the first one) and its large red button', [texts(app, '.alead'), texts(app, '.t1'), texts(app, '.am'), button(app, 'Take down').length], [['These maps are in the lobby map list now. Press “Take down” to remove one.'], ['Treasure 2Classic mapPlayer text'], ['By Mia Player text · 34 x 34 · Approved today, 09:20'], 1]);
+        same('approved: the lead, the row (the approved name, not the first one) and its large red button', [texts(app, '.alead'), texts(app, '.t1'), texts(app, '.am'), button(app, 'Take down').length], [['These maps are in the lobby map list now. Press “Take down” to remove one.'], ['Treasure 2Classic mapPlayer text'], ['By Mia Player text · 34 x 34 · Approved today, 9:20 AM'], 1]);
         check('approved: the button is the red one', button(app, 'Take down')[0].className.indexOf('bad') > 0 && button(app, 'Take down')[0].className.indexOf('big') > 0);
         same('approved: the foot of picture C4', texts(app, '.qfoot'), ['Taking a map down does not delete it. Its name stays protected, and you can put it back later from the “Taken down” tab.']);
         w.calls.length = 0;
@@ -755,7 +755,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         same('declined: the row with the reason, and no button', [texts(app, '.t1'), texts(app, '.quote'), all(app, '.arow button').length], [['Dry CanyonClassic mapPlayer text'], ['Reason: Too plain for the list'], 0]);
         await press(app, 'Taken down (1)');
         same('taken down: the lead of picture C6, the row and the button Put back', [texts(app, '.alead'), texts(app, '.t1'), texts(app, '.am'), button(app, 'Put back').length],
-            [['These maps are not in the lobby list. Press “Put back” to bring one back.'], ['Old HillClassic mapPlayer text'], ['By Mia Player text · 34 x 34 · Taken down today, 09:02'], 1]);
+            [['These maps are not in the lobby list. Press “Put back” to bring one back.'], ['Old HillClassic mapPlayer text'], ['By Mia Player text · 34 x 34 · Taken down today, 9:02 AM'], 1]);
         w.calls.length = 0;
         await press(app, 'Put back');
         same('Put back: sent at once (nothing is lost by it)', [w.calls[0].url, w.calls[0].body], ['/admin/api/maps/' + 'e'.repeat(32) + '/put-back', {}]);
@@ -996,12 +996,12 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         w.lists.declined[0].decided_by = '<i>lee</i>';
         const { app } = await open(w);
         await press(app, 'Approved (1)');
-        same('who decided: the meta line of an approved map ends with the admin', [texts(app, '.am')[0], all(app, '.am [data-untrusted="typed-text"]').map((n) => n.textContent)], ['By Mia Player text · 34 x 34 · Approved today, 09:20 by mia', ['mia']]);
+        same('who decided: the meta line of an approved map ends with the admin', [texts(app, '.am')[0], all(app, '.am [data-untrusted="typed-text"]').map((n) => n.textContent)], ['By Mia Player text · 34 x 34 · Approved today, 9:20 AM by mia', ['mia']]);
         await press(app, 'Declined (1)');
         same('who decided: a declined map too, as text', [all(app, '.am [data-untrusted="typed-text"]').map((n) => n.textContent), texts(app, '.am')[0].indexOf('by <i>lee</i>') > 0], [['<i>lee</i>'], true]);
         w.lists.taken_down[0].decided_by = 'earlier admin';
         await press(app, 'Taken down (1)');
-        same('who decided: the words "earlier admin" are shown like any name, as typed text', [texts(app, '.am')[0], all(app, '.am [data-untrusted="typed-text"]').map((n) => n.textContent)], ['By Mia Player text · 34 x 34 · Taken down today, 09:02 by earlier admin', ['earlier admin']]);
+        same('who decided: the words "earlier admin" are shown like any name, as typed text', [texts(app, '.am')[0], all(app, '.am [data-untrusted="typed-text"]').map((n) => n.textContent)], ['By Mia Player text · 34 x 34 · Taken down today, 9:02 AM by earlier admin', ['earlier admin']]);
         await press(app, 'Waiting (2)');
         check('who decided: a waiting map has no decider', texts(app, '.am').every((t) => t.indexOf(' by ') < 0));
     }
@@ -1018,9 +1018,9 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         same('Chat: the minutes have four presets and a hint', [texts(app, '.minrow .chip'), texts(app, '.fh')], [['10 min', '1 hour', '1 day', '1 week'], ['1 to 10080 (one week). A mute ends by itself.']]);
         same('Chat: Mute and Ban, Ban in red, Hide picture and Take away image posting', [texts(app, '.acts button'), all(app, '.acts button')[1].className.indexOf('bad') > 0], [['Mute', 'Ban', 'Hide picture', 'Take away image posting'], true]);
         same('Chat: Banned lists the newest first, each with its time and who did it (a username, the terminal for the command line, a short code when no name is left) and Unban', [texts(app, '.p-banned .pn'), texts(app, '.p-banned .ps'), texts(app, '.p-banned .btn')],
-            [['clover.4782', 'spam.king', '55e5555555555555'], ['banned today, 09:12 · by basil', 'banned 14 Oct · by tess', 'banned 9 Oct · by terminal'], ['Unban', 'Unban', 'Unban']]);
+            [['clover.4782', 'spam.king', '55e5555555555555'], ['banned today, 9:12 AM · by basil', 'banned Oct 14, 11:00 AM · by tess', 'banned Oct 9, 11:00 AM · by terminal'], ['Unban', 'Unban', 'Unban']]);
         same('Chat: a ban that has no name left shows its short code in a code element, marked as typed text', all(app, '.p-banned .pn code').map((n) => [n.textContent, n.getAttribute('data-untrusted')]), [['55e5555555555555', 'typed-text']]);
-        same('Chat: Muted shows the end time and what is left, in Pacific time, and who did it', [texts(app, '.p-muted .pn'), texts(app, '.p-muted .ps'), texts(app, '.p-muted .btn')], [['hazel_b', 'pebble_9'], ['until today, 14:31 (1 h 31 min left) · by sage', 'until 25 Oct, 11:40 (6 days left) · by basil'], ['Unmute', 'Unmute']]);
+        same('Chat: Muted shows the end time (the visitor\'s zone, 12 hours) and what is left, and who did it', [texts(app, '.p-muted .pn'), texts(app, '.p-muted .ps'), texts(app, '.p-muted .btn')], [['hazel_b', 'pebble_9'], ['until today, 2:31 PM (1 h 31 min left) · by sage', 'until Oct 25, 11:40 AM (6 days left) · by basil'], ['Unmute', 'Unmute']]);
         same('Chat: Hidden now lists the accounts whose picture is hidden, with Show again, and the words about what comes after', [texts(app, '.p-pics .pn'), texts(app, '.p-pics .ps'), texts(app, '.p-pics .btn').filter((t) => t !== 'Hide picture'), texts(app, '.p-pics .ph')],
             [['marlow.old', 'aaaaaaaaaaaaaaaa'], ['picture hidden', 'picture hidden'], ['Show again', 'Show again'], ['Hides a person\u2019s Discord picture in the chat; their letter shows instead.', 'After \u201CShow again\u201D the picture stays off until the person turns it on themselves.']]);
         check('Chat: every name of a list is typed text and marked (a short code too)', all(app, '.pn').length === 9 && all(app, '.pn').every((n) => n.getAttribute('data-untrusted') === 'typed-text' || (n.children.length === 1 && n.children[0].getAttribute('data-untrusted') === 'typed-text')));
@@ -1180,7 +1180,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         await section(app, 'Chat');
         same('Chat: Taken away now lists the accounts whose posting is taken away, newest first, by whom and when (a name, or the code of the account with none left), with Give back, and the words that go with it',
             [texts(app, '.p-noimg .pn'), texts(app, '.p-noimg .ps'), texts(app, '.p-noimg .btn').filter((t) => t !== 'Take away image posting'), texts(app, '.p-noimg .ph'), all(app, '.p-noimg .pn code').map((n) => [n.textContent, n.getAttribute('data-untrusted')])],
-            [['hazel_b', 'eeeeeeeeeeeeeeee'], ['taken away by basil \u00b7 today, 09:31', 'taken away by terminal \u00b7 14 Oct'], ['Give back', 'Give back'], ['People with the Active Anters role, moderators and administrators can post images in the chat. Here an administrator takes that away from one person, or gives it back.',
+            [['hazel_b', 'eeeeeeeeeeeeeeee'], ['taken away by basil \u00b7 today, 9:31 AM', 'taken away by terminal \u00b7 Oct 14, 11:00 AM'], ['Give back', 'Give back'], ['People with the Active Anters role, moderators and administrators can post images in the chat. Here an administrator takes that away from one person, or gives it back.',
                 'Images that the person posted stay in the chat until a moderator deletes them. Only administrators can take image posting away or give it back.'], [['eeeeeeeeeeeeeeee', 'typed-text']]]);
         w.calls.length = 0;
         await press(app, 'Give back', 0);
@@ -1307,7 +1307,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         await section(app, 'Log');
         same('Log: the hub\'s log and the two kinds of the server\'s log (the server filters them) are asked for, all reads, and nothing else', w.calls.map((c) => c.method + ' ' + c.url), ['GET /hub/admin/api/modlog', 'GET /admin/api/audit?kind=maps', 'GET /admin/api/audit?kind=bots']);
         same('Log: the four filters with their counts, All chosen, and the lead of All', [texts(app, '.lhead .chip'), all(app, '.lhead .chip').map((c) => c.getAttribute('aria-selected')), texts(app, '.alead')], [['All (9)', 'Chat actions (6)', 'Map decisions (3)', 'Bot matches (0)'], ['true', 'false', 'false', 'false'], ['Chat actions (the last 30 days), map decisions and bot matches, newest first.']]);
-        same('Log: the rows are in one list, newest first, each with its time (Pacific), who and what', texts(app, '.arow2 .tm'), ['today, 12:02', 'today, 11:47', 'today, 11:30', 'today, 10:02', 'today, 09:12', 'yesterday', 'yesterday', '13 Oct', '12 Oct']);
+        same('Log: the rows are in one list, newest first, each with its time (the visitor\'s zone), who and what', texts(app, '.arow2 .tm'), ['today, 12:02 PM', 'today, 11:47 AM', 'today, 11:30 AM', 'today, 10:02 AM', 'today, 9:12 AM', 'yesterday, 11:00 AM', 'yesterday, 11:00 AM', 'Oct 13, 11:00 AM', 'Oct 12, 11:00 AM']);
         const rows = all(app, '.arow2').map((r) => r.children.map((c) => c.textContent));
         same('Log: the words of each row', rows.map((r) => r[1] + ' | ' + r[2]), [
             'basil | ChatMuted hazel_b for 60 minutes', 'sage | ChatDeleted line 148 by clover.4782', 'basil | MapApproved Mossy Ridge', 'tess | MapDeclined Test 1 Reason: Same as an existing map.', 'basil | ChatBanned clover.4782',
@@ -1377,13 +1377,13 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         await section(app, 'Status');
         same('Status: the game server\'s counts and the hub\'s status are asked for, reads only', w.calls.map((c) => c.method + ' ' + c.url).sort(), ['GET /busy', 'GET /hub/admin/api/status']);
         same('Status: the game server\'s counts are asked for without the cookie (they are public) and the hub\'s status with it', [w.calls.filter((c) => c.url === '/busy')[0].credentials, w.calls.filter((c) => c.url === '/hub/admin/api/status')[0].credentials], ['omit', 'same-origin']);
-        same('Status: when it was checked, in Pacific time, and the Refresh button', [texts(app, '.upd'), button(app, 'Refresh').length], [['Checked today, 13:00 (Pacific time)'], 1]);
+        same('Status: when it was checked (the visitor\'s zone, 12 hours), and the Refresh button', [texts(app, '.upd'), button(app, 'Refresh').length], [['Checked today, 1:00 PM'], 1]);
         same('Status: the panels', texts(app, '.panel h2'), ['Right now', 'Role checks', 'Pictures from Discord', 'Chat store', 'Versions']);
         same('Status: matches running and players', all(app, '.kv').slice(0, 2).map((r) => r.textContent), ['Matches running2', 'Players on the game server5 in matches and lobbies']);
         same('Status: the role checks work, and say how many accounts are known', [texts(app, '.state').slice(0, 1), all(app, '.tg')[0].className, texts(app, '.note')[0]], [['Working' + 'Roles known for 14 accounts'], 'tg active big', 'If this says Refused or Not answering, the page stays shut for everyone but the owner\u2019s account.']);
         same('Status: the last picture was saved three minutes ago', [texts(app, '.state')[1], all(app, '.tg')[1].className], ['okSaved · 3 minutes ago', 'tg active big']);
         same('Status: the store, from numbers: the database of its limit and the percent, the meter, the log file, the lines (the oldest from a day), the pictures, the switches', [all(app, '.kv').slice(2).map((r) => r.textContent), all(app, '.meter i')[0].style.width, all(app, '.meter i')[0].className],
-            [['Database4.2 of 64 MB 6%', 'Log file0.3 MB', 'Lines kept187 the oldest from 9 Oct', 'Pictures kept41 1.1 of 24 MB', 'Switched off / blocked6 / 1', 'Sitev0.16.11 build 9d41c2e · built 2026-11-16 09:30 PT', 'Chat hubcode 9f3c1a2e running since 16 Oct'], '6%', '']);
+            [['Database4.2 of 64 MB 6%', 'Log file0.3 MB', 'Lines kept187 the oldest from Oct 9, 11:00 AM', 'Pictures kept41 1.1 of 24 MB', 'Switched off / blocked6 / 1', 'Sitev0.16.11 build 9d41c2e · built Nov 16, 9:30 AM', 'Chat hubcode 9f3c1a2e running since Oct 16, 9:30 AM'], '6%', '']);
         noMarkup('Status', app);
         noId('Status', app, w.calls);
         w.calls.length = 0;
@@ -1704,8 +1704,8 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
             same('Running: the map, the rules tag, the Teams tag and Starting where they belong', all(app, '.b-run .brow .bn').map((n) => n.textContent), ['MEDIUMHighest score', 'TREASURE187Teams', 'Fight Island187', 'TINYHighest scoreTeamsStarting']);
             same('Running: the seats as the colors with their level', all(app, '.b-run .brow').map((r) => r.querySelectorAll('.seats span').map((s) => s.textContent).join(', ')), ['Green Hard, Blue Medium, Black Hard', 'Green Hard, Red Hard, Blue Medium, Black Easy', 'Red Hard, Black Hard', 'Green Medium, Red Medium, Blue Hard, Black Hard']);
             same('Running: the sides in words, when it began, and who or what started it', all(app, '.b-run .brow .bs').map((n) => n.textContent), [
-                'Free for all · started today, 12:54 (6 min ago) · schedule Hourly rotation', 'Green and Black against Red and Blue · started today, 12:56 (4 min ago) · Start now by basil',
-                'Free for all · started today, 12:56 (4 min ago) · Start now by basil', 'Green and Blue against Red and Black · started today, 12:59 (1 min ago) · Start now by tess']);
+                'Free for all · started today, 12:54 PM (6 min ago) · schedule Hourly rotation', 'Green and Black against Red and Blue · started today, 12:56 PM (4 min ago) · Start now by basil',
+                'Free for all · started today, 12:56 PM (4 min ago) · Start now by basil', 'Green and Blue against Red and Black · started today, 12:59 PM (1 min ago) · Start now by tess']);
             same('Running: Watch opens the live match in a new tab, and is off while the live list does not have the match', [all(app, '.b-run .brow').map((r) => (r.querySelectorAll('a.btn')[0] || {}).tagName || 'off'), all(app, '.b-run a.btn').map((a) => a.getAttribute('href')), all(app, '.b-run a.btn').map((a) => a.getAttribute('target') + ' ' + a.getAttribute('rel')), all(app, '.b-run .brow')[3].querySelectorAll('button')[0].disabled],
                 [['a', 'a', 'a', 'off'], ['/play?live=MEDIUM-20261018-195400Z', '/play?live=TREASURE-20261018-195600Z', '/play?live=Fight%20Island-20261018-195600Z'], ['_blank noopener', '_blank noopener', '_blank noopener'], true]);
             same('Running: every name that came from the server is marked as typed text', [all(app, '.b-run .brow [data-untrusted]').map((n) => n.getAttribute('data-untrusted') + ':' + n.textContent)], [['typed-text:MEDIUM', 'typed-text:Hourly rotation', 'typed-text:TREASURE', 'typed-text:basil', 'typed-text:Fight Island', 'typed-text:basil', 'typed-text:TINY', 'typed-text:tess']]);
@@ -1748,10 +1748,10 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
         {   // Schedules
             const { w, app } = await opened();
             same('Schedules: a row for each, with the name, On or Off and the Default tag', all(app, '.b-sched .brow .bn').map((n) => n.textContent), ['Hourly rotationOnDefault', 'Evening swarmOn', 'ISLANDS practiceOff']);
-            same('Schedules: when, what in one line, and the next and the last start (Pacific time)', all(app, '.b-sched .brow .bs').map((n) => n.textContent), [
-                'Every 60 minutes', '1 match · a random map of the rotation · random rules · 2 to 4 bots · levels Medium or Hard · random teams', 'Next start today, 13:14 · last start today, 12:14',
-                'Every day at 18:00, 20:00 and 22:00 (Pacific time)', '4 matches · a random map of the rotation · rules Highest score · 4 bots · levels Hard, Hard, Medium, Medium · random teams', 'Next start today, 18:00 · last start yesterday',
-                'Every 30 minutes', '2 matches · ISLANDS · rules Highest score · 2 to 4 bots · levels all Easy · free for all', 'Off: it starts nothing · last start yesterday']);
+            same('Schedules: when (the Pacific clock, 12 hours), what in one line, and the next and the last start (the visitor\'s zone)', all(app, '.b-sched .brow .bs').map((n) => n.textContent), [
+                'Every 60 minutes', '1 match · a random map of the rotation · random rules · 2 to 4 bots · levels Medium or Hard · random teams', 'Next start today, 1:14 PM · last start today, 12:14 PM',
+                'Every day at 6:00 PM, 8:00 PM and 10:00 PM (Pacific time)', '4 matches · a random map of the rotation · rules Highest score · 4 bots · levels Hard, Hard, Medium, Medium · random teams', 'Next start today, 6:00 PM · last start yesterday, 1:00 PM',
+                'Every 30 minutes', '2 matches · ISLANDS · rules Highest score · 2 to 4 bots · levels all Easy · free for all', 'Off: it starts nothing · last start yesterday, 1:30 PM']);
             same('Schedules: the buttons of each row, and a row that is off says Turn on', [all(app, '.b-sched .brow').map((r) => r.querySelectorAll('button').map((b) => b.textContent).join('/')), all(app, '.b-sched .sfoot .btn').map((b) => b.textContent)], [['Turn off/Edit/Delete', 'Turn off/Edit/Delete', 'Turn on/Edit/Delete'], ['Add a schedule']]);
             await press(app, 'Turn off');
             await press(app, 'Turn on');
@@ -1760,16 +1760,16 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
             w.calls.length = 0;
             await press(app, 'Edit', 1);
             same('Edit opens the form with what the schedule has: the name, the kind, the times as chips, the choices', [texts(app, '.sform .shead'), all(app, 'input').filter((n) => n.id === 'sc-name')[0].value, chipOn(app, 'sc-when'), texts(app, '.times .tm2'), chipOn(app, 'sc-rules'), chipOn(app, 'sc-bots'), texts(app, '.sform .stepv'), chipOn(app, 'sc-on')],
-                [['Edit schedule'], 'Evening swarm', ['At times of the day'], ['18:00×', '20:00×', '22:00×'], ['Highest score'], ['4'], ['4'], ['On']]);
+                [['Edit schedule'], 'Evening swarm', ['At times of the day'], ['6:00 PM×', '8:00 PM×', '10:00 PM×'], ['Highest score'], ['4'], ['4'], ['On']]);
             same('the name box takes 40 characters at most', all(app, 'input').filter((n) => n.id === 'sc-name')[0].maxLength, 40);
             same('the form says what the count means for a schedule: it keeps its own limit of 8 (the stepper is the old one), and what does not fit waits in the queue', texts(app, '.sform .f .fh').filter((s) => /own limit/.test(s)), ['1 to 8: a schedule keeps its own limit. What does not fit at that time waits in the queue, as any start does.']);
             all(app, '.times .tm2 button')[0].click(); await settle();
-            type(app, 'sc-time', '25:00'); await press(app, 'Add time');
-            same('a time that is not one is refused in a line above Save', texts(app, '.sform .msg.bad'), ['A time looks like 18:30 (24 hours).']);
-            type(app, 'sc-time', '7:05'); await press(app, 'Add time');
-            same('a time is added in the 24-hour form, sorted, and the one that was removed is gone', texts(app, '.times .tm2'), ['07:05×', '20:00×', '22:00×']);
-            for (const t of ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']) { type(app, 'sc-time', t); await press(app, 'Add time'); }
-            type(app, 'sc-time', '17:00'); await press(app, 'Add time');
+            for (const bad of ['25:00', '18:30', '7:05', '13 PM', '0 AM', '7:5 AM']) { type(app, 'sc-time', bad); await press(app, 'Add time'); }
+            same('a time that is not one (25:00; with no AM or PM; with an hour that is not of a 12-hour clock) is refused in a line above Save: nothing is guessed', [texts(app, '.sform .msg.bad'), texts(app, '.times .tm2')], [['A time looks like 6:30 PM.'], ['8:00 PM×', '10:00 PM×']]);
+            type(app, 'sc-time', '7:05 am'); await press(app, 'Add time');
+            same('a time is added in the 12-hour form, sorted, and the one that was removed is gone', texts(app, '.times .tm2'), ['7:05 AM×', '8:00 PM×', '10:00 PM×']);
+            for (const t of ['8 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM']) { type(app, 'sc-time', t); await press(app, 'Add time'); }
+            type(app, 'sc-time', '5:00 PM'); await press(app, 'Add time');
             same('at most twelve times', [all(app, '.times .tm2').length, texts(app, '.sform .msg.bad')], [12, ['At most 12 times.']]);
             all(app, '.times .tm2 button').slice(3).forEach((b) => b.click());
             await settle();
@@ -1803,7 +1803,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
             same('the name is sent as it was typed (the server cleans it)', posts(w)[posts(w).length - 1].body.name, '<b>Loud</b>');
             w.bots.schedules.push({ id: 9, name: '<b>Loud</b>', default: false, on: true, last: 0, next: at('2026-10-18T21:00:00Z'), when: { kind: 'every', minutes: 120 }, what: { count: 1, every_s: 0, map: 'random:rotation', rules: 'random', bots: 'random', levels: ['rmh', 'rmh', 'rmh', 'rmh'], teams: 'random', split: '' } });
             await press(app, 'Refresh');
-            same('a name that is markup is text, marked as typed', [all(app, '.b-sched .brow .bn [data-untrusted]').map((n) => n.textContent).slice(-1), all(app, '.b-sched .brow .bn [data-untrusted]').every((n) => n.getAttribute('data-untrusted') === 'typed-text'), texts(app, '.b-sched .brow .bs').slice(-3)[2]], [['<b>Loud</b>'], true, 'Next start today, 14:00 · no start yet']);
+            same('a name that is markup is text, marked as typed', [all(app, '.b-sched .brow .bn [data-untrusted]').map((n) => n.textContent).slice(-1), all(app, '.b-sched .brow .bn [data-untrusted]').every((n) => n.getAttribute('data-untrusted') === 'typed-text'), texts(app, '.b-sched .brow .bs').slice(-3)[2]], [['<b>Loud</b>'], true, 'Next start today, 2:00 PM · no start yet']);
             noMarkup('Bot matches with markup in the name of a schedule, of a map and of a match', app);
             // Cancel
             w.calls.length = 0;
@@ -2213,7 +2213,7 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
             const rows = [
                 { at: at('2026-10-18T19:56:00Z'), who: 'basil', ref: '22b2222222222222', action: 'bot_started', target: '2 matches', detail: '2 matches, TREASURE.LVL, rules 187, 4 bots' },
                 { at: at('2026-10-18T19:30:00Z'), who: 'tess', ref: '44d4444444444444', action: 'bot_stopped', target: 'GAUNTLET', detail: '' },
-                { at: at('2026-10-18T18:10:00Z'), who: 'basil', ref: '22b2222222222222', action: 'bot_schedule_added', target: '<script>x</script>', detail: 'every 60 minutes, 4 matches' },
+                { at: at('2026-10-18T18:10:00Z'), who: 'basil', ref: '22b2222222222222', action: 'bot_schedule_added', target: '<script>x</script>', detail: 'at 18:00, 20:00, 22:00 (Pacific) · 4 matches' },
                 { at: at('2026-10-18T18:00:00Z'), who: 'basil', ref: '22b2222222222222', action: 'bot_schedule_off', target: 'ISLANDS practice', detail: '' },
                 { at: at('2026-10-17T22:00:00Z'), who: 'tess', ref: '44d4444444444444', action: 'bot_stopped_all', target: '5 matches', detail: '' },
                 { at: at('2026-10-17T21:00:00Z'), who: 'tess', ref: '44d4444444444444', action: 'bot_something_new', target: 'x', detail: '' },
@@ -2228,11 +2228,11 @@ process.on('unhandledRejection', (e) => { console.log('FAIL an error was thrown 
             same('Log: the fourth filter, and the counts: the maps are not counted twice', [texts(app, '.lhead .chip'), texts(app, '.alead')], [['All (16)', 'Chat actions (6)', 'Map decisions (1)', 'Bot matches (9)'], ['Chat actions (the last 30 days), map decisions and bot matches, newest first.']]);
             await press(app, 'Bot matches (9)');
             same('Bot matches: only those rows, with no tag, and the words of each action (the rotation lists and the starts that were cancelled too)', [all(app, '.arow2').length, all(app, '.arow2 .src').length, all(app, '.arow2 .wt').map((n) => n.textContent), texts(app, '.alead')], [9, 0, [
-                'Started bot matches: 2 matches 2 matches, TREASURE.LVL, rules 187, 4 bots', 'Stopped the bot match on GAUNTLET', 'Added the schedule <script>x</script> every 60 minutes, 4 matches', 'Turned off the schedule ISLANDS practice',
+                'Started bot matches: 2 matches 2 matches, TREASURE.LVL, rules 187, 4 bots', 'Stopped the bot match on GAUNTLET', 'Added the schedule <script>x</script> at 6:00 PM, 8:00 PM, 10:00 PM (Pacific time) · 4 matches', 'Turned off the schedule ISLANDS practice',
                 'Stopped all bot matches: 5 matches', 'x bot_something_new', 'Changed the rotation list Highest score +2 -1, 10 maps', 'Put the rotation list back to its defaults: 187 6 maps', 'Cancelled a waiting start on TREASURE'],
                 ['What was started and stopped, the schedules that were added, changed or deleted, and the changes of the rotation lists.']]);
             same('Bot matches: every admin, schedule, map and detail is typed text and marked (markup in a name stays text), and the words of the page are not', [all(app, '.arow2 [data-untrusted]').every((n) => n.getAttribute('data-untrusted') === 'typed-text'), all(app, '.arow2 [data-untrusted]').map((n) => n.textContent).sort()],
-                [true, ['basil', 'basil', 'basil', 'basil', 'tess', 'tess', 'tess', 'tess', 'tess', '2 matches', '2 matches, TREASURE.LVL, rules 187, 4 bots', 'GAUNTLET', '<script>x</script>', 'every 60 minutes, 4 matches', 'ISLANDS practice', '5 matches', 'x', 'bot_something_new', '+2 -1, 10 maps', 'Highest score', '187', '6 maps', 'TREASURE'].sort()]);
+                [true, ['basil', 'basil', 'basil', 'basil', 'tess', 'tess', 'tess', 'tess', 'tess', '2 matches', '2 matches, TREASURE.LVL, rules 187, 4 bots', 'GAUNTLET', '<script>x</script>', 'at 6:00 PM, 8:00 PM, 10:00 PM (Pacific time) \u00b7 4 matches', 'ISLANDS practice', '5 matches', 'x', 'bot_something_new', '+2 -1, 10 maps', 'Highest score', '187', '6 maps', 'TREASURE'].sort()]);
             await press(app, 'All (16)');
             same('All: a bot line has its own tag, and a map line its own', all(app, '.arow2 .src').map((n) => n.className).filter((c) => c !== 'src chat'), ['src bot', 'src bot', 'src bot', 'src bot', 'src bot', 'src bot', 'src bot', 'src bot', 'src bot', 'src map']);
             noMarkup('Log with bot lines', app);

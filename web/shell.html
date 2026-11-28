@@ -1163,7 +1163,7 @@
 
     <div class="toast" id="toast" role="status" hidden></div>
 
-    <script src="site_hooks.js" data-page="play"></script><script src="game_bar.js"></script><script src="update_notice.js" data-window="no"></script><script src="rejoin_key.js"></script><script src="shapes.js"></script><script src="shape_picker.js"></script><script src="replay_page.js"></script><script src="map_files.js"></script><script src="countdown_button.js"></script><script src="alert_core.js"></script><script src="hud_fullscreen.js"></script><script src="wake_lock.js"></script><script src="p2p.js"></script><script src="touch_keys.js"></script><script src="front/name_letters.js"></script><script src="front/lobby_net.js"></script><script src="front/player_name.js"></script><script src="front/rematch.js"></script><script src="front/test_game.js"></script>
+    <script src="local_time.js"></script><script src="site_hooks.js" data-page="play"></script><script src="game_bar.js"></script><script src="update_notice.js" data-window="no"></script><script src="rejoin_key.js"></script><script src="shapes.js"></script><script src="shape_picker.js"></script><script src="replay_page.js"></script><script src="map_files.js"></script><script src="countdown_button.js"></script><script src="alert_core.js"></script><script src="hud_fullscreen.js"></script><script src="wake_lock.js"></script><script src="p2p.js"></script><script src="touch_keys.js"></script><script src="front/name_letters.js"></script><script src="front/lobby_net.js"></script><script src="front/player_name.js"></script><script src="front/rematch.js"></script><script src="front/test_game.js"></script>
     <script>
         var ANTS_BUILD_VER = '@@BUILD_TIMESTAMP@@';
         if (!ANTS_BUILD_VER || ANTS_BUILD_VER.indexOf('@') !== -1) {
@@ -2750,6 +2750,7 @@
                 var build = document.getElementById('game-build');
                 if (build) build.style.display = 'none';
             } else if (buildDate && buildDate.textContent.indexOf('@') !== -1) buildDate.style.display = 'none';
+            else AntsTime.stampNode(buildDate);      // (the build's time as the visitor's clock says it: web/local_time.js)
         })();
 
         // The game's keys belong to the game: while it has the screen the browser's own reactions to them (Ctrl+O opens a file dialog, Ctrl+S saves the page,
@@ -3123,7 +3124,7 @@
                     if (liveOn) { small.appendChild(el('span', 'pill lv', 'Live')); small.appendChild(document.createTextNode(' ')); }
                     small.appendChild(document.createTextNode(R.startedText(R.startedOf(LIVE_ID), new Date())));
                 } else {
-                    var when = R.whenText(R.endedOf(file), new Date());
+                    var when = AntsTime.whenText(R.endedOf(file), new Date());
                     var parts = [];
                     if (when) parts.push(when);
                     var seconds = shown === 'over' ? (overEntry ? overEntry.seconds : 0) : headLength();

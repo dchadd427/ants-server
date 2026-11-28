@@ -15,7 +15,6 @@
     var WELCOME_KEY = 'ants.guestwelcome';           // localStorage: '1' once the guest has answered the welcome (a name, Not now, the sheet opened) or logged in: the card never shows again in this browser
     var CHECK_MS = 350;                              // the wait after the last key before the hub is asked
     var NICK_MIN = 3, NICK_MAX = 16, TAG_MIN = 2, TAG_MAX = 5;
-    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var TEXT = {
         title: 'Your name', close: 'Close', previewLabel: 'How others see you', save: 'Save',
         nickLabel: 'Nickname', nickHint: '3 to 16 characters', nickPick: 'Pick a nickname', nickHelp: 'Letters and digits of one alphabet, spaces and . _ - \u2019',
@@ -53,11 +52,6 @@
     };
 
     // ---- the pure parts ----
-    // "4 Dec": the day and the month of a time in seconds since 1970 (the browser's own time zone)
-    function dayOf(seconds, win) {
-        var d = new (win && win.Date ? win.Date : Date)(seconds * 1000);
-        return d.getDate() + ' ' + MONTHS[d.getMonth()];
-    }
     // "in 6 hours" / "in 1 hour" / "in 40 minutes" / "tomorrow": how long until a time, in words, for a wait of up to a day
     function inWords(seconds, nowSeconds) {
         var left = Math.max(60, seconds - nowSeconds), hours = Math.ceil(left / 3600);
@@ -65,7 +59,7 @@
         return 'in ' + hours + (hours === 1 ? ' hour' : ' hours');
     }
     // The line under a field for what the hub said of it: { text, tone } with tone 'bad' (a refusal), 'lock' (a wait: the field is dim, and stays editable and focused, so that the person can keep typing or type the old text back; Save is off), 'ok' or '' (nothing). `field` is the hub's { ok, why?, until? }; `asked` is the text
-    // that was asked (the name that is free is named); `time` is { date(seconds) -> "4 Dec", words(seconds) -> "in 6 hours" }; `current` is true when the field says what the account has now.
+    // that was asked (the name that is free is named); `time` is { date(seconds) -> "Dec 4", words(seconds) -> "in 6 hours" }; `current` is true when the field says what the account has now.
     function say(kind, field, asked, time, current) {
         if (!field || typeof field !== 'object') return { text: '', tone: '' };
         if (field.ok === true) {
@@ -90,7 +84,7 @@
         function calm() { try { return !env.calm || env.calm() === true; } catch (e) { return true; } }
         function you() { return dock && dock.you ? dock.you() : null; }
         function now() { return Math.floor((win.Date ? win.Date.now() : Date.now()) / 1000); }
-        var time = { date: function (s) { return dayOf(s, win); }, words: function (s) { return inWords(s, now()); } };
+        var time = { date: function (s) { return AntsTime.dateText(s, now() * 1000); }, words: function (s) { return inWords(s, now()); } };
         function draw(node, name) { if (letters && letters.paint) letters.paint(doc, node, name); else node.textContent = name; return node; }
         function initial(name) { return letters && letters.initial ? letters.initial(name) : String(name).charAt(0).toUpperCase(); }
 
@@ -304,5 +298,5 @@
         return { open: open, close: close, state: function () { return { sheet: !!sheet, chip: !!chip && !chip.hidden, welcome: !!card }; }, heard: heard };
     }
 
-    return { WELCOME_KEY: WELCOME_KEY, TEXT: TEXT, WHY: WHY, dayOf: dayOf, inWords: inWords, say: say, mount: mount };
+    return { WELCOME_KEY: WELCOME_KEY, TEXT: TEXT, WHY: WHY, inWords: inWords, say: say, mount: mount };
 });

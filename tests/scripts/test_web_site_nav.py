@@ -224,6 +224,8 @@ class TheFiles(unittest.TestCase):
 
 
 STAMPS = {"@@GAME_VERSION@@": "v9.8.7", "@@BUILD_ID@@": "abc1234", "@@BUILD_DATE@@": "2026-01-02 09:30 PT"}
+# The build's time is said by the visitor's own clock (web/local_time.js): 09:30 on the Pacific coast in January is 5:30 PM in UTC, which the bar writes for a visitor whose zone is not named
+ZONES = {"America/New_York": "Jan 2, 12:30 PM", "Asia/Tokyo": "Jan 3, 2:30 AM", "Europe/Berlin": "Jan 2, 6:30 PM"}
 LINKS_OF_THE_OLD_FOOTERS = ["/", "/matches", "/asset_catalog/", "/changelog", "https://github.com/dchadd427/ants-cross-platform", "https://github.com/dchadd427/ants-cross-platform/issues", "/legal"]
 BAR_PAGES = ("matches", "match", "legal", "mapmaker", "shell", "admin")      # (shell: the game page)
 
@@ -238,11 +240,11 @@ class TheMenusLastLine(unittest.TestCase):
         cls.maker = "v" + read("web", "MAPMAKER_VERSION").strip()
         manifest = []
 
-        def add(name, text):
-            path = os.path.join(cls.tmp, name + ".html")
+        def add(name, text, zone=None):
+            path = os.path.join(cls.tmp, name.replace("/", "_") + ".html")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(text)
-            manifest.append({"name": name, "path": path})
+            manifest.append(dict({"name": name, "path": path}, **({"zone": zone} if zone else {})))
 
         for page in BAR_PAGES:
             raw = read("web", page + ".html")
@@ -250,6 +252,8 @@ class TheMenusLastLine(unittest.TestCase):
             for placeholder, value in STAMPS.items():
                 stamped = stamped.replace(placeholder, value)
             add(page + ":stamped", stamped)
+            for zone in ZONES:
+                add(page + ":stamped:" + zone, stamped, zone)                                              # (the same page for a visitor in another zone)
             add(page + ":raw", raw)                                                                       # (a page that was never stamped: the repository's own file)
             add(page + ":version", raw.replace("@@GAME_VERSION@@", "v9.8.7"))                             # (a stamp that has the version and not the build)
             add(page + ":nodate", raw.replace("@@GAME_VERSION@@", "v9.8.7").replace("@@BUILD_ID@@", "abc1234"))      # (the version and the build, no date)
@@ -261,6 +265,8 @@ class TheMenusLastLine(unittest.TestCase):
             sys.path.pop(0)
         md = read("CHANGELOG.md")
         add("changelog:stamped", changelog_to_html.convert(md, changelog_to_html.DEFAULT_REPO_BLOB, version="v9.8.7", build_id="abc1234", build_date="2026-01-02 09:30 PT"))
+        for zone in ZONES:
+            add("changelog:stamped:" + zone, changelog_to_html.convert(md, changelog_to_html.DEFAULT_REPO_BLOB, version="v9.8.7", build_id="abc1234", build_date="2026-01-02 09:30 PT"), zone)
         add("changelog:raw", changelog_to_html.convert(md, changelog_to_html.DEFAULT_REPO_BLOB))
         add("changelog:version", changelog_to_html.convert(md, changelog_to_html.DEFAULT_REPO_BLOB, version="v9.8.7"))
         add("changelog:nodate", changelog_to_html.convert(md, changelog_to_html.DEFAULT_REPO_BLOB, version="v9.8.7", build_id="abc1234"))
@@ -284,11 +290,19 @@ class TheMenusLastLine(unittest.TestCase):
         for page in BAR_PAGES + ("changelog",):
             line = self.last_line(page + ":stamped")
             self.assertIsNotNone(line, page)
-            expected = "Version v9.8.7 - build abc1234 (2026-01-02 09:30 PT)" + (" - Map maker " + self.maker if page == "mapmaker" else "")
+            expected = "Version v9.8.7 - build abc1234 (Jan 2, 5:30 PM)" + (" - Map maker " + self.maker if page == "mapmaker" else "")
             self.assertEqual(line["text"], expected, page)
             self.assertEqual(line["links"], [], page + ": the line is text, not a link")
             self.assertFalse(self.found[page + ":stamped"]["hidden"], page)
             self.assertEqual([i["cls"] for i in self.found[page + ":stamped"]["items"]].count("sbver"), 1, page)
+
+    def test_the_build_time_is_the_visitors_own_clock_in_every_zone_and_never_24_hours(self):
+        for page in BAR_PAGES + ("changelog",):
+            for zone, said in ZONES.items():
+                line = self.last_line(page + ":stamped:" + zone)
+                self.assertIsNotNone(line, page + " " + zone)
+                self.assertEqual(line["text"], "Version v9.8.7 - build abc1234 (" + said + ")" + (" - Map maker " + self.maker if page == "mapmaker" else ""), page + " " + zone)
+                self.assertNotIn(" PT", line["text"], page + " " + zone)
 
     def test_a_page_that_nobody_stamped_shows_no_line_and_never_a_placeholder(self):
         for page in BAR_PAGES + ("changelog",):

@@ -260,6 +260,7 @@ PAGE = """<!DOCTYPE html>
 </script>
 </div>
 </div>
+<script src="/local_time.js"></script>
 <script src="/site_nav.js"></script>
 <script src="/update_notice.js"></script>
 <script src="/analytics.js"></script>

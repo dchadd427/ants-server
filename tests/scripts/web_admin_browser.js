@@ -13,7 +13,7 @@
 //   Made-up names only (basil and tess are admins, sage a moderator, pebble a player, clover.4782 the spammer). ADMIN_SHOT_THUMBS=DIR names a folder with mapthumb_a.png to mapthumb_d.png for the pictures of the
 //   maps (else small drawings are made).
 //
-//   node tests/scripts/web_admin_browser.js [--shots DIR] [--only PREFIX] [--bots]      (CHROME=/path/to/chromium names a browser, PLAYWRIGHT_MODULE=/path/to/playwright-core a module; as root it runs with --no-sandbox)
+//   node tests/scripts/web_admin_browser.js [--shots DIR] [--only PREFIX] [--bots]      (CHROME=/path/to/chromium names a browser, PLAYWRIGHT_MODULE=/path/to/playwright-core a module, ADMIN_TZ=Asia/Tokyo names the visitor's time zone (else the machine's: the times are the viewer's own, in 12 hours); as root it runs with --no-sandbox)
 //
 // Needs `playwright` (npm) and a Chromium that it can start; without them it says so and exits 0 (nothing was checked). Exit status: 0 every check passed (or none could be run), 1 a check failed.
 'use strict';
@@ -322,9 +322,9 @@ const BOT_SCENES = [
         await pg.click('.b-sched .sfoot .btn'); await pg.waitForSelector('.sform');
         await pg.fill('#sc-name', 'Weekend swarm');
         await chipOf(pg, 'sc-when', 'At times of the day');
-        await pg.fill('#sc-time', '10:00'); await pg.locator('.addtime .btn').click();
-        await pg.fill('#sc-time', '14:30'); await pg.locator('.addtime .btn').click();
-        await pg.locator('.tm2 button[aria-label="Remove 18:00"]').click();
+        await pg.fill('#sc-time', '10:00 AM'); await pg.locator('.addtime .btn').click();
+        await pg.fill('#sc-time', '2:30 PM'); await pg.locator('.addtime .btn').click();
+        await pg.locator('.tm2 button[aria-label="Remove 6:00 PM"]').click();
         const plus = pg.locator('.sform .step button').nth(1);
         await plus.click(); await plus.click(); await plus.click();
         await openMap(pg, 'sc'); await pg.locator('.mrow', { hasText: 'Random from the players’ maps' }).first().click(); await pg.waitForTimeout(120);
@@ -506,7 +506,7 @@ async function checks_of(pg, label, size) {
             hubRefuses = false;
             if (spec.setup) spec.setup();
             if (spec.trouble) { W.status.health = { roles: 'refused', roles_known: 0, kind: 'token', status: 401, retry: 600 }; W.status.last_picture = { kind: 'down', age: 120 }; }
-            const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: size.dsf, isMobile: size.mobile, hasTouch: size.mobile, colorScheme: 'dark' });
+            const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: size.dsf, isMobile: size.mobile, hasTouch: size.mobile, colorScheme: 'dark', timezoneId: process.env.ADMIN_TZ || undefined });
             await ctx.addInitScript((now) => { Date.now = () => now; }, NOW_MS);
             const pg = await ctx.newPage();
             const errors = [];
@@ -528,7 +528,7 @@ async function checks_of(pg, label, size) {
     {   // a real double click on the form's Ban: the second click lands on the question's own Ban, and the question must not take it for an answer
         W = world();
         who = WHO.admin;
-        const ctx = await browser.newContext({ viewport: { width: 390, height: 600 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+        const ctx = await browser.newContext({ viewport: { width: 390, height: 600 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, colorScheme: 'dark', timezoneId: process.env.ADMIN_TZ || undefined });
         const pg = await ctx.newPage();
         const errors = [];
         pg.on('pageerror', (e) => errors.push(String(e)));
@@ -567,7 +567,7 @@ async function checks_of(pg, label, size) {
         W.modlog[0].actor_name = evil;
         W.audit[0].target = evil;
         who = WHO.admin;
-        const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+        const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, timezoneId: process.env.ADMIN_TZ || undefined });
         const pg = await ctx.newPage();
         const errors = [];
         pg.on('pageerror', (e) => errors.push(String(e)));

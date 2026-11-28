@@ -52,6 +52,7 @@
 <script src="update_notice.js"></script>
 <script src="analytics.js"></script>
 <script src="replay_likes.js"></script>
+<script src="local_time.js"></script>
 <script src="site_nav.js"></script>
 <script src="replay_page.js"></script>
 <script src="front/map_picker.js"></script>
@@ -104,7 +105,7 @@
         var tags = el('span', 'tags'); tags.appendChild(el('span', 'pill fmt', H.formatText(rec.format))); tags.appendChild(el('span', 'pill ' + (rec.mode === '187' ? 'mode' : 'fmt'), H.modeText(rec.mode)));
         if (rec.draw === true) tags.appendChild(el('span', 'pill draw', 'Draw')); else if (rec.result === 'cut') tags.appendChild(el('span', 'pill cut', 'Cut short'));
         h1.appendChild(tags); top.appendChild(h1);
-        top.appendChild(el('p', 'meta', R.whenText(rec.ended, new Date()) + ' · ' + R.lengthText(rec.seconds) + ' long'));
+        top.appendChild(el('p', 'meta', AntsTime.whenText(rec.ended, new Date()) + ' · ' + R.lengthText(rec.seconds) + ' long'));
         s.appendChild(top);
         var rest = el('div', 'rest'), v = el('div', 'verdict'), w = el('span', 'who'), win = H.winnerSide(rec, ctx.sides);
         if (win) { w.appendChild(H.paintSide(document, el('em', ''), win)); w.appendChild(document.createTextNode(' won')); }
@@ -208,7 +209,7 @@
         var s = panel('about', 'about-h', 'About this match'), f = el('dl', 'facts'), mapLine = H.mapFact(rec.map, pics.maps());
         [['Map', R.mapTitle(rec.map) + (mapLine ? '  ' + mapLine : '')], ['Mode', H.modeText(rec.mode)], ['Players', H.playersText(rec)],
          ['Format', H.formatText(rec.format) + (H.rankedOf(ctx.sides).length !== H.seatsOf(rec).length ? ', ' + H.rankedOf(ctx.sides).length + ' sides at the end' : '')],
-         ['Length', R.lengthText(rec.seconds) + ' (' + H.numberText(rec.turns) + ' turns)'], ['Ended', R.whenText(rec.ended, new Date())], ['How it ended', H.howEnded(rec)], ['Recorded by', typeof rec.game === 'string' ? rec.game : '']
+         ['Length', R.lengthText(rec.seconds) + ' (' + H.numberText(rec.turns) + ' turns)'], ['Ended', AntsTime.whenText(rec.ended, new Date())], ['How it ended', H.howEnded(rec)], ['Recorded by', typeof rec.game === 'string' ? rec.game : '']
         ].forEach(function (x) { var d = el('div'); d.appendChild(el('dt', '', x[0])); var dd = el('dd', '', x[1]); if (x[0] === 'Map') dd.id = 'fact-map'; d.appendChild(dd); f.appendChild(d); });
         s.appendChild(f); s.appendChild(el('p', 'idline', 'Match ' + rec.id));
         return s;

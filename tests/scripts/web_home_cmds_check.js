@@ -61,7 +61,9 @@ function makeClock() {
     c.now = () => c.t;
     return c;
 }
-const QUIET = { DateTimeFormat: function () { return { format: () => '10:54' }; } };
+const TIME = require('./quiet_time.js');
+const STILL = Object.assign({}, TIME.real, { clockText: () => '10:54', fullText: () => '10:54' });       // (the clock of every line of the dock reads 10:54; the check of the time of a batch uses the real one)
+globalThis.AntsTime = STILL;
 const ME = { name: 'maple.leaf', k: 'aaaaaaaaaaaa' };
 const asRole = (role) => Object.assign({}, ME, { role, mod: role !== 'none' });
 const W = (o) => Object.assign({ t: 'welcome', v: 1, you: null, login: true, online: 7, history: [] }, o);
@@ -82,7 +84,7 @@ function rig(o) {
     const fetches = [];
     const sync = (v) => ({ then(ok) { return ok(v); } });
     const win = {
-        innerWidth: o.width || 1280, innerHeight: 800, location: { protocol: 'https:', host: 'play.test' }, listeners: {}, Intl: QUIET, addEventListener(t, fn) { (win.listeners[t] = win.listeners[t] || []).push(fn); },
+        innerWidth: o.width || 1280, innerHeight: 800, location: { protocol: 'https:', host: 'play.test' }, listeners: {}, addEventListener(t, fn) { (win.listeners[t] = win.listeners[t] || []).push(fn); },
         fetch: o.fetch ? (url, init) => {
             fetches.push({ url, init });
             let answer;
@@ -102,7 +104,7 @@ function rig(o) {
     const host = new El(env, 'div', 'home');
     const errors = [];
     const load = o.noLoad ? undefined : (base, done) => { loads.push(base); if (o.loadFails) return; win.AntsHomeCmds = Cmds; clock.setTimeout(done, 0); };
-    const dock = chatRoot.AntsHomeChat.mount({ doc, win, host, screen: undefined, now: clock.now, random: () => 0, Intl: QUIET, WebSocket: HubSocket, error: (e) => errors.push(e), load });
+    const dock = chatRoot.AntsHomeChat.mount({ doc, win, host, screen: undefined, now: clock.now, random: () => 0, WebSocket: HubSocket, error: (e) => errors.push(e), load });
     dock.shown(true);
     const r = { env, clock, doc, win, host, sockets, dock, errors, loads, fetches, root: dock.root, HubSocket };
     r.s = () => sockets[sockets.length - 1];
@@ -168,14 +170,19 @@ const ALLOWED_TAGS = ['div', 'p', 'span', 'bdi', 'b', 'i', 'mark', 'kbd', 'butto
             ['The server runs as many as it has room for at once; the rest wait, and a new one starts as each one ends, until all 1,000 have played or you type /bots stop.', 'The server keeps 30 of them an hour as replays; the rest are played but not kept (watch them live while they run).'], ['All 3 matches start now, one a second.']]);
     same('planOf: a count or a spacing that is not allowed is one red line and nothing else', [flat(P.planOf(S({ count: -1 }), 80)), flat(P.planOf(S({ count: 10001 }), 80)), flat(P.planOf(S({ count: 5, every: -1 }), 80)), flat(P.planOf(S({ count: 5, map: { file: '<' } }), 80))],
         [['!Matches: use a number from 1 to 10,000.'], ['!Matches: use a number from 1 to 10,000.'], ['!One every: 0 to 120 minutes, in whole or half minutes.'], ['!That map\u2019s name cannot be typed into the chat (it is too long, or holds a < or >). Choose another map.']]);
-    const at = Date.UTC(2026, 10, 20, 18, 42), clk = (d) => d.toISOString().slice(11, 16);
-    const R = (m, typed) => P.replyOf(Object.assign({ t: 'reply' }, m), typed || '', at, clk);
+    const at = Date.UTC(2026, 10, 20, 18, 42);
+    globalThis.AntsTime = TIME.real; process.env.TZ = 'Europe/Berlin';       // (the times of a batch are the visitor's own: 18:42 UTC is 7:42 PM in Berlin)
+    const R = (m, typed) => P.replyOf(Object.assign({ t: 'reply' }, m), typed || '', at);
     const text = (r) => r.lines.join(' | ');
     same('replyOf started: all of them go; a batch that waits (the first ones go, the rest start as each ends); spaced (the time of the last one); nothing could start yet (why); one match',
         [text(R({ c: 'bots', r: 'started', asked: 5, started: 5, queued: 0, at_once: 80 })), text(R({ c: 'bots', r: 'started', asked: 1000, started: 80, queued: 920, at_once: 80 })), text(R({ c: 'bots', r: 'started', asked: 5, started: 1, queued: 4, every_s: 180, at_once: 80 })),
             text(R({ c: 'bots', r: 'started', asked: 3, started: 0, queued: 3, held: 'cap', at_once: 80 })), text(R({ c: 'bots', r: 'started', asked: 1, started: 1, queued: 0 })), text(R({ c: 'bots', r: 'started', asked: 2, started: 1, queued: 1, every_s: 30 }))],
-        ['Started 5 matches.', 'Started 1,000 matches. | The first 80 are going; 920 wait and start as each one ends. | Type /bots status to see how far it is, /bots stop to end it.', 'Started 5 matches. | One is going now; the next four start every 3 minutes (the last one at 18:54).',
-            'Queued 3 matches. None has started yet: the limit of 80 bot matches at once is reached. They start as soon as there is room.', 'Started 1 match.', 'Started 2 matches. | One is going now; the other one starts in 30 s (at 18:42).']);
+        ['Started 5 matches.', 'Started 1,000 matches. | The first 80 are going; 920 wait and start as each one ends. | Type /bots status to see how far it is, /bots stop to end it.', 'Started 5 matches. | One is going now; the next four start every 3 minutes (the last one at 7:54 PM).',
+            'Queued 3 matches. None has started yet: the limit of 80 bot matches at once is reached. They start as soon as there is room.', 'Started 1 match.', 'Started 2 matches. | One is going now; the other one starts in 30 s (at 7:42 PM).']);
+    process.env.TZ = 'America/New_York';
+    same('the time of a batch is the visitor\'s own, whatever the zone: the same moment in New York (18:42 UTC is 1:42 PM there), and never 24 hours', [text(R({ c: 'bots', r: 'started', asked: 2, started: 1, queued: 1, every_s: 30 })), text(R({ c: 'bots', r: 'started', asked: 5, started: 1, queued: 4, every_s: 180 }))],
+        ['Started 2 matches. | One is going now; the other one starts in 30 s (at 1:42 PM).', 'Started 5 matches. | One is going now; the next four start every 3 minutes (the last one at 1:54 PM).']);
+    process.env.TZ = 'UTC'; globalThis.AntsTime = STILL;
     same('replyOf held: the four words of a limit', ['cap', 'places', 'people', 'busy', 'other'].map((w) => text(R({ c: 'bots', r: 'started', asked: 1, started: 0, queued: 1, held: w, at_once: 40 }))), [
         'Queued 1 match. None has started yet: the limit of 40 bot matches at once is reached. They start as soon as there is room.', 'Queued 1 match. None has started yet: the server has no places left for more bot matches. They start as soon as there is room.',
         'Queued 1 match. None has started yet: people\u2019s matches are using the server. They start as soon as there is room.', 'Queued 1 match. None has started yet: the server is busy. They start as soon as there is room.', 'Queued 1 match. None has started yet: there is no room yet. They start as soon as there is room.']);
@@ -199,7 +206,7 @@ const ALLOWED_TAGS = ['div', 'p', 'span', 'bdi', 'b', 'i', 'mark', 'kbd', 'butto
             'Done. You do not follow that person any more.', 'Type /unfollow NAME, for example /unfollow pebble.', 'You do not follow anybody by that name.', 'Type /msg NAME, for example /msg pebble.', 'You cannot message yourself.', 'Nobody in the chat has that name.', 'That did not work, try again', null]);
     const same1 = ['bots', 'ignore', 'unignore', 'mute', 'unknown', 'zzz', 'help'].map((c) => text(R({ c, r: 'unknown' })));
     same('replyOf unknown: the same words and the same refusal for every command word and so for every role (a word that is no command and a command of a higher role are answered alike); /help is the helper\'s, a word that is not a reply is nothing',
-        [same1.every((t) => t === 'That command is not one that you have. Type /help to see the commands.') && ['bots', 'mute', 'zzz', 'unknown'].every((c) => R({ c, r: 'unknown' }).cls === 'gc-err'), R({ c: 'help', r: 'list' }), P.replyOf({ t: 'reply', c: 'bots', r: 'status', queues: 5 }, '', at, clk).batches.length, R({ c: 'mute', r: 'what' }).cls], [true, { help: true }, 0, 'gc-err']);
+        [same1.every((t) => t === 'That command is not one that you have. Type /help to see the commands.') && ['bots', 'mute', 'zzz', 'unknown'].every((c) => R({ c, r: 'unknown' }).cls === 'gc-err'), R({ c: 'help', r: 'list' }), P.replyOf({ t: 'reply', c: 'bots', r: 'status', queues: 5 }, '', at).batches.length, R({ c: 'mute', r: 'what' }).cls], [true, { help: true }, 0, 'gc-err']);
     const st = R({ c: 'bots', r: 'status', at_once: 80, running: 80, waiting: 648, busy: 31, queues: [{ total: 1000, remaining: 648, finished: 312, running: 80, kept: 30, every_s: 0, next_in: -1, held: false, by: 'basil' }] });
     same('replyOf status, one batch: the bar (done, running), the numbers, the lines under it', [st.cls, st.lines, st.batches.map((b) => [b.title, b.by, b.done, b.running, b.nums, b.fine])],
         ['gc-status', [], [['Batch of 1,000 matches', 'basil', 31.2, 8, [['312', 'done'], ['80', 'running'], ['648', 'waiting']], ['The next one starts as soon as one ends.', '30 of the 312 that ended are kept as replays (30 an hour); the rest could only be watched live.']]]]);

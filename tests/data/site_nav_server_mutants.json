@@ -208,8 +208,8 @@
   {
    "id": "version_line_prints_brackets_without_a_date",
    "file": "web/site_nav.js",
-   "old": "(t ? ' (' + t + ')' : '')",
-   "new": "(' (' + t + ')')",
+   "old": "(t ? ' (' + (typeof AntsTime === 'object' ? AntsTime.stampText(t) : t) + ')' : '')",
+   "new": "(' (' + (typeof AntsTime === 'object' ? AntsTime.stampText(t) : t) + ')')",
    "test": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -f tests.scripts.test_web_site_nav"
   },
   {

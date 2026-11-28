@@ -18,7 +18,6 @@
     var STALL_MS = 3500;        // a playhead that has stood at the end of what it holds this long, with the match not over, is waiting for the next part (the parts come every 2 s, a second of the server's cache and a second of the web server's make it 3: a shorter wait is the usual gap between two parts)
     var AT_LIVE = 1.5;          // a playhead that is less than this many seconds behind the game's Limit is at the present
     var FOLLOW_SLACK = 8;       // ... and one that follows the match stays there while it is less than this behind: the snapshots come in steps (a poll brings up to 7 s of the match at once)
-    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     // The replay that an address asks for (?replay=<file>): the name when it has the shape above, else null
     function fileOf(search) {
@@ -55,24 +54,9 @@
         return isFinite(ms) ? Math.floor(ms / 1000) : null;
     }
 
-    // "7:32 AM" in the visitor's own time zone
-    function clockText(date) {
-        var h = date.getHours(), m = date.getMinutes();
-        return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM');
-    }
-    function dayStart(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
-    // The day and the time of a match in the visitor's own time zone: "Today, 7:32 AM", "Yesterday, 10:15 PM", "Oct 6, 11:30 AM" (with the year for another year). `ended` is seconds since 1970, `now` a Date
-    function whenText(ended, now) {
-        if (typeof ended !== 'number' || !isFinite(ended)) return '';
-        var at = new Date(ended * 1000);
-        var days = Math.round((dayStart(now).getTime() - dayStart(at).getTime()) / 86400000);
-        var day = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : MONTHS[at.getMonth()] + ' ' + at.getDate() + (at.getFullYear() !== now.getFullYear() ? ', ' + at.getFullYear() : '');
-        return day + ', ' + clockText(at);
-    }
-
     // "Started 8:21 AM" for a match that began today, "Started Yesterday, 11:50 PM" for one that began on another day (a long match across midnight); '' for no time
     function startedText(started, now) {
-        var text = whenText(started, now);
+        var text = AntsTime.whenText(started, now);                       // (web/local_time.js: the visitor's time zone, a 12-hour clock)
         return text ? 'Started ' + text.replace(/^Today, /, '') : '';
     }
 
@@ -889,7 +873,7 @@
         };
     }
 
-    var api = { barPointer: barPointer, barZone: barZone, ZONE_PX: ZONE_PX, ZONE_GAP: ZONE_GAP, gapOf: gapOf, ZONE_REST_PX: ZONE_REST_PX, ZONE_DWELL_MS: ZONE_DWELL_MS, ZONE_LEAVE_MS: ZONE_LEAVE_MS, REWIND_SECONDS: REWIND_SECONDS, rewindTurn: rewindTurn, rewindControl: rewindControl, CAM_KEY: CAM_KEY, CAM_NOTE_MS: CAM_NOTE_MS, camLoad: camLoad, camSave: camSave, camLabel: camLabel, camTitle: camTitle, camNoteDue: camNoteDue, cameraControl: cameraControl, FILE_RE: FILE_RE, LIVE_RE: LIVE_RE, SEATS: SEATS, LIVE_LAG: LIVE_LAG, AT_LIVE: AT_LIVE, FOLLOW_SLACK: FOLLOW_SLACK, fileOf: fileOf, liveIdOf: liveIdOf, liveMap: liveMap, startedOf: startedOf, endedOf: endedOf, whenText: whenText, startedText: startedText,
+    var api = { barPointer: barPointer, barZone: barZone, ZONE_PX: ZONE_PX, ZONE_GAP: ZONE_GAP, gapOf: gapOf, ZONE_REST_PX: ZONE_REST_PX, ZONE_DWELL_MS: ZONE_DWELL_MS, ZONE_LEAVE_MS: ZONE_LEAVE_MS, REWIND_SECONDS: REWIND_SECONDS, rewindTurn: rewindTurn, rewindControl: rewindControl, CAM_KEY: CAM_KEY, CAM_NOTE_MS: CAM_NOTE_MS, camLoad: camLoad, camSave: camSave, camLabel: camLabel, camTitle: camTitle, camNoteDue: camNoteDue, cameraControl: cameraControl, FILE_RE: FILE_RE, LIVE_RE: LIVE_RE, SEATS: SEATS, LIVE_LAG: LIVE_LAG, AT_LIVE: AT_LIVE, FOLLOW_SLACK: FOLLOW_SLACK, fileOf: fileOf, liveIdOf: liveIdOf, liveMap: liveMap, startedOf: startedOf, endedOf: endedOf, startedText: startedText,
                 lengthText: lengthText, mapKey: mapKey, mapTitle: mapTitle, speedText: speedText, liveVerdict: liveVerdict, tooShort: tooShort, liveInfoOf: liveInfoOf, liveNowTurn: liveNowTurn, liveBehind: liveBehind, delayText: delayText, FEED_MS: FEED_MS, standbyOf: standbyOf, STALL_MS: STALL_MS, HOLD_TURNS: HOLD_TURNS, atLive: atLive, liveTag: liveTag, parsePlayer: parsePlayer, playersOf: playersOf, chipsOf: chipsOf,
                 LOCAL_MAX_BYTES: LOCAL_MAX_BYTES, HEAD_MAX_BYTES: HEAD_MAX_BYTES, crc32: crc32, localSizeOk: localSizeOk, localCheck: localCheck, ownName: ownName, sizeText: sizeText,
                 OWN_KEEP_MS: OWN_KEEP_MS, ownIdOf: ownIdOf, ownRandomId: ownRandomId, ownStore: ownStore, ownStoreOf: ownStoreOf, ownOpen: ownOpen,

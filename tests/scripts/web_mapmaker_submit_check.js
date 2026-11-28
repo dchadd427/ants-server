@@ -19,6 +19,7 @@
 const path = require('path');
 const argv = process.argv.slice(2);
 const FRONT = argv.includes('--front') ? path.resolve(argv[argv.indexOf('--front') + 1]) : path.resolve(__dirname, '..', '..', 'web', 'front');
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times)
 const Store = require(path.join(FRONT, 'mapmaker_store.js')), Submit = require(path.join(FRONT, 'mapmaker_submit.js')), Dialog = require(path.join(FRONT, 'mapmaker_dialog.js'));
 const { makeDocument } = require('./web_mapmaker_fake_dom.js');
 
@@ -163,8 +164,6 @@ function caseA() {
     check(/too big/.test(Submit.why({ status: 413, json: null })), 'a body that is too large (413 of nginx)');
     equal(Submit.why({ status: 400, json: { error: 'bad_name', message: 'The name is too short (at least 3 characters).' } }), 'The name is too short (at least 3 characters).', 'the server’s own sentence for the rest');
     check(/error 500/.test(Submit.why({ status: 500, json: null })), 'an unknown answer says its status');
-    const noon = new Date(2026, 9, 18, 14, 5).getTime();
-    equal([Submit.when(noon / 1000, noon), Submit.when(new Date(2026, 9, 15, 9, 0).getTime() / 1000, noon), Submit.when(new Date(2025, 11, 2, 9, 0).getTime() / 1000, noon)], ['today, 14:05', '15 Oct', '2 Dec 2025'], 'the date of a submission');
 }
 
 // ---- B ----
@@ -368,6 +367,7 @@ async function caseF() {
     [ID1, ID3, ID4].forEach((id, i) => idb.m.set(id, { id, name: 'Old name', kind: 'classic', state: 'waiting', bytes: new Uint8Array([8, 1, i]), sent_at: 1, tok: TOKEN }));
     const p = await loadedPage({ server, idb });
     const u = listUi(p);
+    const zone = process.env.TZ; process.env.TZ = 'America/New_York';       // (the time of a send is the visitor's own: 22:20 UTC is 5:20 PM here, 11:20 PM in Berlin)
     p.sub.show(u.ui);
     check(/An approved map is never replaced\. To change a map, open your own copy, change it and send the changed copy as a new submission\./.test(u.note.textContent), 'the line of the picture');
     check(u.link.hidden === false, 'the status link button shows');
@@ -376,6 +376,8 @@ async function caseF() {
     equal(rows.length, 4, 'four rows: a withdrawn one is not shown');
     const t = rows.map((r) => r.textContent);
     check(/Sunny Picnic/.test(t[0]) && /Waiting for approval/.test(t[0]), 'newest first, waiting with its words');
+    check(/Sent Nov 14, 2023, 5:20 PM/.test(t[0]) && /Sent Nov 14, 2023, 5:18 PM/.test(t[1]), 'the time of a send is the visitor\'s own zone on a 12-hour clock: ' + t[0]);
+    if (zone === undefined) delete process.env.TZ; else process.env.TZ = zone;
     check(/Big Lake/.test(t[1]) && /Approved as “Big Lake 2” \(renamed by the owner\)/.test(t[1]) && /Extended map\|New version only/.test(t[1]) && /300 x 400/.test(t[1]), 'renamed by the owner, Extended, with its size');
     check(/The owner wrote: The name was taken, so I added a number\. <b>Thank you<\/b>!/.test(t[1]) && rows[1].querySelectorAll('b').length === 0, 'the owner’s words are text, never markup');
     check(/Hidden Ponds/.test(t[2]) && /Approved/.test(t[2]) && !/renamed/.test(t[2]) && !/The owner wrote/.test(t[2]), 'approved');

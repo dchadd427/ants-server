@@ -84,7 +84,7 @@
     }
 
     function make(h) {
-        var doc = h.doc, env = h.env, el = h.el, add = h.add, button = h.button, panel = h.panel, call = h.call, message = h.message, typed = h.typed, when = h.when, untilWords = h.untilWords;
+        var doc = h.doc, env = h.env, el = h.el, add = h.add, button = h.button, panel = h.panel, call = h.call, message = h.message, typed = h.typed;
         var minutesWords = h.minutesWords, refused = h.refused, toast = h.toast, questionBox = h.questionBox, inertOthers = h.inertOthers, clearInert = h.clearInert, tick = h.tick, ASK_DELAY = h.ASK_DELAY;
         var PICK = AntsAdminMapPick;                            // the list of the server's maps (web/admin_map_pick.js, loaded before this file: the page has no section Bot matches without it)
         var picker = PICK.make({ doc: doc, el: el, add: add, button: button, typed: typed, questionBox: questionBox, inertOthers: inertOthers, clearInert: clearInert });
@@ -471,7 +471,7 @@
                         var r = el('div', 'brow'), l = el('div'), name = el('div', 'bn');
                         add(name, typed('span', null, m.name), el('span', 'rtag ' + (m.rules === '187' ? 'k187' : 'hs'), m.rules === '187' ? '187' : 'Highest score'), m.teams !== 'ffa' ? el('span', 'rtag team', 'Teams') : null, m.live ? null : el('span', 'tg warn', 'Starting'));
                         var bs = el('div', 'bs');
-                        add(bs, doc.createTextNode(sidesWords(m.teams) + ' · started ' + when(m.started, env.now()) + ' (' + minutesAgo(m.started, env.now()) + ' min ago) · '), m.schedule ? doc.createTextNode('schedule ') : doc.createTextNode('Start now by '), typed('span', null, m.schedule || m.by));
+                        add(bs, doc.createTextNode(sidesWords(m.teams) + ' · started ' + AntsTime.whenText(m.started, env.now(), true) + ' (' + minutesAgo(m.started, env.now()) + ' min ago) · '), m.schedule ? doc.createTextNode('schedule ') : doc.createTextNode('Start now by '), typed('span', null, m.schedule || m.by));
                         add(l, name, seatsOf(m), bs);
                         var bb = el('div', 'bb'), watch;
                         if (m.live) { watch = el('a', 'btn', 'Watch'); watch.setAttribute('href', '/play?live=' + encodeURIComponent(m.live)); watch.setAttribute('target', '_blank'); watch.setAttribute('rel', 'noopener'); }
@@ -551,18 +551,18 @@
             }
 
             // ---- Schedules ----
-            var sched = panel('Schedules', 'A schedule starts bot matches by itself. Times are Pacific time.');
+            var sched = panel('Schedules', 'A schedule starts bot matches by itself. Its times of the day are on the Pacific clock; the starts below are in your own time zone.');
             sched.className += ' b-sched';
             add(sched, schedBox);
             function whenWords(s) {
                 if (s.when.kind === 'every') return 'Every ' + minutesWords(s.when.minutes);
-                var t = s.when.times.slice().sort();
+                var t = s.when.times.slice().sort().map(AntsTime.dayClockText);
                 return 'Every day at ' + (t.length > 1 ? t.slice(0, -1).join(', ') + ' and ' + t[t.length - 1] : t[0]) + ' (Pacific time)';
             }
             function nextWords(s) {
-                if (!st.scheduling) return 'Not running: the server’s settings switch every schedule off' + (s.last ? ' · last start ' + when(s.last, env.now()) : '');
-                if (!s.on) return 'Off: it starts nothing' + (s.last ? ' · last start ' + when(s.last, env.now()) : '');
-                return 'Next start ' + untilWords(s.next, env.now()) + (s.last ? ' · last start ' + when(s.last, env.now()) : ' · no start yet');
+                if (!st.scheduling) return 'Not running: the server’s settings switch every schedule off' + (s.last ? ' · last start ' + AntsTime.whenText(s.last, env.now(), true) : '');
+                if (!s.on) return 'Off: it starts nothing' + (s.last ? ' · last start ' + AntsTime.whenText(s.last, env.now(), true) : '');
+                return 'Next start ' + AntsTime.whenText(s.next, env.now(), true) + (s.last ? ' · last start ' + AntsTime.whenText(s.last, env.now(), true) : ' · no start yet');
             }
             function sendSchedule(s, patch) {
                 if (st.switching) return;
@@ -634,24 +634,23 @@
                         add(f, l, add(el('div', 'minrow'), inw, pre), el('div', 'fh', '5 to 1440 (a day). Counted from the last start, so a restart of the server does not start one at once.'));
                         add(whenBox, f);
                     } else {
-                        var f2 = el('div', 'f'), l2 = el('div', 'flab', 'Times of the day (Pacific time, 24 hours)'), tl = el('div', 'times');
+                        var f2 = el('div', 'f'), l2 = el('div', 'flab', 'Times of the day (Pacific time)'), tl = el('div', 'times');
                         times.sort();
                         times.forEach(function (t) {
                             var c = el('span', 'tm2'), x = el('button', null, '×');
-                            x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + t);
+                            x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + AntsTime.dayClockText(t));
                             x.addEventListener('click', function () { times = times.filter(function (y) { return y !== t; }); drawWhen(); });
-                            add(c, doc.createTextNode(t), x);
+                            add(c, doc.createTextNode(AntsTime.dayClockText(t)), x);
                             add(tl, c);
                         });
                         if (!times.length) add(tl, el('p', 'none', 'No time yet.'));
                         var addRow = el('div', 'addtime'), inw2 = el('div', 'inw'), ti = el('input', 'tinput');
-                        ti.id = 'sc-time'; ti.type = 'text'; ti.setAttribute('placeholder', '18:30'); ti.setAttribute('inputmode', 'numeric'); ti.setAttribute('autocomplete', 'off'); ti.setAttribute('aria-label', 'A time to add, like 18:30');
+                        ti.id = 'sc-time'; ti.type = 'text'; ti.setAttribute('placeholder', '6:30 PM'); ti.setAttribute('autocomplete', 'off'); ti.setAttribute('aria-label', 'A time to add, like 6:30 PM');
                         add(inw2, ti);
                         add(addRow, inw2, button('Add time', '', function () {
-                            var m = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/.exec(ti.value.replace(/^\s+|\s+$/g, ''));
+                            var t = AntsTime.dayClockParse(ti.value);
                             timeMsg.textContent = '';
-                            if (!m) { add(timeMsg, message('A time looks like 18:30 (24 hours).', 'bad')); return; }
-                            var t = (m[1].length === 1 ? '0' : '') + m[1] + ':' + m[2];
+                            if (!t) { add(timeMsg, message('A time looks like 6:30 PM.', 'bad')); return; }
                             if (times.indexOf(t) < 0) {
                                 if (times.length >= 12) { add(timeMsg, message('At most 12 times.', 'bad')); return; }
                                 times.push(t);
@@ -957,5 +956,11 @@
     var LOG_ACTIONS = { bot_started: 'Started bot matches: ', bot_stopped: 'Stopped the bot match on ', bot_waiting_stopped: 'Cancelled a waiting start on ', bot_stopped_all: 'Stopped all bot matches: ', bot_schedule_added: 'Added the schedule ', bot_schedule_changed: 'Changed the schedule ', bot_schedule_on: 'Turned on the schedule ',
         bot_schedule_off: 'Turned off the schedule ', bot_schedule_deleted: 'Deleted the schedule ', bot_rotation_changed: 'Changed the rotation list ', bot_rotation_reset: 'Put the rotation list back to its defaults: ' };
 
-    return { make: make, logActions: LOG_ACTIONS, sidesWords: sidesWords, summary: summary, spacingWords: spacingWords, nextStart: nextStart, everySeconds: everySeconds };
+    // The times of a schedule in a line of the log were written by the server in 24 hours ("at 18:00, 20:00 (Pacific) · 4 matches"): said in 12 ("at 6:00 PM, 8:00 PM (Pacific time) · 4 matches"); any other detail as it is
+    var SCHEDULE_TIMES = /^at ((?:[01]\d|2[0-3]):[0-5]\d(?:, (?:[01]\d|2[0-3]):[0-5]\d)*) \(Pacific\)/;
+    function logDetail(r) {
+        var m = r.action.indexOf('bot_schedule') === 0 ? SCHEDULE_TIMES.exec(r.detail) : null;
+        return m ? 'at ' + m[1].split(', ').map(AntsTime.dayClockText).join(', ') + ' (Pacific time)' + r.detail.slice(m[0].length) : r.detail;
+    }
+    return { make: make, logActions: LOG_ACTIONS, logDetail: logDetail, sidesWords: sidesWords, summary: summary, spacingWords: spacingWords, nextStart: nextStart, everySeconds: everySeconds };
 });

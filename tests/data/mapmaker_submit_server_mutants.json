@@ -37,10 +37,10 @@
    "test": "node tests/scripts/web_mapmaker_submit_check.js"
   },
   {
-   "id": "date_today_is_never",
+   "id": "the_time_of_a_send_is_the_clock_of_utc",
    "file": "web/front/mapmaker_submit.js",
-   "old": "d.toDateString() === t.toDateString()",
-   "new": "d.toDateString() === ''",
+   "old": "'Sent ' + AntsTime.whenText(rec.sent_at || 0, env.now(), true)",
+   "new": "'Sent ' + new Date((rec.sent_at || 0) * 1000).toISOString().slice(0, 16)",
    "test": "node tests/scripts/web_mapmaker_submit_check.js"
   },
   {

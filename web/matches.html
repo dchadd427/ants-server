@@ -70,6 +70,7 @@
 </div>
 
 <script src="front/name_letters.js"></script>
+<script src="local_time.js"></script>
 <script src="site_nav.js"></script>
 <script src="replay_page.js"></script>
 <script src="front/map_picker.js"></script>
@@ -152,7 +153,7 @@
         var key = H.sortKeyOf(rec, state.sort);
         if (key) tags.appendChild(el('span', 'pill fmt sk', key.label + ' ' + H.numberText(key.value)));
         info.appendChild(tags);
-        var when = el('span', 'when', R.whenText(rec.ended, new Date())), l = el('span', key ? 'l force' : 'l', ' · ' + R.lengthText(rec.seconds)); when.appendChild(l); info.appendChild(when);
+        var when = el('span', 'when', AntsTime.whenText(rec.ended, new Date())), l = el('span', key ? 'l force' : 'l', ' · ' + R.lengthText(rec.seconds)); when.appendChild(l); info.appendChild(when);
         info.appendChild(recNode(rec, 'rec-s'));
         li.appendChild(info);
         var sides = el('ul', 'sides'); sides.setAttribute('aria-label', 'Who played and what they scored');

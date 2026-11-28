@@ -65,8 +65,11 @@ class ThePagesOwnCode(unittest.TestCase):
             "Decline needs no reason": ("if (!area.value.replace(/\\s+/g, '')) { why.textContent = 'Please write a short reason.'; why.hidden = false; area.className = 'err'; return; }", ""),
             "Use next name asks for the wrong name": ("'/admin/api/next-name?name=' + encodeURIComponent(input.value)", "'/admin/api/next-name?name=' + encodeURIComponent(m.name)"),
             "a taken name does not open the box": ("res.json.error === 'name_taken') {", "res.json.error === 'never') {"),
-            "the times are not Pacific": ("var TIME_ZONE = 'America/Los_Angeles';", "var TIME_ZONE = 'UTC';"),
-            "yesterday is two days": ("if (days === 1) return 'yesterday';", "if (days === 2) return 'yesterday';"),
+            "the meta line is the clock of UTC": ("' · ' + VERBS[st.tab] + ' ' + AntsTime.whenText(stamp, env.now(), true)", "' · ' + VERBS[st.tab] + ' ' + new Date(stamp * 1000).toISOString().slice(11, 16)"),
+            "the meta line leaves the day off": ("' ' + AntsTime.whenText(stamp, env.now(), true)", "' ' + AntsTime.clockText(new Date(stamp * 1000))"),
+            "the meta line is a Pacific time that the visitor did not ask for": ("' ' + AntsTime.whenText(stamp, env.now(), true)", "' ' + AntsTime.whenText(stamp - new Date(stamp * 1000).getTimezoneOffset() * 60 + 480 * 60, env.now(), true)"),
+            "the Checked line is a 24-hour clock": ("upd.textContent = 'Checked ' + AntsTime.whenText(env.now() / 1000, env.now(), true);", "upd.textContent = 'Checked today, ' + new Date(env.now()).toTimeString().slice(0, 5);"),
+            "the build time of the site is the stamp as it was written": ("' · built ' + AntsTime.stampText(site.built, env.now())", "' · built ' + site.built"),
             "Escape does not close the question": ("if (e.key === 'Escape') { closeDialog(); return; }", ""),
             "the focus is not held in the question": ("else if (!e.shiftKey && now === go) { e.preventDefault(); cancel.focus(); }", ""),
             "the focus is lost when the question closes": ("if (back) back.focus();", ""),
@@ -175,8 +178,6 @@ class ThePagesOwnCode(unittest.TestCase):
             'the names of the log are not marked': ("if (name) return add(w, typed('span', null, name));", "if (name) return add(w, el('span', null, name));"),
             'the map name of the log is not marked': ("add(wt, doc.createTextNode(MAP_ACTIONS[r.action] || ''), typed('em', null, r.target));", "add(wt, doc.createTextNode(MAP_ACTIONS[r.action] || ''), el('em', null, r.target));"),
             'the reason of a decline in the log is not marked': ("add(el('span', 'why', 'Reason: '), typed('span', null, r.detail))", "add(el('span', 'why', 'Reason: '), el('span', null, r.detail))"),
-            'a time that is not a number stops the list': ("    function when(seconds, nowMs) {\n        if (!isTime(seconds)) return '';", '    function when(seconds, nowMs) {'),
-            'the end of a mute that is not a time stops the list': ("    function untilWords(seconds, nowMs) {\n        if (!isTime(seconds)) return '';", '    function untilWords(seconds, nowMs) {'),
             'the time that is left of a mute that is not a time stops the list': ("    function leftWords(seconds, nowMs) {\n        if (!isTime(seconds)) return '';", '    function leftWords(seconds, nowMs) {'),
             'the Ban question can be confirmed at once': ("if (tick() - opened < ASK_DELAY) return; closeAsk(); change('ban',", "closeAsk(); change('ban',"),
             'the Approve and Take down questions can be confirmed at once': ('                    if (tick() - st.dialogAt < ASK_DELAY) return;                 // (a press that comes at once is the second click of a double click, not an answer)\n', ''),
@@ -237,7 +238,7 @@ class TheOnlyWayIsTheTypedAddress(unittest.TestCase):
         bar = re.search(r'<header class="sb".*?</header>', page, re.S).group(0)
         self.assertEqual(bar, re.search(r'<header class="sb".*?</header>', read("web", "legal.html"), re.S).group(0))          # (the very markup of the other pages' bar: the build stamps it)
         self.assertEqual(len(re.findall(r"<a\b", page)), len(re.findall(r"<a\b", bar)))                                 # (no link outside the bar)
-        self.assertEqual(re.findall(r'(?:href|src)="([^"]+)"', page.replace(bar, "")), ["/favicon.png?v=9ea2152a", "/front/classic.css", "/site_nav.css", "/update_notice.css", "admin.css", "admin_analytics.css", "/site_nav.js", "/update_notice.js", "admin_map_pick.js", "admin_bots.js", "admin_analytics.js", "admin_page.js"])
+        self.assertEqual(re.findall(r'(?:href|src)="([^"]+)"', page.replace(bar, "")), ["/favicon.png?v=9ea2152a", "/front/classic.css", "/site_nav.css", "/update_notice.css", "admin.css", "admin_analytics.css", "/local_time.js", "/site_nav.js", "/update_notice.js", "admin_map_pick.js", "admin_bots.js", "admin_analytics.js", "admin_page.js"])
         self.assertIn('<meta name="robots" content="noindex, nofollow">', page)
         self.assertNotRegex(page, r"<script>|<style|onclick|onload|javascript:")
         self.assertEqual(len(re.findall(r'<div id="app"></div>', page)), 1)

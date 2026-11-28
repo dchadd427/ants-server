@@ -138,14 +138,14 @@
         if (why === 'busy') return 'the server is busy' + (busy ? ' (' + busy + '%)' : '');
         return 'there is no room yet';
     }
-    function startedOf(m, now, clock) {
+    function startedOf(m, now) {
         var asked = int(m.asked), started = int(m.started), queued = int(m.queued), every = int(m.every_s), lines = [], at = int(m.at_once), late;
         asked = asked || started + queued;
         if (!started && queued) lines.push('Queued ' + matchesOf(asked) + '. None has started yet: ' + heldWords(m.held, at) + '. They start as soon as there is room.');
         else lines.push('Started ' + matchesOf(asked) + '.');
         if (!queued) return lines;
         if (every > 0) {
-            late = clock(new Date(now + (asked - 1) * every * 1000));
+            late = AntsTime.clockText(new Date(now + (asked - 1) * every * 1000));       // (the visitor's time zone, a 12-hour clock: web/local_time.js)
             lines.push((started === 1 ? 'One is going now' : started ? n1(started) + ' are going now' : 'None is going yet') + '; ' + (queued === 1 ? 'the other one starts in ' + spanOf(every) + ' (at ' + late + ').' : 'the next ' + wordOf(queued) + ' start ' + spacingOf(every) + ' (the last one at ' + late + ').'));
         } else if (started) {
             lines.push((started === 1 ? 'The first one is going; ' : 'The first ' + n1(started) + ' are going; ') + n1(queued) + ' wait and start as each one ends.');
@@ -180,9 +180,8 @@
         if (Array.isArray(w)) w = w[i];
         return typeof w === 'string' && w ? bad(w) : bad(TEXT.generic);
     }
-    function replyOf(m, typed, now, clock) {   // a `reply` frame as { cls, lines, batches }, { help: true }, or null
+    function replyOf(m, typed, now) {   // a `reply` frame as { cls, lines, batches }, { help: true }, or null
         var c = typeof m.c === 'string' ? m.c : '', r = typeof m.r === 'string' ? m.r : '', say = function (t, cls) { return { cls: cls || '', lines: [t], batches: [] }; }, bad = function (t) { return say(t, 'gc-err'); }, n, at, list;
-        clock = clock || function (d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); };
         if (r === 'unknown') return bad(TEXT.unknown);
         if (r === 'role') return bad(TEXT.role);
         if (c === 'help' && r === 'list') return { help: true };
@@ -195,7 +194,7 @@
         if (c === 'invite') return inviteReply(m, typed, say, bad);
         if (c === 'follow' || c === 'unfollow' || c === 'msg') return followReply(c, r, m, say, bad);
         if (c !== 'bots') return bad(TEXT.generic);
-        if (r === 'started') return { cls: '', lines: startedOf(m, now, clock), batches: [] };
+        if (r === 'started') return { cls: '', lines: startedOf(m, now), batches: [] };
         if (r === 'stopped') {
             n = int(m.stopped); at = int(m.dropped);
             return say(!n && !at ? 'Nothing was running or waiting.' : 'Stopped: ' + (n ? matchesOf(n) + ' ended' : '') + (n && at ? ' and ' : '') + (at ? (at === 1 ? '1 waiting start' : n1(at) + ' waiting starts') + ' cancelled' : '') + '.');
@@ -227,9 +226,6 @@
             var f = win.fetch;
             if (typeof f !== 'function') { done(0, null); return; }
             try { f.call(win, path, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json().then(function (j) { done(r.status, j); }, function () { done(r.status, null); }); }, function () { done(0, null); }); } catch (e) { done(0, null); }
-        }
-        function clock(d) {
-            try { return new win.Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(d); } catch (e) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
         }
 
         // ---- the helper: the account's commands after a slash, the people after `/invite ` and after an `@` (a word's first character, anywhere in the line) ----
@@ -493,7 +489,7 @@
         // ---- the private answers ----
         function echo(typed) { var d = el('div', 'gc-pl gc-echo'); d.appendChild(el('bdi', '', clean(typed, 200))); return d; }
         function reply(m, typed) {
-            var r = replyOf(m, typed, now(), clock), dir;
+            var r = replyOf(m, typed, now()), dir;
             if (!r) return;
             if (m && m.c === 'invite' && m.r === 'ok' && typeof m.to === 'string') { dir = directory(); if (dir && dir.invited) dir.invited(m.to); }       // (the list of people greys this person for the minute that the hub holds a second invitation back)
             if (r.help) { setField('/'); return; }
@@ -513,7 +509,7 @@
         }
         return {
             rows: function (list) { rows = rowsOf(list); last = null; if (!rows.length) { close(); closeBuilder(); } else sync(); },
-            reply: reply, words: function (m) { var r = replyOf(m, '', now(), clock); return r && r.lines && r.lines[0] ? r.lines[0] : ''; }, key: key, sync: sync, builder: builder, closeBuilder: closeBuilder, state: function () { return { rows: rows.slice(), open: pop !== null, shown: shown.slice(), selected: sel, builder: box !== null, atOnce: atOnce }; }
+            reply: reply, words: function (m) { var r = replyOf(m, '', now()); return r && r.lines && r.lines[0] ? r.lines[0] : ''; }, key: key, sync: sync, builder: builder, closeBuilder: closeBuilder, state: function () { return { rows: rows.slice(), open: pop !== null, shown: shown.slice(), selected: sel, builder: box !== null, atOnce: atOnce }; }
         };
     }
 

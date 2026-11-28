@@ -8,7 +8,7 @@
     'use strict';
 
     var CAP = { classic: 512 * 1024, extended: 4 * 1024 * 1024 };               // the most a map file of each kind may be (the server's own limits)
-    var TOKEN = /^[A-Za-z0-9_-]{43}$/, MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var TOKEN = /^[A-Za-z0-9_-]{43}$/;
     var OFF = 'Sending maps is not switched on right now. Everything else works, and your map stays here. Please try again later.';
     var LINES = {                                                                  // the limits and the server's own trouble, in plain words (the server's sentence is used for the rest)
         address_limit: 'You have already sent 3 maps today. Please try again tomorrow.', day_limit: 'The most maps for one day have been sent. Please try again tomorrow.',
@@ -51,11 +51,6 @@
     function makerProblem(t) {
         return skeletons(t).some(function (k) { return /^(the)?(owner|admin|administrator|system|moderator|mod|staff|assistant|server|ants|root)$/.test(k); }) || readsAsBot(fold(t)) ?
             'That player name cannot be used. Please choose another.' : '';
-    }
-    function when(sec, now) {
-        var d = new Date(sec * 1000), t = new Date(now);
-        if (d.toDateString() === t.toDateString()) return 'today, ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
-        return d.getDate() + ' ' + MONTHS[d.getMonth()] + (d.getFullYear() === t.getFullYear() ? '' : ' ' + d.getFullYear());
     }
     // A status link carries the token in the fragment (never sent to a server): '#sent=<token>,<token>' -> the tokens that are shaped like one
     function tokensOf(hash) {
@@ -174,7 +169,7 @@
                 build();
             }
             function paint() {
-                var v = values(), nm = nameProblem(v.name), lib = env.store.libraryState(), mine = !nm && env.store.inLibrary(v.name), since = twin ? when(twin.sent_at || 0, env.now()) : '';
+                var v = values(), nm = nameProblem(v.name), lib = env.store.libraryState(), mine = !nm && env.store.inLibrary(v.name), since = twin ? AntsTime.whenText(twin.sent_at || 0, env.now(), true) : '';
                 fill(nameBox, nm ? 'bad ' + nm : mine ? 'warn ' + v.name : lib === 'ready' ? 'free' : '', function () {
                     if (nm) nameBox.appendChild(note('bad', '!', nm));
                     else if (mine) nameBox.appendChild(note('warn', 'i', 'The name “' + v.name + '” is already in the game’s map list. You can still send it. The owner may change the name or add a number (for example “' + v.name + ' 2”). You will see the final name in My submissions.'));
@@ -325,7 +320,7 @@
             var rows = rec.height || rec.rows, cols = rec.width || rec.columns, pic = file && env.thumb(file);
             env.tags(tags, rec.kind === 'extended' ? 'extended' : 'classic', file && file.rules);
             mid.appendChild(h('div', 't1', [name + ' ', tags]));
-            mid.appendChild(h('div', 't2', 'Sent ' + when(rec.sent_at || 0, env.now()) + (rows && cols ? ' · ' + rows + ' x ' + cols : '')));
+            mid.appendChild(h('div', 't2', 'Sent ' + AntsTime.whenText(rec.sent_at || 0, env.now(), true) + (rows && cols ? ' · ' + rows + ' x ' + cols : '')));
             mid.appendChild(h('div', 't3', [h('i', 'dot ' + st[0]), h('span', 'st-' + st[0], st[1])]));
             if (rec.linked) mid.appendChild(h('div', 't2', 'Added from a link'));
             if (rec.message) mid.appendChild(h('div', 'owrote', [h('span', '', 'The owner wrote: '), String(rec.message)]));
@@ -390,5 +385,5 @@
         return { load: load, open: open, show: show, hide: function () { token++; }, count: function () { return visible().length; }, fromAddress: fromAddress, tokens: function () { return tokens.slice(); } };
     }
 
-    return { create: create, api: api, nameProblem: nameProblem, textProblem: textProblem, makerProblem: makerProblem, skeletons: skeletons, tokensOf: tokensOf, statusOf: statusOf, why: why, when: when, isOff: isOff };
+    return { create: create, api: api, nameProblem: nameProblem, textProblem: textProblem, makerProblem: makerProblem, skeletons: skeletons, tokensOf: tokensOf, statusOf: statusOf, why: why, isOff: isOff };
 });

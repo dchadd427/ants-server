@@ -19,7 +19,7 @@
     function stamp() {
         function got(k) { var v = bar.getAttribute(k) || ''; return v && v.indexOf('@') < 0 ? v : ''; }
         var v = got('data-version'), b = got('data-build'), t = got('data-built'), m = got('data-maker'), out = [];
-        if (v) out.push('Version ' + v + (b ? ' - build ' + b + (t ? ' (' + t + ')' : '') : ''));
+        if (v) out.push('Version ' + v + (b ? ' - build ' + b + (t ? ' (' + (typeof AntsTime === 'object' ? AntsTime.stampText(t) : t) + ')' : '') : ''));
         if (m) out.push('Map maker ' + m);
         return out.join(' - ');
     }

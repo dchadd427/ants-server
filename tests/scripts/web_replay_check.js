@@ -13,6 +13,7 @@ process.env.TZ = 'America/Los_Angeles';                      // (the table below
 const path = process.argv[2];
 if (!path) { console.log('usage: web_replay_check.js replay_page.js'); process.exit(2); }
 const R = require(require('path').resolve(path));
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times)
 
 let checks = 0, failures = 0;
 function check(label, ok, detail) {
@@ -46,23 +47,8 @@ same('a counter changes nothing', R.endedOf('ants-TINY-20261008-143200Z-3.antsre
 same('no stamp', R.endedOf('nonsense'), null);
 same('not a string', R.endedOf(7), null);
 
-// ---- the day and the time, in the visitor's own zone
-const now = new Date(2026, 9, 8, 12, 0, 0);                    // Oct 8, 12:00 PM
+// ---- the day and the time of a match are the page's one formatter's (web/local_time.js, tests/scripts/web_local_time_check.js); the replay pages only add a word
 const at = (y, mo, d, h, mi) => new Date(y, mo, d, h, mi, 0).getTime() / 1000;
-same('today morning', R.whenText(at(2026, 9, 8, 7, 32), now), 'Today, 7:32 AM');
-same('today at noon', R.whenText(at(2026, 9, 8, 12, 0), now), 'Today, 12:00 PM');
-same('today just after midnight', R.whenText(at(2026, 9, 8, 0, 5), now), 'Today, 12:05 AM');
-same('today late (in the future of "now" by a minute: still today)', R.whenText(at(2026, 9, 8, 12, 1), now), 'Today, 12:01 PM');
-same('yesterday evening', R.whenText(at(2026, 9, 7, 22, 15), now), 'Yesterday, 10:15 PM');
-same('yesterday at 11:59 PM', R.whenText(at(2026, 9, 7, 23, 59), now), 'Yesterday, 11:59 PM');
-same('two days ago', R.whenText(at(2026, 9, 6, 11, 30), now), 'Oct 6, 11:30 AM');
-same('last month', R.whenText(at(2026, 8, 20, 9, 5), now), 'Sep 20, 9:05 AM');
-same('last year', R.whenText(at(2025, 11, 31, 20, 0), now), 'Dec 31, 2025, 8:00 PM');
-same('yesterday across a month end', R.whenText(at(2026, 8, 30, 18, 0), new Date(2026, 9, 1, 8, 0, 0)), 'Yesterday, 6:00 PM');
-same('yesterday across a year end', R.whenText(at(2025, 11, 31, 18, 0), new Date(2026, 0, 1, 8, 0, 0)), 'Yesterday, 6:00 PM');
-same('across the autumn clock change (Nov 1 2026)', R.whenText(at(2026, 9, 31, 20, 0), new Date(2026, 10, 1, 9, 0, 0)), 'Yesterday, 8:00 PM');
-same('no time', R.whenText(undefined, now), '');
-same('not a number', R.whenText(NaN, now), '');
 
 // ---- the length
 same('0 s', R.lengthText(0), '0:00');

@@ -158,6 +158,7 @@ tests/data/last_side_mutants.json
 tests/data/library_guard_mutants.json
 tests/data/live_delay_mutants.json
 tests/data/lobby_messages.txt
+tests/data/local_time_mutants.json
 tests/data/lvl_*
 tests/data/lvl_core/**
 tests/data/map_atlas_mutants.json
@@ -243,6 +244,7 @@ tests/scripts/mutant_shard.py
 tests/scripts/mutant_specs.py
 tests/scripts/process_state.py
 tests/scripts/quick_http.py
+tests/scripts/quiet_time.js
 tests/scripts/replay_file_tools.js
 tests/scripts/run_python_tests.py
 tests/scripts/test_bot_names.py
@@ -285,6 +287,7 @@ tests/scripts/test_web_game.py
 tests/scripts/test_web_game_bar.py
 tests/scripts/test_web_game_menu.*
 tests/scripts/test_web_hud_fullscreen.py
+tests/scripts/test_web_local_time.py
 tests/scripts/test_web_map_files.py
 tests/scripts/test_web_mapmaker.*
 tests/scripts/test_web_mapmaker_fill.py
@@ -315,6 +318,7 @@ tests/scripts/web_edge_*
 tests/scripts/web_game_bar_check.js
 tests/scripts/web_game_menu_*
 tests/scripts/web_hud_fullscreen_check.js
+tests/scripts/web_local_time_check.js
 tests/scripts/web_map_files_check.js
 tests/scripts/web_mapmaker_address_check.js
 tests/scripts/web_mapmaker_ants_check.js
@@ -494,6 +498,7 @@ web/front/rematch.*
 web/front/test_game.js
 web/game_*
 web/hud_fullscreen.js
+web/local_time.js
 web/lvl_core_api.js
 web/manifest.webmanifest
 web/map_files.js
