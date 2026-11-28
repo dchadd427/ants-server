@@ -23,9 +23,9 @@
     <meta name="apple-mobile-web-app-title" content="Ants!">
     <link rel="shortcut icon" href="/favicon.ico?v=67dc022d">
     <link rel="preload" href="front/LibreFranklin-Medium.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="stylesheet" href="site_nav.css"><link rel="stylesheet" href="game_bar.css"><link rel="stylesheet" href="replay_stats.css"><link rel="stylesheet" href="death_map.css"><link rel="stylesheet" href="replay_activity.css"><link rel="stylesheet" href="front/rematch.css"><link rel="stylesheet" href="touch_keys.css"><link rel="stylesheet" href="update_notice.css">
+    <script src="site_hooks.js" data-page="play"></script><link rel="stylesheet" href="game_bar.css"><link rel="stylesheet" href="front/rematch.css"><link rel="stylesheet" href="touch_keys.css"><link rel="stylesheet" href="update_notice.css">
     <style>
-        /* The look of the front page (web/lobby.html), which is the look of the 1998 game's own menus: the orange clay, the thin green frame, teal bevelled buttons with a red shadow, black
+        /* The look of the front page, which is the look of the 1998 game's own menus: the orange clay, the thin green frame, teal bevelled buttons with a red shadow, black
            inset boxes, the game's own font (Libre Franklin, SIL OFL) and the "ants!" logo, all from web/front/. The colors are the front page's, token for token (tests/scripts/test_web_game.py
            compares them). The picture sits in the same frame as the front page's map preview and its games. */
         @font-face { font-family: "Libre Franklin"; src: url("front/LibreFranklin-Medium.ttf") format("truetype"); font-weight: 400 700; font-style: normal; font-display: swap; }
@@ -164,7 +164,7 @@
             box-shadow: var(--bevel), 3px 4px 0 var(--shadow);
         }
 
-        /* the bar at the top (the site's: site_nav.css, and game_bar.css for what is the game page's own); the buttons of its tools show a short word on a narrow window */
+        /* the bar at the top (the site's own, and game_bar.css for what is the game page's own); the buttons of its tools show a short word on a narrow window */
         .btn-text-short {
             display: none;
         }
@@ -834,7 +834,7 @@
         .clock { grid-area: clock; font-variant-numeric: tabular-nums; font-size: 20px; white-space: nowrap; text-align: right; min-width: 118px; }
         .clock small { font-size: 17px; opacity: .72; }
         /* a replay's bar on a computer (wider than 700 px): the timeline has a row of its own, as on a phone, so that it is as wide as the picture (beside the buttons it kept 0 - 330 px) and the activity curve above it has
-           room (web/replay_activity.js); a live bar and the fullscreen bar keep their one row, and the Settings button is the gear alone (a phone's gear lies above the bar, game_menu.css) */
+           room (the site's activity curve); a live bar and the fullscreen bar keep their one row, and the Settings button is the gear alone (a phone's gear lies above the bar, game_menu.css) */
         @media (min-width: 701px) {
             .rbar:not(.over):not(.islive) { grid-template-columns: auto auto 1fr auto auto auto auto; grid-template-areas: "tl tl tl tl tl tl tl" "play rew clock cam speed pic set"; gap: 4px 8px; }
             .rbar:not(.over):not(.islive) .clock { text-align: left; padding-left: 12px; min-width: max-content; }
@@ -1163,12 +1163,13 @@
 
     <div class="toast" id="toast" role="status" hidden></div>
 
-    <script src="site_nav.js"></script><script src="game_bar.js"></script><script src="update_notice.js" data-window="no"></script><script src="analytics.js"></script><script src="rejoin_key.js"></script><script src="hub_here.js"></script><script src="shapes.js"></script><script src="shape_picker.js"></script><script src="replay_page.js"></script><script src="history_page.js"></script><script src="death_map.js"></script><script src="replay_activity.js"></script><script src="map_files.js"></script><script src="countdown_button.js"></script><script src="alert_core.js"></script><script src="hud_fullscreen.js"></script><script src="wake_lock.js"></script><script src="p2p.js"></script><script src="touch_keys.js"></script><script src="front/name_letters.js"></script><script src="front/lobby_net.js"></script><script src="front/player_name.js"></script><script src="front/rematch.js"></script><script src="front/test_game.js"></script>
+    <script src="site_hooks.js" data-page="play"></script><script src="game_bar.js"></script><script src="update_notice.js" data-window="no"></script><script src="rejoin_key.js"></script><script src="shapes.js"></script><script src="shape_picker.js"></script><script src="replay_page.js"></script><script src="map_files.js"></script><script src="countdown_button.js"></script><script src="alert_core.js"></script><script src="hud_fullscreen.js"></script><script src="wake_lock.js"></script><script src="p2p.js"></script><script src="touch_keys.js"></script><script src="front/name_letters.js"></script><script src="front/lobby_net.js"></script><script src="front/player_name.js"></script><script src="front/rematch.js"></script><script src="front/test_game.js"></script>
     <script>
         var ANTS_BUILD_VER = '@@BUILD_TIMESTAMP@@';
         if (!ANTS_BUILD_VER || ANTS_BUILD_VER.indexOf('@') !== -1) {
             ANTS_BUILD_VER = String(Date.now());
         }
+        var antsSite = window.AntsSite || {};                                // the site's hooks (web/site_hooks.js): a page with none, or with the stub, does without them
 
         var statusElement = document.getElementById('status-text');
         var progressContainer = document.getElementById('progress-container');
@@ -1177,7 +1178,7 @@
         var canvas = document.getElementById('canvas');
         var isReadyToPlay = false;
         var antsDataPackage = null;                                          // the bytes of index.data, once downloaded (handed to the game by Module.getPreloadedPackage)
-        var ANTS_DATA_SIZE = parseInt('@@DATA_SIZE@@', 10) || 0;             // the exact size of index.data in bytes (the Dockerfile writes it in after the build; 0 = not known: a build outside it)
+        var ANTS_DATA_SIZE = parseInt('@@DATA_SIZE@@', 10) || 0;             // the exact size of index.data in bytes (the build writes it in; 0 = not known: a build outside it)
 
         // ANTS_PAGE_BEGIN (tests/scripts/web_aspect_key_check.js runs everything from here to ANTS_PAGE_END on a table of addresses and of what the browser remembered)
         // The page's own logic that needs no browser (ANTS_PAGE; tests/scripts/web_aspect_check.py calls these in a real one).
@@ -1528,7 +1529,7 @@
             }
 
             // Does this address make the page ASK for a name before the game connects? A link that somebody shared does: a join of a room (a door and a room code that joinArguments accepts) with no
-            // `name` parameter at all. The page that makes an address of its own (web/lobby.html: START, Rejoin and its Join button) always puts
+            // `name` parameter at all. The page that makes an address of its own (the front page: START, Rejoin and its Join button) always puts
             // the name in, empty or not, because its player chose it there ("name=" with nothing behind it is a name that was chosen: none), so such an address asks nobody.
             function asksForName(search) {
                 var q;
@@ -1540,7 +1541,7 @@
                 return !q.has('name');
             }
             // A room code as a screen shows it: six characters in two groups of three, "k7m2xq" as "k7m 2xq" (easier to read out and to copy by eye), any other length as it is. The front page's codeText
-            // (web/lobby.html: the room panel, the Rejoin button, the name step of a room link) says the same. Only a screen shows a code so: addresses, fields and the game's arguments keep the plain code.
+            // (the room panel, the Rejoin button, the name step of a room link) says the same. Only a screen shows a code so: addresses, fields and the game's arguments keep the plain code.
             function codeText(code) {
                 var text = typeof code === 'string' ? code : '';
                 return text.length === 6 ? text.slice(0, 3) + ' ' + text.slice(3) : text;
@@ -1558,7 +1559,7 @@
                 return kept.length ? '?' + kept.join('&') : '';
             }
 
-            // The name that an address carries is the game's only when the front page of this tab put it there on purpose: web/lobby.html keeps the name in this tab's storage just before it takes the tab here, and this
+            // The name that an address carries is the game's only when the front page of this tab put it there on purpose: the front page keeps the name in this tab's storage just before it takes the tab here, and this
             // page takes it out once. A link that somebody else wrote has no such entry, so its name is not the game's: the address comes back without it, and the page asks, like for any shared link.
             function vouched(search, storage) {
                 var text = String(search), given = null, kept = null;
@@ -1596,7 +1597,7 @@
             }
 
             // Is what came back for index.data the data? A captive portal or an error page is served with "200 OK" and a body that is not the package: its type is HTML and it is far
-            // smaller than the package. null: it is the data; else the reason. `expected` is the package's exact size in bytes when the build knows it (the Dockerfile writes it into
+            // smaller than the package. null: it is the data; else the reason. `expected` is the package's exact size in bytes when the build knows it (the build writes it into
             // the page; 0 when it does not), else anything under a megabyte (the package is 19.3 MB) is not it.
             function badDownload(contentType, got, expected) {
                 if (/^\s*text\/html/i.test(contentType || '')) return 'the server sent a web page, not the game data';
@@ -1630,7 +1631,7 @@
 
         // Joining a game server from the page address (docs/NETWORK_PORT.md): ?join=/ws&room=<code>[&roommap=<key>][&roomseats=<2-4>][&roomteams=A+B][&roomleaderstart=1][&platform=<word>]&seat=<0-3>&name=<name>[&fill=<plan>]
         //                                                                         [&teams=A+B][&start=<1-4>] (ANTS_PAGE.joinArguments reads it)
-        //   join   the server's WebSocket door on THIS site: /ws or a path below it (the nginx of the site passes /ws to the server)
+        //   join   the server's WebSocket door on THIS site: /ws or a path below it (the site's web server passes /ws to the server)
         //   room   the room code, a name and nothing more (letters, digits, _ and -, up to 32; the front page makes six characters of its own: k7m2xq); seat 0 green, 1 red, 2 blue, 3 black;
         //          name: printable ASCII, up to 32 characters
         //   roommap, roomseats, roomteams, roomleaderstart   the room's create block (protocol 15): what the server makes the room of when it has none of this code, so every link of a room made by the
@@ -1678,7 +1679,7 @@
             Object.keys(vars).forEach(function (name) { document.body.style.setProperty(name, vars[name]); });
         }
         // The shape of this page's picture, passed on to the game as --aspect (the game validates it too); the selector changes it while the game runs (antsSetAspect below). The stage's data-aspect names the shape (tests and the settings menu read it), and the slot's CSS takes its ratio from custom properties of <body> (antsShowShape, from web/shapes.js's rows).
-        // What a pick remembers lives under ANTS_ASPECT_KEY (one shape for each way the device is held: AntsShapes.pickFor), and only a pick (the settings menu's Picture shape row, a recording's Picture window) writes it (web/lobby.html only reads
+        // What a pick remembers lives under ANTS_ASPECT_KEY (one shape for each way the device is held: AntsShapes.pickFor), and only a pick (the settings menu's Picture shape row, a recording's Picture window) writes it (the front page only reads
         // the same key). The earlier keys ('ants.aspect', 'ants.aspect.v2') are NOT read any more, so that the picks that browsers remembered are forgotten once: every browser starts on Automatic (AntsShapes.automatic; never stored)
         // until its player picks a shape again. ?aspect=4:3 (or any other shape of the table) in the address works as ever, for that tab.
         var ANTS_ASPECT_KEY = 'ants.aspect.v3';
@@ -1707,9 +1708,9 @@
         };
         // ANTS_PAGE_END
         if (window.AntsRematch) AntsRematch.gamePage({ win: window, doc: document, Net: window.AntsLobbyNet, host: document.getElementById('rematch') });      // the rematch: when the match of a lobby room is over (window.antsMatchOver), the strip under the picture (web/front/rematch.js)
-        if (window.AntsHubHere) AntsHubHere.begin({ win: window, args: ANTS_ARGS, replay: ANTS_REPLAY_MODE, test: !!ANTS_TEST });      // (web/hub_here.js: tells the chat hub that this visitor is in a match, for the players list; nothing for a recording, a live match or a test map)
-        // NAME_BEGIN (tests/scripts/web_name_check.js runs this block; web/lobby.html and web/shell.html carry the same text)
-        // THE PLAYER'S NAME is not typed in the game: a person who is logged in with Discord plays under the name that the hub says (the nickname and its tag, or the name of the login: front/player_name.js, docs/HUB_NICKNAMES.md),
+        if (antsSite.onPageStart) antsSite.onPageStart({ win: window, args: ANTS_ARGS, replay: ANTS_REPLAY_MODE, test: !!ANTS_TEST });      // (the site's hook: what it does with a visit is the site's own business)
+        // NAME_BEGIN (a test runs this block; the front page and web/shell.html carry the same text)
+        // THE PLAYER'S NAME is not typed in the game: a person who is logged in with Discord plays under the name that the hub says (the nickname and its tag, or the name of the login: front/player_name.js),
         // anybody else under the name that this browser keeps as a guest ("Wren (Guest)") or a number. The game takes UTF-8 of printable ASCII and the letters of a name (front/name_letters.js: the Latin and Cyrillic letters that the
         // game's font draws), the blanks at both ends cut off, at most 32 characters, and nothing that reads as a computer player's label: "Bot (...)", "Pip (bot)", "Pip (bot, Hard)" (blanks, signs between the letters and case
         // ignored: a computer player is always shown as one, and a person never): the rules of the desktop game's start menu (check_player_name in src/ants_app/start_menu.cpp). nameCheck(text) is { ok: true, name } or
@@ -1788,7 +1789,7 @@
         // NAMEGATE_END
 
         // The name step of a shared link (the gate above): a card in the loading screen that shows the name that the person plays under (their login's, else a guest's: front/player_name.js, which asks only when this card or a
-        // game here with no name needs it). The address of a game that was opened with a name by web/lobby.html loses its name parameter in the address bar, so that a copy of it is a shared link like any other.
+        // game here with no name needs it). The address of a game that was opened with a name by the front page loses its name parameter in the address bar, so that a copy of it is a shared link like any other.
         var ANTS_NAME_GATE = (function () {
             var asks = ANTS_PAGE.asksForName(window.location.search);
             if (asks) {                                           // (a browser that holds the key of this very seat is on its way back: no step, see holdsThisSeat)
@@ -1833,13 +1834,13 @@
             if (others === 'predicted') ANTS_ARGS.push('--others', 'predicted');
         })();
 
-        // ANTS_REPORT_BEGIN (tests/scripts/web_report_check.js runs this function with a fake fetch and a table of failures)
-        // The game calls this when a game on THIS computer begins (its first tick; a match of the network never does): the server counts it for the numbers of the front page (docs/SERVER.md, the section on the site statistics), except a test game from the map maker (ANTS_TEST), which is not counted. One POST with nothing in it; no retry, nothing on the page, and no failure (no fetch, a throw, a refused or lost request, a 503) is ever the game's business.
+        // ANTS_REPORT_BEGIN (tests/scripts/test_web_seam.py runs this function with and without the site's hook)
+        // The game calls this when a game on THIS computer begins (its first tick; a match of the network never does): the site's hook may count it (web/site_hooks.js), except a test game from the map maker (ANTS_TEST), which is never reported. No failure of the hook (a throw, a missing hook) is ever the game's business.
         function antsReportLocalGame() {
             try {
-                if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return; var sent = fetch('/stats/local', { method: 'POST', keepalive: true });
-                if (sent && typeof sent.catch === 'function') sent.catch(function () { /* only the front page's numbers depend on it: nobody is told */ });
-            } catch (e) { /* no fetch in this browser: nothing is counted */ }
+                if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;
+                if (antsSite.localGameReport) antsSite.localGameReport();
+            } catch (e) { /* nothing is counted */ }
         }
         // ANTS_REPORT_END
 
@@ -1857,7 +1858,7 @@
                 clearTimeout(window.antsStartWatchdog);
                 progressContainer.style.display = 'none';
                 hideLoadingScreen();
-                if (window.AntsAnalytics && window.performance && performance.now) window.AntsAnalytics.game(performance.now());          // (the counter, docs/ANALYTICS.md: how long the page took to download the game and start it)
+                if (antsSite.gameStarted && window.performance && performance.now) antsSite.gameStarted(performance.now());          // (the site's hook: how long the page took to download the game and start it)
             }],
             getPreloadedPackage: function(name, size) {
                 // The data package that the page downloaded itself (see "The game's data" below): the file packager of index.js asks for it, synchronously, when it starts. It gets
@@ -2636,7 +2637,7 @@
         })();
         // ANTS_SELECTOR_END
 
-        // THE WAY BACK TO THE MENU: the front page (lobby.html, at "/"): Home in the bar (web/game_bar.js; the bar's Menu has it too, and so has the mark of live matches). It goes there in THIS tab (requested: nothing opens a new tab by default). The game that is running
+        // THE WAY BACK TO THE MENU: the front page (at "/"): Home in the bar (web/game_bar.js; the bar's Menu has it too, and so has the mark of live matches). It goes there in THIS tab (requested: nothing opens a new tab by default). The game that is running
         // here is left, and a room that is joined is left for good, so a click asks first while a match is being played here or a room is joined (ants_match_running, and
         // --join-url among the arguments), and No stays; Yes tells the server (antsLeaveMatch: the seat is dropped at once and the key is let go of; a closed tab would have held it). While that is so every other link of the bar
         // opens in a new tab, and the bar's keys are the bar's, not the game's (game_bar.js).
@@ -2653,7 +2654,7 @@
             focus: function () { canvas.focus(); }
         });
 
-        // The update notice (web/update_notice.js, docs/SITE_NAV.md "The update notice"): NOTHING while the game loads, a match is joined or played, or a live match is watched; its strip comes once the results are up (or at a game's menu,
+        // The update notice (web/update_notice.js): NOTHING while the game loads, a match is joined or played, or a live match is watched; its strip comes once the results are up (or at a game's menu,
         // or a recording), and goes when the next match starts. window.antsMatchOver (the rematch strip and the hub's tab already wrap it) says that the match of a room is over.
         // ANTS_UPDATE_BEGIN (tests/scripts/web_update_notice_check.js runs this block on a page of fakes)
         (function () {
@@ -2994,8 +2995,8 @@
         // ANTS_CHAT_END
         if (window.AntsCountdown) window.AntsCountdown.forPage({ doc: document, stage: stageElement, canvas: canvas, ask: function (what) { try { return Module._ants_probe ? Module._ants_probe(what) : -1; } catch (err) { return -1; } }, ready: function () { return isReadyToPlay; }, isFullscreen: isFullscreen, enter: enterFullscreen });      // the Fullscreen button of the countdown (countdown_button.js)
         if (window.AntsHudFullscreen) window.AntsHudFullscreen.forPage({ stage: stageElement, rect: function () { return canvas.getBoundingClientRect(); }, ask: function (what) { try { return Module._ants_probe ? Module._ants_probe(what) : -1; } catch (err) { return -1; } }, ready: function () { return isReadyToPlay; }, isFullscreen: isFullscreen, enter: enterFullscreen, leave: leaveFullscreen, tell: function (on) { try { if (Module._ants_set_page_fullscreen) Module._ants_set_page_fullscreen(on ? 1 : 0); } catch (err) { /* the game is not up yet: the next look tells it */ } } });      // the HUD's Fullscreen button (hud_fullscreen.js)
-        // ALERTS_BEGIN (tests/scripts/web_home_alerts_check.js runs this block on a page of fakes)
-        // My match starts while this page is in the background: when the countdown card comes up, the tab's title blinks and its icon gets a dot until the page is looked at (docs/HOME_SCREEN.md, "Alerts"). It looks
+        // ALERTS_BEGIN (a test runs this block on a page of fakes)
+        // My match starts while this page is in the background: when the countdown card comes up, the tab's title blinks and its icon gets a dot until the page is looked at (the alerts that the front page has too). It looks
         // at the game's answer (ask(60): the seconds that the card has left, -1 for none) on the beat of the page's own Worker timer, which a hidden page does not slow, as the game's background pump does.
         try {
             if (window.AntsAlertCore && !ANTS_REPLAY_MODE) {
@@ -3228,12 +3229,7 @@
                     if (found) { overEntry = found; setHeader(); } else if (tries > 1) setTimeout(function () { overHeader(tries - 1); }, 4000);
                 };
                 try {
-                    fetch('/replays', { cache: 'no-store', credentials: 'same-origin' }).then(function (response) { return response.ok ? response.json() : null; }).then(function (data) {
-                        var list = data && Array.isArray(data.replays) ? data.replays : [];
-                        var e = list.filter(function (x) { return x && x.file === overFile; })[0];
-                        done(e ? { map: typeof e.map === 'string' ? e.map : '', seconds: typeof e.seconds === 'number' && isFinite(e.seconds) ? Math.floor(e.seconds) : 0,
-                                   players: (Array.isArray(e.players) ? e.players : []).filter(function (p) { return typeof p === 'string'; }).slice(0, 4) } : null);
-                    }).catch(function () { done(null); });
+                    if (antsSite.replayEntry) antsSite.replayEntry(overFile, done);
                 } catch (e) { /* no list: the header says the map and the time */ }
             }
             function cardFor(failure, text) {
@@ -3450,7 +3446,7 @@
             });
             // COPY_LINK_BEGIN (tests/scripts/web_copy_link_check.js runs this block on a page of fakes)
             // The bar's Copy link (docs/REPLAYS.md "Watching"): the address of the page that is watched, made of this site, play?live=<id> or play?replay=<file> and nothing else of the page's own address. Where the page
-            // has a phone's layout (the test of web/lobby.html's Share) and the browser has a share sheet, a press opens it with the address; anywhere else the address goes to the clipboard and the toast says "Copied!".
+            // has a phone's layout (the test of the front page's Share) and the browser has a share sheet, a press opens it with the address; anywhere else the address goes to the clipboard and the toast says "Copied!".
             // A clipboard that refuses is tried the old way (a hidden field and the copy command), and when that fails too the browser's own box shows the address to copy by hand.
             function copyAddress() { return window.location.origin + (FILE ? '/play?replay=' + encodeURIComponent(FILE) : '/play?live=' + encodeURIComponent(LIVE_ID || '')); }
             function copyPhone() { try { return !!window.matchMedia && window.matchMedia('(max-width: 700px), (max-height: 500px)').matches; } catch (e) { return false; } }
@@ -3747,22 +3743,15 @@
             liveClasses();
             document.querySelector('.sb nav a[href="/matches"]').setAttribute('aria-current', 'page');   // (the Menu says where the player is: the list of matches)
             window.antsReplayPlaceBar(); if (OWN) OWN.chrome();
-            // PLAYS_BEGIN (tests/scripts/web_plays_check.js runs this block on a page of fakes)
-            // A recording of the server's own store is one play after 10 s of playing (web/replay_plays.js, docs/REPLAYS.md "Watching a replay"): never a match that is being played, never a file of your own; the script is fetched for these only
-            if (!ANTS_LIVE_MODE && !ANTS_OWN_MODE && window.AntsHistory.idOfFile(FILE)) {
-                var plays = document.createElement('script');
-                plays.src = 'replay_plays.js?v=' + ANTS_BUILD_VER;
-                plays.onload = function () { window.AntsPlays.start(window, window.AntsHistory.idOfFile(FILE), function () { return get(VALUE.state) === STATE.playing; }); };
-                document.head.appendChild(plays);      // (a script that cannot be had counts nothing: no other part of the page waits for it)
-            }
-            // PLAYS_END
+            // A recording of the site's own store is the site's to count once it has been played for a while (the site's hook, web/site_hooks.js): never a match that is being played, never a file of your own
+            if (!ANTS_LIVE_MODE && !ANTS_OWN_MODE && antsSite.playCounter) antsSite.playCounter({ file: FILE, version: ANTS_BUILD_VER, playing: function () { return get(VALUE.state) === STATE.playing; } });
             setInterval(tick, 100);
             tick();
         })();
 
-        // ---- the stats of the match on show (docs/REPLAYS.md "The match pages"): the server's record of it as a panel (the Stats button on a wide screen, a row under the controls on a phone); web/history_page.js.
-        // Only for a recording of the server's own store: a live match and a file from elsewhere have none. The frame of a match page asks for the record too, for the activity curve alone (`curveOnly`): the numbers are that page's own. ----
-        if (ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && ANTS_REPLAY_FILE && typeof fetch === 'function') window.AntsHistory.replayStats({ document: document, fetch: fetch.bind(window), file: ANTS_REPLAY_FILE, curveOnly: ANTS_EMBED, redraw: window.AntsDeathMap && window.AntsDeathMap.redraw, deathMap: window.AntsDeathMap && window.AntsDeathMap.create(document, function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }, { replay: window.AntsReplay, storage: (function () { try { return window.localStorage; } catch (e) { return null; } })() }), onRecord: window.AntsActivity && function (rec) { window.AntsActivity.mount(window, rec); } });      // (the small map "Where ants died" in the panel: web/death_map.js; the activity curve of the timeline from the same record: web/replay_activity.js; the frame of a match page gets the curve and no panel: that page has the numbers itself)
+        // ---- the stats of the match on show: the site's hook shows the server's record of it (web/site_hooks.js; a panel on a wide screen, a row under the controls on a phone). Only for a recording of the site's own store: a live match and
+        // a file from elsewhere have none. The frame of a match page asks for the record too, for the activity curve alone (`embed`): the numbers are that page's own. ----
+        if (ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats({ file: ANTS_REPLAY_FILE, embed: ANTS_EMBED });
     </script>
     <!-- END replay glue -->
     <script>
@@ -3789,7 +3778,7 @@
                 var s = document.createElement('script');
                 s.async = true;
                 s.onerror = function() { showDownloadError(new Error('index.js could not be loaded'), 'program'); };
-                // (the address is set as an attribute: the Dockerfile adds the build's ?v= to every `src=index.js` of the built page, and a literal one here got a second ?v=)
+                // (the address is set as an attribute: the build adds its ?v= to every `src=index.js` of the built page, and a literal one here got a second ?v=)
                 s.setAttribute('src', SCRIPT_URL);
                 document.body.appendChild(s);
                 if (statusElement && !isReadyToPlay) statusElement.textContent = 'Starting the game...';

@@ -13,10 +13,13 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_pages  # noqa: E402  (the game page as the browser builds it once the site's hooks have written their tags)
 CHECK_JS = os.path.join(REPO, "tests", "scripts", "web_death_map_check.js")
 NODE = shutil.which("node")
 
@@ -165,7 +168,7 @@ class TheFiles(unittest.TestCase):
     page = read("web", "match.html")
     script = read("web", "death_map.js")
     css = read("web", "death_map.css")
-    shell = read("web", "shell.html")
+    shell = site_pages.expanded("web", "shell.html")
 
     def test_the_stylesheet_and_the_script_are_linked_after_the_shared_ones_and_load_nothing_from_elsewhere(self):
         self.assertIn('<link rel="stylesheet" href="match_stats.css">\n    <link rel="stylesheet" href="death_map.css">', self.page)
@@ -198,7 +201,7 @@ class TheFiles(unittest.TestCase):
         self.assertIn("env.deathMap.card(rec, { compact: true })", helpers)
         self.assertIn("redraw(pop)", helpers)
         self.assertIn("redraw(flow)", helpers)
-        self.assertIn("deathMap: window.AntsDeathMap && window.AntsDeathMap.create(", self.shell)
+        self.assertIn("deathMap: win.AntsDeathMap && win.AntsDeathMap.create(", read("web", "site", "site_hooks.js"))          # (the game page asks the site's hook for the stats; the hook makes the card)
 
     def test_the_seat_colors_are_the_pages(self):
         for token in ("--c-green", "--c-red", "--c-blue", "--c-black"):

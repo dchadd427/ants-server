@@ -1,4 +1,4 @@
-/* The game page's part of the bar at the top (docs/SITE_NAV.md "The game page"; site_nav.js builds the Menu, game_bar.css has the rules). The page calls AntsGameBar.start({ doc, win, busy, running, leave, ask, focus }):
+/* The game page's part of the bar at the top (the site's own script builds the bar's Menu, game_bar.css has the rules). The page calls AntsGameBar.start({ doc, win, busy, running, leave, ask, focus }):
    busy() is true while a match runs here or a room is joined, running() while a match is played, leave() lets go of the seat, ask() is the question (true: leave), focus() gives the focus to the game.
    Links: while busy, Home asks first and every other link opens a new tab. Keys: while the Menu or the question is open or the focus is in the bar, no key reaches the game (a held key stays the bar's until its lift);
    a closed Menu or question gives the focus back to the game. Menu lines: the note, a recording's tools, "Reload page" (it asks first while a game is played). */

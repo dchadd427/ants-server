@@ -1,17 +1,18 @@
-// Runs the OWN code of the play counter (web/replay_plays.js) on a page of fakes (a clock, a window, a storage, a fetch) and the page's own call of it (the block of web/shell.html between PLAYS_BEGIN and PLAYS_END):
+// Runs the OWN code of the play counter (web/replay_plays.js) on a page of fakes (a clock, a window, a storage, a fetch) and the page's own call of it (the line of web/shell.html that asks the site's hook, and the block of web/site/site_hooks.js between PLAYS_BEGIN and PLAYS_END):
 // 10 seconds of playing is one play and 9.9 are not; a pause, a jump, the end, a game that is not ready, a hidden tab and a computer that slept add nothing; once a day for a recording in this browser (two page views
 // share the memory, a day later it counts again, another recording counts, the memory is written BEFORE the play is sent, at most 200 recordings and none a day old are kept); a browser that refuses its storage
 // counts once for each page view and never throws; what is sent (POST /counts/play/<id>, no body, no cookies), a play that does not arrive is not sent again, and nothing is sent for a match that is being
 // played, for a file of your own or for an address that is no recording. tests/scripts/test_web_plays.py runs it with node (the quick tier) and again on changed copies, which it must refuse.
-// usage: node web_plays_check.js web/replay_plays.js web/shell.html web/history_page.js include/ants_app/replay_view.hpp          (exit 0: every check holds; every failure is printed)
+// usage: node web_plays_check.js web/replay_plays.js web/shell.html web/history_page.js include/ants_app/replay_view.hpp web/site/site_hooks.js          (exit 0: every check holds; every failure is printed)
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const [modulePath, shellPath, historyPath, headerPath] = process.argv.slice(2).map((p) => path.resolve(p));
-if (!headerPath) { console.log('usage: web_plays_check.js replay_plays.js shell.html history_page.js replay_view.hpp'); process.exit(2); }
+const [modulePath, shellPath, historyPath, headerPath, hooksPath] = process.argv.slice(2).map((p) => path.resolve(p));
+if (!hooksPath) { console.log('usage: web_plays_check.js replay_plays.js shell.html history_page.js replay_view.hpp site_hooks.js'); process.exit(2); }
 const P = require(modulePath);
 const H = require(historyPath);
+const SITE = require(hooksPath);
 
 let checks = 0, failures = 0;
 function expect(label, got, want) {
@@ -248,12 +249,15 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
         expect('a play that failed is not sent on the next page view either: it was counted for the day', again.posts.length, 0);
     }
 
-    // ---- the page's own call (web/shell.html) ----
+    // ---- the page's own call (web/shell.html asks the site's hook; web/site/site_hooks.js does it) ----
     {
         const text = fs.readFileSync(shellPath, 'utf8');
-        const begin = text.indexOf('// PLAYS_BEGIN'), end = text.indexOf('// PLAYS_END');
-        expect('the page has the block that this check runs', [begin > 0, end > begin], [true, true]);
-        const block = text.slice(begin, end);
+        const hookText = fs.readFileSync(hooksPath, 'utf8');
+        const begin = hookText.indexOf('// PLAYS_BEGIN'), end = hookText.indexOf('// PLAYS_END');
+        expect('the site has the block that this check runs', [begin > 0, end > begin], [true, true]);
+        const calls = text.split('\n').filter((l) => l.indexOf('antsSite.playCounter({') >= 0);
+        expect('the page has the one line that asks for the counter', calls.length, 1);
+        const call = calls[0];
         // the numbers of the page's own tables are the game's (include/ants_app/replay_view.hpp)
         const header = fs.readFileSync(headerPath, 'utf8');
         const enumOf = (name) => { const m = new RegExp('enum class ' + name + '[^{]*\\{([^}]*)\\}').exec(header); const out = {}; m[1].replace(/\/\/.*$/gm, '').split(',').forEach((e) => { const x = /(\w+)\s*=\s*(\d+)/.exec(e); if (x) out[x[1]] = +x[2]; }); return out; };
@@ -265,13 +269,15 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
             const r = rig({ clock: o.clock, store: o.store });
             const scripts = [];
             const game = { state: -1 };
+            Object.assign(r.win, { AntsHistory: H, AntsPlays: P });
+            r.win.document.createElement = (tag) => ({ tag });
+            r.win.document.head = { appendChild: (n) => { scripts.push(n); } };
             const context = {
                 ANTS_LIVE_MODE: !!o.live, ANTS_OWN_MODE: !!o.own, FILE: o.file === undefined ? ID + '.antsrep' : o.file, ANTS_BUILD_VER: '123', STATE, VALUE,
                 get: (what) => (what === VALUE.state ? game.state : 2),           // (anything but the state is 2, the number of "playing")
-                window: Object.assign(r.win, { AntsHistory: H, AntsPlays: P }),
-                document: { createElement: (tag) => ({ tag }), head: { appendChild: (n) => { scripts.push(n); } } }
+                antsSite: SITE.hooks(r.win)
             };
-            vm.runInNewContext(block, context);
+            vm.runInNewContext(call, context);
             r.scripts = scripts; r.game = game;
             r.load = () => { if (scripts[0] && scripts[0].onload) scripts[0].onload(); };
             return r;

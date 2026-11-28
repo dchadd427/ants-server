@@ -1,0 +1,61 @@
+{
+ "note": "Mutants of the seam between the pages of the game and a site, as a tree with the stub alone has it (web/site_hooks.js and the game page's own part of it in web/shell.html: the stub's hooks that do nothing, a second load that changes nothing, a site's own object that is never replaced, the report of a game on this computer that asks a site once and never for a test game) for tools/mutate.py (docs/TESTING.md, 'Mutation checks'). Run from the checkout: tools/mutate.py tests/data/seam_stub_mutants.json --keep-going --jobs 1; every mutant must be caught. tests/scripts/test_web_seam.py runs them on copies.",
+ "mutants": [
+  {
+   "id": "a_second_load_replaces_the_object",
+   "file": "web/site_hooks.js",
+   "old": "    if (root.AntsSite) return;                   // (the second load of a page)\n",
+   "new": "",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "a_hook_throws",
+   "file": "web/site_hooks.js",
+   "old": "localGameReport: function () { /* nothing */ },",
+   "new": "localGameReport: function () { throw new Error('no site'); },",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "a_hook_has_something_to_say",
+   "file": "web/site_hooks.js",
+   "old": "replayEntry: function (file, done) { /* nothing */ },",
+   "new": "replayEntry: function (file, done) { done(null); },",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "a_hook_is_missing",
+   "file": "web/site_hooks.js",
+   "old": "mapMaker: function (page) { /* nothing */ }",
+   "new": "mapMakerX: function (page) { /* nothing */ }",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "a_hook_touches_the_document",
+   "file": "web/site_hooks.js",
+   "old": "gameStarted: function (ms) { /* nothing */ },",
+   "new": "gameStarted: function (ms) { document.title; },",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "the_page_reports_a_test_game",
+   "file": "web/shell.html",
+   "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
+   "new": "\n",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "the_page_never_asks_the_site",
+   "file": "web/shell.html",
+   "old": "if (antsSite.localGameReport) antsSite.localGameReport();",
+   "new": ";",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  },
+  {
+   "id": "the_page_asks_the_site_twice",
+   "file": "web/shell.html",
+   "old": "if (antsSite.localGameReport) antsSite.localGameReport();",
+   "new": "if (antsSite.localGameReport) { antsSite.localGameReport(); antsSite.localGameReport(); }",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+  }
+ ]
+}

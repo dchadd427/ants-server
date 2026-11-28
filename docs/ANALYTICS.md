@@ -6,7 +6,7 @@ Built so far (part 1 of three): the counter, and the views **Overview**, **Visit
 
 ## What is counted
 
-The pages tell the hub, with `navigator.sendBeacon`, a few small events (`web/analytics.js`, loaded by every public page after the update notice; not by the admin page, not in a frame):
+The pages tell the hub, with `navigator.sendBeacon`, a few small events (`web/analytics.js`, loaded by every public page (the game page and the Map Maker get it from the site's hooks, `web/site/site_hooks.js`); not by the admin page, not in a frame):
 
 | Event | What it holds | What it is for |
 |---|---|---|

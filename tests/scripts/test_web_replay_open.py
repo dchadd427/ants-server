@@ -127,11 +127,10 @@ class ThePlayer(unittest.TestCase):
 
     def test_the_file_is_the_record_and_nothing_is_fetched_for_it(self):
         has(self, "fetched = OWN ? OWN.read() : Promise.resolve({ error: 'gone' });", self.glue)
-        self.assertEqual(re.findall(r"fetch\(([^,)]*)", self.glue), ["'/replays'", "'/live/' + LIVE_ID", "'/replays/' + file", "'/replays/' + FILE"])      # (the list of the pages' requests: none of them is made for a file of your own)
+        self.assertEqual(re.findall(r"fetch\(([^,)]*)", self.glue), ["'/live/' + LIVE_ID", "'/replays/' + file", "'/replays/' + FILE"])      # (the list of the page's own requests: none of them is made for a file of your own; the list of the kept matches is the site's hook's)
         has(self, "if (got.error) return;                    // (its card is up already)", self.glue)                    # (no record, no game)
         has(self, "if (got.error === 'gone' || got.error === 'again') card(got.error);", self.glue)
-        has(self, "window.AntsHistory.replayStats", self.page)
-        self.assertIn("ANTS_REPLAY_FILE && typeof fetch === 'function') window.AntsHistory.replayStats", self.page)           # (the stats are asked for by the server's own file name, which a local address has none of)
+        self.assertIn("ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats(", self.page)           # (the stats are asked for by the server's own file name, which a local address has none of)
         has(self, "var OWN = ", self.glue.replace("var LIVE_ID = ANTS_LIVE_ID, OWN = ", "var OWN = "))
         self.assertIn("ANTS_OWN_MODE ? R.ownPageOf(window, ", self.glue)
 

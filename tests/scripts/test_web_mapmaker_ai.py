@@ -108,15 +108,18 @@ class ThePagesOwnCode(unittest.TestCase):
         self.assertNotIn("fetch(", tools, "the tools ask the page for what they fetch (env.fetchText, env.fetchMap), never an address of their own")
         self.assertIn("'/ai/skills/' + skill + '/SKILL.md'", tools, "a guide is a file of the skills, by a name from a fixed table")
 
-    def test_the_page_has_the_button_the_menu_entry_and_the_loading_in_the_order_it_needs(self):
-        html, app, css = read("web", "mapmaker.html"), read("web", "front", "mapmaker_app.js"), read("web", "front", "mapmaker.css")
-        self.assertIn('data-act="ai"', html)
-        self.assertIn('class="btn sm ghost aik-btn dsk"', html, "the button is for a window with room; a phone has the File menu")
+    def test_the_site_adds_the_button_the_menu_entry_and_the_loading_in_the_order_it_needs(self):
+        html, app, site, css = read("web", "mapmaker.html"), read("web", "front", "mapmaker_app.js"), read("web", "site", "mapmaker_site.js"), read("web", "front", "mapmaker.css")
+        self.assertNotIn('data-act="ai"', html, "the page has no button for it: the site's part adds it (web/site/mapmaker_site.js)")
+        self.assertIn('<button class="btn sm ghost aik-btn dsk" type="button" data-act="ai" disabled>', site, "the button is for a window with room; a phone has the File menu")
         for name in PARTS + ("mapmaker_ai.css",):
             self.assertNotIn(name, html, "a lazily loaded file has no tag in the page")
-        self.assertIn("{ text: 'Connect an AI...', onClick: ACTIONS.ai }", app)
-        self.assertLess(app.index("t.src = 'front/mapmaker_ai_tools.js';"), app.index("p.src = 'front/mapmaker_ai.js';"), "the tools come before the part that needs them")
-        self.assertIn("if (aiPart) aiPart.touch();", app, "every change of the map is counted, whoever made it")
+            self.assertNotIn(name, app, "and the page itself does not name it")
+        self.assertIn("{ text: 'Connect an AI...', onClick: ACTIONS.ai }", site)
+        self.assertLess(site.index("t.src = 'front/mapmaker_ai_tools.js';"), site.index("p.src = 'front/mapmaker_ai.js';"), "the tools come before the part that needs them")
+        self.assertIn("if (aiPart) aiPart.touch();", site, "every change of the map is counted, whoever made it")
+        self.assertIn("function siteChanged() {", app, "the page tells the site's part of every change of the map and of every new map")
+        self.assertEqual(app.count("siteChanged();"), 2)
         self.assertIn(".aik-btn", css)
         version = read("web", "MAPMAKER_VERSION").strip()
         self.assertIn('data-maker="v%s"' % version, html)

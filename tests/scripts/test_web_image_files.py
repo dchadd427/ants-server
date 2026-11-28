@@ -12,9 +12,12 @@ The Dockerfile copies the web files ONE BY ONE (COPY web/<name> ...), and the ro
 import glob
 import os
 import re
+import sys
 import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_pages  # noqa: E402  (the pages as the browser builds them once the site's hooks have written their tags)
 
 
 def read(*parts):
@@ -26,11 +29,18 @@ def read(*parts):
 BUILT = {"lvl_core.js": ("COPY --from=builder /src/build_web/lvl_core/lvl_core.js ", "lvl_core/lvl_core.js")}
 
 
+def in_the_site_folder(ref):
+    """a file that the site's hooks load: it is in web/site/ (the image serves that folder at the root of the site), not in web/"""
+    return os.path.isfile(os.path.join(REPO, "web", "site", ref)) and not os.path.isfile(os.path.join(REPO, "web", ref))
+
+
 def loaded_files():
-    """{path in web/: [pages that load it]} for every local script and stylesheet of web/*.html (a canonical link loads nothing)"""
+    """{path in web/: [pages that load it]} for every local script and stylesheet of web/*.html (a canonical link loads nothing), the pages that have the site's hooks as the browser builds them"""
     found = {}
     for page in sorted(glob.glob(os.path.join(REPO, "web", "*.html"))):
         text = read("web", os.path.basename(page))
+        if "site_hooks.js" in text:
+            text = site_pages.expanded("web", os.path.basename(page))
         for tag in re.finditer(r"<(?:script|link)\b[^>]*>", text):
             if re.search(r"""\brel=["']canonical["']""", tag.group(0)):
                 continue
@@ -77,6 +87,9 @@ class ThePagesAndTheImage(unittest.TestCase):
             if ref in BUILT:
                 self.assertIn(BUILT[ref][0], self.dockerfile, "%s (loaded by %s) is made by the web build: the image must copy it" % (ref, ", ".join(pages)))
                 continue
+            if in_the_site_folder(ref):
+                self.assertIn("COPY web/site/ /usr/share/nginx/html/\n", self.dockerfile, ref)
+                continue
             self.assertTrue(os.path.isfile(os.path.join(REPO, "web", ref)), "%s (loaded by %s) is not a file of web/" % (ref, ", ".join(pages)))
             if ref.startswith("front/"):
                 self.assertIn("COPY web/front/ ", self.dockerfile, ref)
@@ -94,7 +107,7 @@ class ThePagesAndTheImage(unittest.TestCase):
             if "/" in ref or ref.startswith("favicon."):
                 continue
             self.assertRegex(self.ci, r"ls -l [^\n]*\b%s\b" % re.escape(ref), "%s (loaded by %s) is not in the CI's check of the image" % (ref, ", ".join(pages)))
-            self.assertIn(BUILT[ref][1] if ref in BUILT else "web/" + ref, self.build, "%s (loaded by %s) is not copied by build_web.sh" % (ref, ", ".join(pages)))
+            self.assertIn(BUILT[ref][1] if ref in BUILT else "web/site\"" if in_the_site_folder(ref) else "web/" + ref, self.build, "%s (loaded by %s) is not copied by build_web.sh" % (ref, ", ".join(pages)))
 
     def test_the_stub_root_of_the_routes_test_has_every_script_and_stylesheet_that_the_routes_check_asks_for(self):
         asked = set(re.findall(r"""\(\s*["']/([A-Za-z0-9_.-]+\.(?:js|css))["']\s*,""", read("tests", "scripts", "web_routes_check.py")))

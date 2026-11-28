@@ -4,10 +4,11 @@
 // record handler (AntsHistory.replayStats gives the record to onRecord). tests/scripts/test_web_activity.py runs it with node (the quick tier), and again on broken copies, which it must refuse.
 // And the game page's own call of that handler (web/shell.html), cut out of the page and RUN as the page writes it with the page's names made fakes: in the frame of a match page (play?replay=<file>&embed=1) the
 // curve is on the timeline and no panel is made (the match page has the numbers itself); on the page's own address both are; a live match and a file of your own ask for nothing.
-// usage: node web_activity_check.js web/replay_activity.js web/history_page.js web/shell.html
+// usage: node web_activity_check.js web/replay_activity.js web/history_page.js web/shell.html web/site/site_hooks.js
 'use strict';
 const path = require('path');
-const [activityPath, historyPath, shellPath] = process.argv.slice(2).map((p) => path.resolve(p));
+const [activityPath, historyPath, shellPath, hooksPath] = process.argv.slice(2).map((p) => path.resolve(p));
+const SITE = require(hooksPath);
 global.AntsHistory = require(historyPath);                                       // (the page loads history_page.js first)
 const A = require(activityPath);
 let checks = 0, failures = 0;
@@ -311,18 +312,12 @@ function windowOf(opts) {
     check('a page with a handler gets the record and the panel both', given.length === 1 && both.mstats.byTag('table').length === 1);
 
     // ---- the game page's own call, as the page writes it ----
-    // the statement of web/shell.html that asks for the record and gives it to the curve and the panel, cut out of the page and run with the page's names: the document has the bar, the timeline and its rail
-    // (the curve goes there) and the elements of the panel
+    // the statement of web/shell.html that asks the site's hook for the record (the hook, web/site/site_hooks.js, gives it to the curve and the panel), cut out of the page and run with the page's names and
+    // the real hook: the document has the bar, the timeline and its rail (the curve goes there) and the elements of the panel
     const shell = require('fs').readFileSync(shellPath, 'utf8');
     const from = shell.indexOf('if (ANTS_REPLAY_MODE && !ANTS_LIVE_MODE');
-    const open = shell.indexOf('window.AntsHistory.replayStats(', from);
-    check('the page has the call', from >= 0 && open > from);
-    let depth = 0, end = -1;
-    for (let i = open + 'window.AntsHistory.replayStats'.length; i < shell.length && end < 0; i++) {
-        if (shell[i] === '(') depth++;
-        else if (shell[i] === ')' && --depth === 0) end = i;
-    }
-    const call = shell.slice(from, end + 1) + ';';
+    const call = shell.slice(from, shell.indexOf('\n', from));
+    check('the page has the call', from >= 0 && call.indexOf('antsSite.replayStats(') > 0, call);
     function framePage(names, rec) {
         const p = page(), els = { rbar: p.bar, tl: p.tl, rail: p.rail };
         ['stats-btn', 'mstats', 'mstats-flow'].forEach((id) => { els[id] = new Node(id === 'stats-btn' ? 'button' : 'aside'); els[id].hidden = true; });
@@ -330,9 +325,9 @@ function windowOf(opts) {
         const doc = Object.assign(Object.create(document), { getElementById: (id) => els[id] || null, querySelector: (q) => (q === 'header' ? header : null), addEventListener() {}, defaultView: null });
         const asked = [];
         const win = { document: doc, AntsHistory, AntsActivity: A, AntsDeathMap: { create: () => ({ card: () => null }), redraw() {} }, AntsReplay: {}, antsFinger: false,
-                      matchMedia: () => ({ matches: false }), Event: class { constructor(type) { this.type = type; } }, dispatchEvent() {} };
-        const table = Object.assign({ window: win, document: doc, ANTS_REPLAY_MODE: true, ANTS_LIVE_MODE: false, ANTS_EMBED: false, ANTS_REPLAY_FILE: ID + '.antsrep',
-                                      fetch: (url) => { asked.push(url); return answer(rec)(); }, getComputedStyle: () => ({ getPropertyValue: () => '' }) }, names);
+                      matchMedia: () => ({ matches: false }), Event: class { constructor(type) { this.type = type; } }, dispatchEvent() {},
+                      fetch: (url) => { asked.push(url); return answer(rec)(); }, getComputedStyle: () => ({ getPropertyValue: () => '' }) };
+        const table = Object.assign({ window: win, document: doc, ANTS_REPLAY_MODE: true, ANTS_LIVE_MODE: false, ANTS_EMBED: false, ANTS_REPLAY_FILE: ID + '.antsrep', antsSite: SITE.hooks(win) }, names);
         const scope = new Proxy(table, { has: (t, k) => Object.prototype.hasOwnProperty.call(t, k), get: (t, k) => (k === Symbol.unscopables ? undefined : t[k]) });
         const ran = throws(() => new Function('scope', 'with (scope) { ' + call + ' }')(scope));
         return { els, p, asked, ran };

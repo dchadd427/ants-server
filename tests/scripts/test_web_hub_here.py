@@ -16,10 +16,13 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_pages  # noqa: E402  (the pages as the browser builds them once the site's hooks have written their tags)
 SCRIPT = os.path.join(REPO, "web", "hub_here.js")
 CHECK = os.path.join(REPO, "tests", "scripts", "web_hub_here_check.js")
 NODE = shutil.which("node")
@@ -35,18 +38,22 @@ class ThePageAndTheImage(unittest.TestCase):
     def setUpClass(cls):
         cls.js = read("web", "hub_here.js")
 
-    def test_the_game_page_loads_it_once_and_starts_it_once_and_no_other_page_names_it(self):
-        shell = read("web", "shell.html")
+    def test_the_site_loads_it_once_for_the_game_page_and_starts_it_once_and_no_other_page_names_it(self):
+        shell = site_pages.expanded("web", "shell.html")                                                          # (the page with the tags that the site's hooks write)
         self.assertEqual(shell.count('<script src="hub_here.js"></script>'), 1)
-        self.assertEqual(len(re.findall(r"AntsHubHere\.begin\(", shell)), 1)
-        self.assertRegex(shell, r"if \(window\.AntsHubHere\) AntsHubHere\.begin\(\{ win: window, args: ANTS_ARGS, replay: ANTS_REPLAY_MODE, test: !!ANTS_TEST \}\)", "guarded, and given what the page has checked")
-        self.assertLess(shell.index('<script src="hub_here.js"></script>'), shell.index("AntsHubHere.begin("), "loaded before it is started")
-        for rel in (("web", "lobby.html"), ("web", "matches.html"), ("web", "match.html"), ("web", "mapmaker.html"), ("web", "admin.html"), ("web", "legal.html")):
+        self.assertEqual(len(re.findall(r"AntsHubHere\.begin\(", read("web", "site", "site_hooks.js"))), 1)
+        self.assertIn("onPageStart: function (info) { if (win.AntsHubHere) win.AntsHubHere.begin(info); },", read("web", "site", "site_hooks.js"), "guarded: a page without the script is the page as it was")
+        self.assertEqual(len(re.findall(r"antsSite\.onPageStart\(", shell)), 1)
+        self.assertIn("if (antsSite.onPageStart) antsSite.onPageStart({ win: window, args: ANTS_ARGS, replay: ANTS_REPLAY_MODE, test: !!ANTS_TEST });", shell, "guarded, and given what the page has checked")
+        self.assertLess(shell.index('<script src="hub_here.js"></script>'), shell.index("antsSite.onPageStart("), "loaded before it is started")
+        for rel in (("web", "lobby.html"), ("web", "matches.html"), ("web", "match.html"), ("web", "admin.html"), ("web", "legal.html")):
             self.assertNotIn("hub_here", read(*rel), rel[-1])
+        for rel in (("web", "mapmaker.html"), ("asset_catalog", "index.html")):
+            self.assertNotIn("hub_here", site_pages.expanded(*rel), rel[-1])
 
     def test_the_start_comes_after_the_rematch_so_that_the_match_over_of_the_page_is_called_first(self):
         shell = read("web", "shell.html")
-        self.assertLess(shell.index("AntsRematch.gamePage("), shell.index("AntsHubHere.begin("))
+        self.assertLess(shell.index("AntsRematch.gamePage("), shell.index("antsSite.onPageStart("))
 
     def test_it_is_in_the_image_the_local_build_and_the_ci_list(self):
         self.assertIn("COPY web/hub_here.js /usr/share/nginx/html/hub_here.js\n", read("Dockerfile"))
@@ -80,7 +87,7 @@ class TheCodeRuns(unittest.TestCase):
 class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/hub_here_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make the checks fail, and the copy with
     nothing changed must pass"""
-    FILES = ["web/hub_here.js", "web/shell.html", "web/lobby.html", "web/matches.html", "web/match.html", "web/mapmaker.html", "web/admin.html", "web/legal.html", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "tests/scripts/test_web_hub_here.py", "tests/scripts/web_hub_here_check.js"]
+    FILES = ["web/hub_here.js", "web/shell.html", "web/lobby.html", "web/matches.html", "web/match.html", "web/mapmaker.html", "asset_catalog/index.html", "web/admin.html", "web/legal.html", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "web/site/site_hooks.js", "tests/scripts/site_pages.py", "tests/scripts/test_web_hub_here.py", "tests/scripts/web_hub_here_check.js"]
 
     @classmethod
     def setUpClass(cls):

@@ -26,6 +26,8 @@ ROW = ["/", "/matches", "/mapmaker", DISCORD]
 SMALL = [("Sprites and sounds", "/asset_catalog/"), ("What’s new", "/changelog"), ("GitHub", "https://github.com/dchadd427/ants-cross-platform"),
          ("Feedback", "https://github.com/dchadd427/ants-cross-platform/issues"), ("Legal", "/legal")]
 sys.path.insert(0, os.path.join(REPO, "tools"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_pages  # noqa: E402  (the three public pages as the browser builds them once the site's hooks have written their tags)
 from size_limits import NAV_CSS_BUDGET as CSS_BUDGET, NAV_CSS_GZIP_BUDGET as CSS_GZIP_BUDGET, NAV_JS_BUDGET as JS_BUDGET, NAV_JS_GZIP_BUDGET as JS_GZIP_BUDGET  # noqa: E402  (every byte budget: tools/size_limits.py)
 
 
@@ -49,10 +51,10 @@ PAGES = {
     "match": (read("web", "match.html"), "/matches", "now"),
     "legal": (read("web", "legal.html"), None, "menu"),
     "changelog": (changelog_page(), None, "menu"),
-    "mapmaker": (read("web", "mapmaker.html"), "/mapmaker", "menu"),
+    "mapmaker": (site_pages.expanded("web", "mapmaker.html"), "/mapmaker", "menu"),
     "admin": (read("web", "admin.html"), None, "menu"),                                                       # (its title and its tabs are drawn by its script, for a visitor who is let in: tests/scripts/test_web_admin.py)
-    "catalog": (read("asset_catalog", "index.html"), None, "menu"),
-    "game": (read("web", "shell.html"), None, "menu"),                                                        # (the game page: a bot game, a joined match, a recording, a live view; its tools and its stamp are tests/scripts/test_web_game.py's)
+    "catalog": (site_pages.expanded("asset_catalog", "index.html"), None, "menu"),
+    "game": (site_pages.expanded("web", "shell.html"), None, "menu"),                                                        # (the game page: a bot game, a joined match, a recording, a live view; its tools and its stamp are tests/scripts/test_web_game.py's)
 }
 CSS = read("web", "site_nav.css")
 JS = read("web", "site_nav.js")

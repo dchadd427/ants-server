@@ -347,11 +347,12 @@ class TheBar(PageCase):
             self.assertNotIn(gone, self.page, gone)
         self.assertNotIn("Reset", re.sub(r"<script.*?</script>", "", self.page, flags=re.S).replace("Reset Game", ""))
 
-    def test_the_bar_files_load_once_the_site_script_first_and_before_the_page_script(self):
-        self.assertEqual(self.page.count('<link rel="stylesheet" href="site_nav.css"><link rel="stylesheet" href="game_bar.css">'), 1)
-        self.assertEqual(self.page.count('<script src="site_nav.js"></script><script src="game_bar.js"></script>'), 1)
+    def test_the_bar_files_load_once_the_site_hooks_first_and_before_the_page_script(self):
+        # (the site's hooks write the site's own styles and scripts of the bar where their tags stand: tests/scripts/test_web_site_hooks.py reads the page with them)
+        self.assertEqual(self.page.count('<script src="site_hooks.js" data-page="play"></script><link rel="stylesheet" href="game_bar.css">'), 1)
+        self.assertEqual(self.page.count('<script src="site_hooks.js" data-page="play"></script><script src="game_bar.js"></script>'), 1)
         self.assertLess(self.page.index("game_bar.js"), self.page.index("AntsGameBar.start("))
-        self.assertLess(self.page.index('<header class="sb"'), self.page.index("site_nav.js"))
+        self.assertLess(self.page.index('<header class="sb"'), self.page.rindex('<script src="site_hooks.js"'))
 
     def test_the_bar_is_as_high_as_the_header_it_replaced_so_the_picture_keeps_its_size(self):
         css = read("web", "game_bar.css")
@@ -428,12 +429,7 @@ class TheGamePageHasNoFrameModeButTheMatchPages(PageCase):
         # play.html?replay=<file>&embed=1, in the frame of web/match.html (docs/REPLAYS.md "The match pages"): only a replay, never a match played, a room or a live match
         self.assertIn("if (/(^|[?&])replay=/.test(window.location.search) && /(^|[?&])embed=1(&|$)/.test(window.location.search)) document.body.className += ' embed';", self.page)
         self.assertIn("var ANTS_EMBED = ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && !ANTS_OWN_MODE && /(^|[?&])embed=1(&|$)/.test(window.location.search);", self.page)
-        embed_css = read("web", "replay_stats.css")                                                                  # (its own stylesheet: the game page may not grow, tools/check_hygiene.py)
-        self.assertIn('<link rel="stylesheet" href="replay_stats.css">', self.page)
-        self.assertEqual(embed_css.count("body.embed header, body.embed #mobile-tip-banner, body.embed .mstats, body.embed #stats-btn { display: none !important; }"), 1)
-        self.assertEqual(embed_css.count("body.embed::after { content: none; }"), 1)                               # (the page's own frame line: the match page has its own)
-        self.assertEqual(embed_css.count("body.embed { padding-top: 10px; padding-left: 12px; padding-right: 12px; --side: 12px; }"), 1)
-        self.assertNotIn("body.embed", self.style)                                                                   # (nothing of the frame mode in the page's own style)
+        self.assertNotIn("body.embed", self.style)                                                                   # (nothing of the frame mode in the page's own style: the site's stylesheet for it is read by tests/scripts/test_web_site_hooks.py)
 
 
 class TheFullscreenStageIsStillBlack(PageCase):

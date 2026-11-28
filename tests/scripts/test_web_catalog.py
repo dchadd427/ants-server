@@ -29,7 +29,7 @@ PAGE = read("asset_catalog", "index.html")
 STYLE = PAGE[PAGE.index("<style>") + len("<style>"):PAGE.index("</style>")]
 HEAD = PAGE[:PAGE.index("<style>")]
 HEADER = PAGE[PAGE.index('<header class="site-head">'):PAGE.index("</header>", PAGE.index('<header class="site-head">')) + len("</header>")]
-BAR = PAGE[PAGE.index('<header class="sb"'):PAGE.index("</header>")]                        # (the site bar above the catalog's own header: web/site_nav.css)
+BAR = PAGE[PAGE.index('<header class="sb"'):PAGE.index("</header>")]                        # (the site bar above the catalog's own header)
 AFTER_HEADER = PAGE[PAGE.index('<header class="site-head">'):]
 SCRIPT = PAGE[PAGE.index("<script>"):PAGE.rindex("</script>")]
 SHARED = read("web", "front", "classic.css")
@@ -50,9 +50,9 @@ class TheHead(unittest.TestCase):
         for name in ("LibreFranklin-Medium.ttf", "classic.css"):
             self.assertTrue(os.path.exists(os.path.join(REPO, "web", "front", name)), name)
 
-    def test_nothing_is_loaded_but_the_data_the_font_and_the_stylesheet(self):
-        self.assertEqual(re.findall(r'<script[^>]*\bsrc="([^"]+)"', PAGE), ["catalog_data.js", "/site_nav.js"])
-        self.assertEqual(re.findall(r'<link[^>]*\bhref="([^"]+)"', PAGE), ["/manifest.webmanifest", "/app/apple-touch-icon.png?v=82bef672", "/front/LibreFranklin-Medium.ttf", "/front/classic.css", "/site_nav.css"])
+    def test_nothing_is_loaded_but_the_data_the_font_the_stylesheet_and_the_hooks_of_a_site(self):
+        self.assertEqual(re.findall(r'<script[^>]*\bsrc="([^"]+)"', PAGE), ["/site_hooks.js", "catalog_data.js", "/site_hooks.js"])             # (the site's hooks, twice: its styles in the head, its scripts after the page's own)
+        self.assertEqual(re.findall(r'<link[^>]*\bhref="([^"]+)"', PAGE), ["/manifest.webmanifest", "/app/apple-touch-icon.png?v=82bef672", "/front/LibreFranklin-Medium.ttf", "/front/classic.css"])
         self.assertNotIn("@import", STYLE)
         self.assertNotRegex(STYLE, r"url\(\s*[\"']?(?:https?:)?//")
         self.assertNotRegex(PAGE, r"<(?:img|iframe|video|audio|source)[^>]*src=\"(?:https?:)?//")

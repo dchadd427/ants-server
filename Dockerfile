@@ -249,10 +249,13 @@ COPY --from=builder /src/match.html /usr/share/nginx/html/match.html
 COPY web/matches.css /usr/share/nginx/html/matches.css
 COPY web/site_nav.css /usr/share/nginx/html/site_nav.css
 COPY web/site_nav.js /usr/share/nginx/html/site_nav.js
+# The seam between the pages and the site (docs/PLAY_IN_BROWSER.md, "The seam to a site"): web/site_hooks.js is the stub that a tree without a site serves; this image serves the site's own half in its place, and the Map Maker's
+# part of the site beside it (web/site/, at the root of the site: site_hooks.js and mapmaker_site.js), so that the pages name no file of the site
+COPY web/site/ /usr/share/nginx/html/
 # The update notice (docs/SITE_NAV.md "The update notice"): the strip and the "What's new" window that every page with the version stamped loads (update_notice.js, update_notice.css); the data file whats_new.json is made below, with the changelog
 COPY web/update_notice.css /usr/share/nginx/html/update_notice.css
 COPY web/update_notice.js /usr/share/nginx/html/update_notice.js
-# The counter of the site's visits (docs/ANALYTICS.md): the one small script that every public page loads after the update notice; it sends a few beacons to the chat hub's door /hub/a and keeps nothing in the browser
+# The counter of the site's visits (docs/ANALYTICS.md): the one small script that every public page loads (the game page and the Map Maker through the site's hooks); it sends a few beacons to the chat hub's door /hub/a and keeps nothing in the browser
 COPY web/analytics.js /usr/share/nginx/html/analytics.js
 # The bar of the game page (docs/SITE_NAV.md "The game page"): the game page's own rules for the site bar and its part of the bar's script (the links that ask first during a match, the keys, the Menu's own lines)
 COPY web/game_bar.css /usr/share/nginx/html/game_bar.css

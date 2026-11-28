@@ -977,8 +977,8 @@
     {
       "id": "app_play_menu_missing",
       "file": "web/front/mapmaker_app.js",
-      "old": ", { text: '\\u25b6 Play this map', cls: 'gold', hint:",
-      "new": ", { text: '\\u25b6 Play this map', hint:",
+      "old": "[{ text: '\\u25b6 Play this map', cls: 'gold', hint:",
+      "new": "[{ text: '\\u25b6 Play this map', hint:",
       "test": "python3 -m unittest tests.scripts.test_web_mapmaker_play.ThePageWiring"
     },
     {
@@ -1040,15 +1040,15 @@
     {
       "id": "shell_test_counted",
       "file": "web/shell.html",
-      "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return; var sent = fetch(",
-      "new": "var sent = fetch(",
+      "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
+      "new": "\n",
       "test": "python3 -m unittest tests.scripts.test_web_report.ThePagesOwnCode"
     },
     {
       "id": "shell_everything_not_counted",
       "file": "web/shell.html",
-      "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return; var sent = fetch(",
-      "new": "if (true) return; var sent = fetch(",
+      "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
+      "new": "if (true) return;\n",
       "test": "python3 -m unittest tests.scripts.test_web_report.ThePagesOwnCode"
     },
     {

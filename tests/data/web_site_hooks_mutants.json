@@ -1,0 +1,120 @@
+{
+ "note": "Mutants of the site's half of the seam between the pages of the game and the site (web/site/site_hooks.js: what each page loads of the site and in which order, the hooks of the game page; web/site/mapmaker_site.js: the Map Maker's buttons, actions, menu lines and loading; docs/PLAY_IN_BROWSER.md 'The seam to a site') for tools/mutate.py (docs/TESTING.md, 'Mutation checks'), against tests/scripts/web_site_hooks_check.js. Run from the checkout: tools/mutate.py tests/data/web_site_hooks_mutants.json --keep-going --jobs 1; every mutant must be caught. tests/scripts/test_web_site_hooks.py runs them on copies.",
+ "baseline": {
+  "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js"
+ },
+ "mutants": [
+  {
+   "id": "the_history_comes_after_the_map_of_deaths",
+   "file": "web/site/site_hooks.js",
+   "old": "'hub_here.js', 'history_page.js', 'death_map.js'",
+   "new": "'hub_here.js', 'death_map.js', 'history_page.js'",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the map of deaths reads the history helpers when it is loaded"
+  },
+  {
+   "id": "the_game_page_has_no_counter",
+   "file": "web/site/site_hooks.js",
+   "old": "'site_nav.js', 'analytics.js', 'hub_here.js'",
+   "new": "'site_nav.js', 'hub_here.js'",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the visits of the game page are not counted"
+  },
+  {
+   "id": "the_head_gets_the_scripts_and_the_end_the_styles",
+   "file": "web/site/site_hooks.js",
+   "old": "(inHead ? list.styles : list.scripts)",
+   "new": "(inHead ? list.scripts : list.styles)",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a script in the head runs before the markup that it works on"
+  },
+  {
+   "id": "the_second_load_replaces_the_hooks",
+   "file": "web/site/site_hooks.js",
+   "old": "if (inHead && !win.AntsSite) win.AntsSite = hooks(win);",
+   "new": "if (inHead) win.AntsSite = hooks(win);",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a hook that the page has is a hook that the page keeps"
+  },
+  {
+   "id": "a_page_that_is_not_known_gets_the_catalogs_tags",
+   "file": "web/site/site_hooks.js",
+   "old": "if (!list) return '';",
+   "new": "if (!list) list = PAGES.catalog;",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a page that the site does not know gets nothing of the site"
+  },
+  {
+   "id": "five_players_in_an_entry",
+   "file": "web/site/site_hooks.js",
+   "old": ".slice(0, 4) } : null);",
+   "new": ".slice(0, 5) } : null);",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a match has at most four seats"
+  },
+  {
+   "id": "the_seconds_of_a_match_are_not_whole",
+   "file": "web/site/site_hooks.js",
+   "old": "Math.floor(e.seconds)",
+   "new": "e.seconds",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the header says whole seconds"
+  },
+  {
+   "id": "a_lost_list_is_not_answered",
+   "file": "web/site/site_hooks.js",
+   "old": ".catch(function () { done(null); });",
+   "new": ".catch(function () { });",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the header waits for ever"
+  },
+  {
+   "id": "the_ai_button_goes_before_the_tags",
+   "file": "web/site/mapmaker_site.js",
+   "old": "if (tags) tags.insertAdjacentHTML('afterend',",
+   "new": "if (tags) tags.insertAdjacentHTML('beforebegin',",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the button is where the page had it"
+  },
+  {
+   "id": "the_buttons_stay_disabled",
+   "file": "web/site/mapmaker_site.js",
+   "old": "b.disabled = false;",
+   "new": "b.disabled = true;",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the buttons never work"
+  },
+  {
+   "id": "the_menu_has_the_lines_in_another_order",
+   "file": "web/site/mapmaker_site.js",
+   "old": "{ text: 'Submit for approval...', onClick: ACTIONS.submit }, { text: 'My submissions', onClick: ACTIONS.subs });",
+   "new": "{ text: 'My submissions', onClick: ACTIONS.subs }, { text: 'Submit for approval...', onClick: ACTIONS.submit });",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the phone's menu has the lines in the order that the markup has them"
+  },
+  {
+   "id": "my_maps_is_not_given_the_submissions",
+   "file": "web/site/mapmaker_site.js",
+   "old": "page.sent(sentProxy());",
+   "new": "/* none */",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the second tab of My maps is not there"
+  },
+  {
+   "id": "the_ai_part_is_loaded_at_once",
+   "file": "web/site/mapmaker_site.js",
+   "old": "ACTIONS.ai = function () { if (dialogs.isOpen() || canvas.isStroking()) return; withAi(",
+   "new": "withAi(function () {}); ACTIONS.ai = function () { if (dialogs.isOpen() || canvas.isStroking()) return; withAi(",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a player who never connects an AI downloads it"
+  },
+  {
+   "id": "a_status_link_does_not_load_the_sender",
+   "file": "web/site/mapmaker_site.js",
+   "old": "if (/^#sent=/.test(win.location.hash)) withSubmit(function () {});",
+   "new": "if (false) withSubmit(function () {});",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a status link that nobody reads"
+  }
+ ]
+}

@@ -88,7 +88,7 @@
         if (!req) end('failed');
     }
 
-    // What the player sent for approval (mapmaker_submit.js), in a database of its own so that the drafts' database is never touched: one store, a record for each submission (its id is the server's)
+    // What the player sent for approval (a site's part of the page), in a database of its own so that the drafts' database is never touched: one store, a record for each submission (its id is the server's)
     // and the records '#tokens' and '#maker'. Nothing in it is a map of My maps. env: {idb}
     function createSent(env) {
         var db = null, status = 'pending';

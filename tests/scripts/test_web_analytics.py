@@ -4,7 +4,7 @@
   - the code RUNS in node: the counter's script on a fake page (tests/scripts/web_analytics_check.js: what it sends and when, a browser that asked not to be tracked, a frame, the admin page, what it never
     touches) and the tab on a fake page with a fake hub (tests/scripts/web_admin_analytics_check.js: the question and the range, the three views, the charts, the files of the export, text from a visitor's
     browser put in as text and marked as data); the tab inside the whole admin page is web_admin_check.js's;
-  - the files, where no run of the code can look: every public page loads the counter's script once, after the update notice, and the admin page never does; the image and the local web build ship the files;
+  - the files, where no run of the code can look: every public page loads the counter's script once (the game page and the Map Maker through the site's hooks, before the update notice; the others after it), and the admin page never does; the image and the local web build ship the files;
     the scripts are plain ES5, make no markup from a text, touch no cookie and no storage, and the counter's script is within its byte budget; the tab's style is plain CSS with a forced-colors block;
   - tests/data/web_analytics_mutants.json changes one thing at a time in a COPY of the files: the node checks must then fail (the last class of this file; tools/mutate.py runs the same list).
 The hub's side (the door, what is kept, the day's secret, the numbers) is test_hub_analytics.py's, nginx's door is test_nginx_hub_analytics.py's.
@@ -21,7 +21,9 @@ import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(REPO, "tools"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import changelog_to_html  # noqa: E402
+import site_pages  # noqa: E402  (the game page and the Map Maker as the browser builds them once the site's hooks have written their tags)
 import size_limits  # noqa: E402
 
 NODE = shutil.which("node")
@@ -41,15 +43,17 @@ def changelog_page():
 
 
 # the public pages: every address of the site that carries the update notice, except the admin page
-PUBLIC = {"lobby": read("web", "lobby.html"), "game": read("web", "shell.html"), "matches": read("web", "matches.html"), "match": read("web", "match.html"), "legal": read("web", "legal.html"),
-          "mapmaker": read("web", "mapmaker.html"), "map page": read("web", "map_pages", "page.html"), "changelog": changelog_page()}
+# (the game page and the Map Maker as the browser builds them: the site's hooks write the counter's tag where their own stands, before the update notice's, two scripts that know nothing of each other)
+PUBLIC = {"lobby": read("web", "lobby.html"), "game": site_pages.expanded("web", "shell.html"), "matches": read("web", "matches.html"), "match": read("web", "match.html"), "legal": read("web", "legal.html"),
+          "mapmaker": site_pages.expanded("web", "mapmaker.html"), "map page": read("web", "map_pages", "page.html"), "changelog": changelog_page()}
+WRITTEN_BY_THE_HOOKS = ("game", "mapmaker")
 
 
 class ThePages(unittest.TestCase):
-    def test_every_public_page_loads_the_script_once_and_after_the_update_notice(self):
+    def test_every_public_page_loads_the_script_once_and_after_the_update_notice_where_the_page_names_it(self):
         for name, page in PUBLIC.items():
             tags = re.findall(r'<script src="(/?(?:update_notice|analytics)\.js)"[^>]*></script>', page)
-            self.assertEqual([t.lstrip("/") for t in tags], ["update_notice.js", "analytics.js"], name)
+            self.assertEqual([t.lstrip("/") for t in tags], ["analytics.js", "update_notice.js"] if name in WRITTEN_BY_THE_HOOKS else ["update_notice.js", "analytics.js"], name)
             self.assertEqual(len(re.findall(r"analytics\.js", page)), 1, name)
 
     def test_the_admin_page_does_not_count_itself_and_loads_the_tab_before_the_page(self):
@@ -60,8 +64,11 @@ class ThePages(unittest.TestCase):
 
     def test_the_game_page_tells_how_long_the_game_took_once_and_only_when_the_counter_is_there(self):
         page = read("web", "shell.html")
-        self.assertEqual(page.count("AntsAnalytics.game("), 1)
-        self.assertIn("if (window.AntsAnalytics && window.performance && performance.now) window.AntsAnalytics.game(performance.now());", page)
+        self.assertEqual(page.count("antsSite.gameStarted("), 1)
+        self.assertIn("if (antsSite.gameStarted && window.performance && performance.now) antsSite.gameStarted(performance.now());", page)
+        hooks = read("web", "site", "site_hooks.js")
+        self.assertEqual(hooks.count("AntsAnalytics.game("), 1)
+        self.assertIn("gameStarted: function (ms) { if (win.AntsAnalytics) win.AntsAnalytics.game(ms); },", hooks)
 
     def test_the_image_and_the_local_build_ship_the_files(self):
         dockerfile, build = read("Dockerfile"), read("build_web.sh")

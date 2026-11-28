@@ -1,13 +1,16 @@
-// Runs the game page's OWN code for counting a game on this computer (web/shell.html, the block ANTS_REPORT_BEGIN .. ANTS_REPORT_END): the function antsReportLocalGame that the game calls when the
-// first tick of a single-player game runs. Nothing but a POST with nothing in it goes to /stats/local, once for each call, and no failure of any kind (no fetch, a throw, a rejected or a late
-// answer, a thenable without catch) reaches the game or is retried.
-// tests/scripts/test_web_report.py runs this with node (the quick tier). usage: node web_report_check.js web/shell.html     (exit 0: every check holds; every failure is printed)
+// Runs the game page's OWN code for counting a game on this computer (web/shell.html, the block ANTS_REPORT_BEGIN .. ANTS_REPORT_END: the function antsReportLocalGame that the game calls when the
+// first tick of a single-player game runs) and the site's hook that it calls (web/site/site_hooks.js, the block of the same name). Nothing but a POST with nothing in it goes to /stats/local, once for
+// each call, and no failure of any kind (no fetch, a throw, a rejected or a late answer, a thenable without catch) reaches the game or is retried.
+// tests/scripts/test_web_report.py runs this with node (the quick tier). usage: node web_report_check.js web/shell.html web/site/site_hooks.js     (exit 0: every check holds; every failure is printed)
 'use strict';
 const fs = require('fs');
+const path = require('path');
 const vm = require('vm');
 
 const shellPath = process.argv[2];
-if (!shellPath) { console.log('usage: web_stats_check.js shell.html'); process.exit(2); }
+const hooksPath = process.argv[3];
+if (!shellPath || !hooksPath) { console.log('usage: web_report_check.js shell.html site_hooks.js'); process.exit(2); }
+const SITE = require(path.resolve(hooksPath));
 
 let checks = 0;
 let failures = 0;
@@ -21,15 +24,23 @@ function same(label, got, want) {
     check(label, a === b, 'got ' + a + ', wanted ' + b);
 }
 
-const text = fs.readFileSync(shellPath, 'utf8');
-const begin = text.indexOf('ANTS_REPORT_BEGIN');
-const end = text.indexOf('ANTS_REPORT_END');
-if (begin < 0 || end < begin || text.indexOf('ANTS_REPORT_BEGIN', begin + 1) >= 0) { console.log('FAIL the block ANTS_REPORT_BEGIN .. ANTS_REPORT_END is missing or twice in ' + shellPath); process.exit(1); }
-const block = text.slice(text.indexOf('\n', begin) + 1, text.lastIndexOf('\n', end));
+function blockOf(file, label) {
+    const text = fs.readFileSync(file, 'utf8');
+    const begin = text.indexOf('ANTS_REPORT_BEGIN');
+    const end = text.indexOf('ANTS_REPORT_END');
+    if (begin < 0 || end < begin || text.indexOf('ANTS_REPORT_BEGIN', begin + 1) >= 0) { console.log('FAIL the block ANTS_REPORT_BEGIN .. ANTS_REPORT_END is missing or twice in ' + label); process.exit(1); }
+    return { text, begin, end, block: text.slice(text.indexOf('\n', begin) + 1, text.lastIndexOf('\n', end)) };
+}
+const shell = blockOf(shellPath, shellPath);
+const hook = blockOf(hooksPath, hooksPath);
+const text = shell.text;
+const block = shell.block;
 
-// A page whose global scope has the given fetch (and nothing else): the block is a script, and its function is a global of the page, as the game's EM_JS code needs it
+// A page whose global scope has the given fetch (and nothing else) and the site's hooks (the real ones, working on that scope): the block is a script, and its function is a global of the page, as the
+// game's EM_JS code needs it
 function page(fetchImpl, extra) {
     const context = vm.createContext(Object.assign({ fetch: fetchImpl }, extra || {}));
+    context.antsSite = SITE.hooks(context);
     vm.runInContext(block, context);
     return context;
 }
@@ -96,6 +107,7 @@ process.on('unhandledRejection', () => { unhandled++; });
     }
     {   // a browser without fetch at all: the name is not even defined
         const context = vm.createContext({});
+        context.antsSite = SITE.hooks(context);
         vm.runInContext(block, context);
         let thrown = null;
         try { context.antsReportLocalGame(); } catch (e) { thrown = e; }
@@ -111,10 +123,12 @@ process.on('unhandledRejection', () => { unhandled++; });
     }
     check('no rejection was left unhandled', unhandled === 0, unhandled);
 
-    // 3. what the page's text says: the address appears once in the block, the page has no other place that posts a report, and nothing here reads a body, a name or an address of the player
-    check('the block names /stats/local once', (block.match(/\/stats\/local/g) || []).length === 1);
-    check('the block sends no body, headers or credentials', !/\b(body|headers|credentials|mode)\b\s*:/.test(block.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
-    check('the page has no other reference to /stats/local than this function\'s', (text.match(/\/stats\/local/g) || []).length === (text.slice(begin, end).match(/\/stats\/local/g) || []).length);
+    // 3. what the texts say: the address is the hook's, once, the game page has none (it asks the hook), the hook's file has no other place that posts a report, and nothing here reads a body, a name or an address of the player
+    const bare = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    check('the hook\'s block names /stats/local once', (hook.block.match(/\/stats\/local/g) || []).length === 1);
+    check('the game page does not name /stats/local at all', (text.match(/\/stats\/local/g) || []).length === 0);
+    check('the hook\'s file has no other reference to /stats/local than this function\'s', (hook.text.match(/\/stats\/local/g) || []).length === 1);
+    check('the hook sends no body, headers or credentials', !/\b(body|headers|credentials|mode)\b\s*:/.test(bare(hook.block)));
 
     console.log('web_stats_check: ' + checks + ' checks, ' + failures + ' failures');
     process.exit(failures === 0 ? 0 : 1);

@@ -1,10 +1,10 @@
-// The rematch on the two pages (docs/PLAY_IN_BROWSER.md "After a match", docs/SERVER.md "Lobby rooms"): when the rules end a match that a lobby room began, the game server opens a lobby room with the same code at
+// The rematch on the two pages (docs/PLAY_IN_BROWSER.md "After a match"): when the rules end a match that a lobby room began, the game server opens a lobby room with the same code at
 // once, with the match's plan and a seat reserved for each person's key. This file is the pages' side of it, with no game in it:
 //   * the game page (web/shell.html): the game tells the page that its match is over (window.antsMatchOver, src/ants_app/application.cpp); the page reads the key of its seat (the game's own entry, before the game
 //     lets go of it), holds its reserved seat from the results screen with that key (a game's Hello: the seat stays reserved, and the others see "on the results screen"), and shows the strip under the game:
 //     "The match is over", who is back, and the person's choice: "Back to the room", which hands the key to the front page (this tab's session storage) and goes there, and "Back to Ants & Uncles", which
 //     gives the seat up and goes to the front page without it (the game's results screen has the same two buttons: window.antsLeaveToRoom, window.antsLeaveToHub; nothing is chosen for the person: the screen waits);
-//   * the front page (web/lobby.html): the strip "Back from the match." at the top of the page, with the winner and a link to the match's stats and replay.
+//   * the front page: the strip "Back from the match." at the top of the page, with the winner and a link to the match's stats and replay.
 // ES5 and no module system, as the site's other scripts: a page gets the global AntsRematch, node gets module.exports (tests/scripts/web_rematch_check.js). A name is only ever set as text.
 (function (root, factory) {
     var api = factory();
@@ -15,14 +15,14 @@
 
     var BACK_KEY = 'ants.back';                     // sessionStorage: the match that this tab comes back from { c: code, t: epoch ms, m: map file, p: [four names], w: the winner's words, r: this seat's place (1 to 4, 0 or none: unknown) }
     var OVER_KEY = 'ants.over';                     // sessionStorage: the time (epoch ms) of the match that the bell was told of, so that a reload or another tab of the same session does not tell it twice
-    var LOBBY_KEY = 'ants.lobby';                   // sessionStorage: the front page's room { c, k, n, o } (web/lobby.html): the hand-over puts the reserved seat there
+    var LOBBY_KEY = 'ants.lobby';                   // sessionStorage: the front page's room { c, k, n, o }: the hand-over puts the reserved seat there
     var REJOIN_PREFIX = 'ants.rejoin.';             // localStorage: the game's key of a seat (src/ants_app/rejoin_store.cpp)
     var MAX_AGE_MS = 3 * 60 * 60 * 1000;            // a key lives three hours (the game's kRejoinMaxAgeMs), and so does the server's reservation
     var ASK_AFTER_MS = 2000;                        // the results screen asks for its seat this long after the game said that the match is over: the server ends the match in a pass of its own, which
                                                     // a game can be a moment ahead of, and the Hello must find the lobby that follows the match, not the match (where a game's key takes its seat back)
     var COLORS = ['Green', 'Red', 'Blue', 'Black'];
     var DOTS = ['#2e8f56', '#b43a4c', '#5a56c8', '#4a4a50'];   // the color of each seat's dot in the strips
-    var ID_RE = /^ants-[A-Za-z0-9_]{1,24}-[0-9]{8}-[0-9]{6}Z(-[0-9]{1,4})?$/;      // a match's id (web/history_page.js): its replay's file name without .antsrep
+    var ID_RE = /^ants-[A-Za-z0-9_]{1,24}-[0-9]{8}-[0-9]{6}Z(-[0-9]{1,4})?$/;      // a match's id (the match history's helpers): its replay's file name without .antsrep
 
     function printable(s, max) { return typeof s === 'string' && s.length <= max && /^[\x20-\x7e]*$/.test(s); }
     function isWhole(n) { return typeof n === 'number' && isFinite(n) && Math.floor(n) === n; }
@@ -103,7 +103,7 @@
 
     // ---- what the strips say --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // The people of a lobby room's Room message (web/front/lobby_net.js decode) for the game page's strip, in the order of the colors: { seat, name, dot, host, here }. Not here: still on the results screen
-    // (the room counts the reserved seat as a game before any START, and its game runs in a browser or did not say: web/front/lobby_rules.js modelOf has the same rule); here: everybody else, a game of the
+    // (the room counts the reserved seat as a game before any START, and its game runs in a browser or did not say: the front page's modelOf has the same rule); here: everybody else, a game of the
     // desktop that joined by the code too
     function chipsOf(room) {
         var out = [];
@@ -143,7 +143,7 @@
         return '';
     }
     function statsHref(id) { return id ? '/match?id=' + encodeURIComponent(id) : '/matches'; }
-    // What the bell is told of the match that this tab came back from (web/home/alerts.js alert('over')): { map, place, match } (a place that is not known and a match that was not found are left out), or null for a match with no map
+    // What the bell is told of the match that this tab came back from (the front page's alert('over')): { map, place, match } (a place that is not known and a match that was not found are left out), or null for a match with no map
     function overNote(back, id) {
         if (!back || !back.map) return null;
         var note = { map: back.map };
@@ -159,7 +159,7 @@
         return true;
     }
 
-    // ---- the browser's platform (what the Hello tells the room: web/lobby.html's rule) ----
+    // ---- the browser's platform (what the Hello tells the room: the front page's rule) ----
     function platformOf(nav) {
         var ua = ((nav && nav.userAgent) || '') + ' ' + ((nav && nav.platform) || '');
         var os = /Android/i.test(ua) ? 4 : /iPhone|iPad|iPod/i.test(ua) ? 5 : /Windows/i.test(ua) ? 1 : /Mac/i.test(ua) ? 2 : /Linux|X11/i.test(ua) ? 3 : 6;
@@ -350,7 +350,7 @@
     // for five seconds). Also drives an unlisted test-map room opened from the map maker (?testroom=<id>). env: { doc, win, before (the element that the strip goes in front of), fetch (window.fetch or null), later(fn, ms) }.
     function frontStrip(env) {
         var bar = null, link = null, round = 0, tbar = null, known = Object.create(null), pendingTest = null, lastTest = null, testError = false, handoffId = '', paintedKey = '', pendingHost = null;
-        function tell(back, id) { if (env.over) { try { env.over(back, id); } catch (e) { /* the bell is the page's own */ } } }      // (the bell is told once the match is found, or when it will not be: web/home/alerts.js)
+        function tell(back, id) { if (env.over) { try { env.over(back, id); } catch (e) { /* the bell is the page's own */ } } }      // (the bell is told once the match is found, or when it will not be: the front page's alerts)
         function look(back, mine, tries) {
             if (mine !== round) return;
             if (!env.fetch) { tell(back, ''); return; }
@@ -472,7 +472,7 @@
             },
             // The page made its room again (the first one was closed, the server restarted, the link was lost for long): the new room has the default map, so the test map is sent to it again
             remade: function () { if (lastTest) { pendingTest = lastTest; pendingTest.sent = false; } },
-            // The two addresses that make a room: /?testroom=<id> (a test map from the Map Maker, below) and /?hostmap=<file name> (a map of the library, from the Play it button of its page, docs/MAP_PAGES.md): `held` says that the page
+            // The two addresses that make a room: /?testroom=<id> (a test map from the Map Maker, below) and /?hostmap=<file name> (a map of the library, from the Play it button of its page): `held` says that the page
             // holds a room already, in which case the second makes no room and changes none (the front page's own answer to a press on Quick host while it holds one), and the address loses its query either way.
             begin: function (onReady, held) {
                 var win = env.win;

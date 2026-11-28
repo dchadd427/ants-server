@@ -14,10 +14,13 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import site_pages  # noqa: E402  (the pages as the browser builds them once the site's hooks have written their tags)
 HELPERS_JS = os.path.join(REPO, "tests", "scripts", "web_history_check.js")
 PICTURES_JS = os.path.join(REPO, "tests", "scripts", "web_history_pictures_check.js")
 PAGES = ("matches.html", "match.html")
@@ -220,13 +223,16 @@ class TheGamePagesStats(unittest.TestCase):
     page = read("web", "shell.html")
 
     def test_the_stats_are_asked_for_only_for_a_replay_of_the_servers_own_store(self):
-        self.assertIn("if (ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && ANTS_REPLAY_FILE && typeof fetch === 'function') window.AntsHistory.replayStats({ document: document, fetch: fetch.bind(window), file: ANTS_REPLAY_FILE, curveOnly: ANTS_EMBED, redraw: window.AntsDeathMap && window.AntsDeathMap.redraw, deathMap: window.AntsDeathMap && window.AntsDeathMap.create(", self.page)           # (the frame of a match page asks too, for the curve alone: tests/scripts/web_activity_check.js runs this call)
+        self.assertIn("if (ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats({ file: ANTS_REPLAY_FILE, embed: ANTS_EMBED });", self.page)           # (the frame of a match page asks too, for the curve alone: tests/scripts/web_activity_check.js runs this call with the site's hook)
+        hooks = read("web", "site", "site_hooks.js")
+        self.assertIn("file: info.file, curveOnly: info.embed,", hooks)                                         # (the hook gives the frame's flag on: the activity curve alone, no panel)
         helpers = read("web", "history_page.js")
         self.assertIn("id = idOfFile(env.file);", helpers)
         self.assertIn("env.fetch('/history/' + id, { cache: 'no-store', credentials: 'omit' })", helpers)
         self.assertIn("rec.id === id", helpers)                                                              # (an answer for another match is no stats)
-        self.assertLess(self.page.index('<script src="replay_page.js"></script>'), self.page.index('<script src="history_page.js"></script>'))
-        self.assertLess(self.page.index('<script src="history_page.js"></script>'), self.page.index("var ANTS_REPLAY_MODE"))
+        loaded = site_pages.expanded("web", "shell.html")                                                    # (the page with the tags that the site's hooks write)
+        self.assertLess(loaded.index('<script src="replay_page.js"></script>'), loaded.index("var ANTS_REPLAY_MODE"))
+        self.assertLess(loaded.index('<script src="history_page.js"></script>'), loaded.index("var ANTS_REPLAY_MODE"))
 
     def test_the_pieces_are_there_once_and_closed_at_first(self):
         for ident, markup in (("stats-btn", r'<button id="stats-btn" type="button" class="btn rep-only wide-only"[^>]*aria-expanded="false" aria-controls="mstats" hidden>Stats</button>'),

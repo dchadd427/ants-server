@@ -24,7 +24,7 @@
 <link rel="preload" href="/front/LibreFranklin-Medium.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="/front/classic.css">
 <link rel="stylesheet" href="/front/mapmaker.css">
-<link rel="stylesheet" href="/site_nav.css">
+<script src="/site_hooks.js" data-page="mapmaker"></script>
 <link rel="stylesheet" href="/update_notice.css">
 </head>
 <body>
@@ -38,7 +38,6 @@
         <label class="sr" for="map-name">Name of the map</label>
         <input class="nm" id="map-name" type="text" maxlength="40" autocomplete="off" spellcheck="false" disabled>
         <span class="tags" id="top-tags"></span>
-        <button class="btn sm ghost aik-btn dsk" type="button" data-act="ai" disabled><span class="dt" aria-hidden="true"></span><span class="lbl">Connect an AI...</span></button>
     </div>
     <div class="edmenu dsk">
         <button class="btn sm gold" type="button" data-act="play" disabled>&#9654; Play this map</button>
@@ -49,7 +48,6 @@
         <button class="btn sm" type="button" data-act="save" disabled>Save as new...</button>
         <button class="btn sm" type="button" data-act="props" disabled>Properties</button>
         <button class="btn sm" type="button" data-act="download" disabled>Download</button>
-        <button class="btn sm" type="button" data-act="submit" disabled>Submit for approval...</button>
     </div>
     <div class="edmenu mob"><button class="btn sm" type="button" data-act="menu" disabled>File</button></div>
 </header>
@@ -150,6 +148,7 @@
 </div>
 <input type="file" id="file-in" accept=".lvl,.LVL" hidden>
 <noscript><p style="position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px;background:#0b1612;color:#f4ece2;font-size:18px">The map maker needs JavaScript.</p></noscript>
+<script src="site_hooks.js" data-page="mapmaker"></script>
 <script src="lvl_core.js"></script>
 <script src="lvl_core_api.js"></script>
 <script src="front/mapmaker_file.js"></script>
@@ -170,8 +169,6 @@
 <script src="front/mapmaker_canvas.js"></script>
 <script src="front/mapmaker_tools.js"></script>
 <script src="front/mapmaker_app.js"></script>
-<script src="site_nav.js"></script>
 <script src="update_notice.js"></script>
-<script src="analytics.js"></script>
 </body>
 </html>
