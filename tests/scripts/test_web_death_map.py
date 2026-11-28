@@ -218,7 +218,7 @@ class TheFiles(unittest.TestCase):
         dockerfile = read("Dockerfile")
         for name in ("death_map.css", "death_map.js"):
             self.assertIn("COPY web/%s /usr/share/nginx/html/%s" % (name, name), dockerfile)
-            self.assertIn('cp -f "${SCRIPT_DIR}/web/%s" "${DIST_DIR}/"' % name, read("build_web.sh"))
+            self.assertIn('cp -f "${SCRIPT_DIR}/web/%s" "${DIST_DIR}/"' % name, read("build_site.sh"))
         self.assertIn("death_map.js death_map.css", read(".github", "workflows", "ci.yml"))
 
 

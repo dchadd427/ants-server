@@ -1571,7 +1571,7 @@
   },
   {
    "id": "local_build_leaves_the_dock_out",
-   "file": "build_web.sh",
+   "file": "build_site.sh",
    "old": "cp -f \"${SCRIPT_DIR}/web/home\"/* \"${DIST_DIR}/home/\"",
    "new": "cp -f \"${SCRIPT_DIR}/web/home\"/home.* \"${DIST_DIR}/home/\"",
    "test": "python3 tests/scripts/test_web_home_chat.py ThePageAndTheOtherPages TheLoaderInHome TheFolderAndTheScript TheStyle TheWayIntoTheImage TheInvisibleCharactersAreTheHubs && node tests/scripts/web_home_chat_check.js web/lobby.html"

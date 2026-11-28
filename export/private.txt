@@ -16,6 +16,7 @@ Dockerfile
 Dockerfile.*
 README.md
 SECURITY.md
+build_site.sh
 docker-*
 
 # .github
@@ -164,6 +165,7 @@ tests/scripts/test_turn_relay.py
 tests/scripts/test_web_activity.py
 tests/scripts/test_web_admin.py
 tests/scripts/test_web_analytics.py
+tests/scripts/test_web_build_site.py
 tests/scripts/test_web_changelog.sh
 tests/scripts/test_web_countdown.sh
 tests/scripts/test_web_death_*

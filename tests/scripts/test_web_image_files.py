@@ -57,7 +57,7 @@ def loaded_files():
 class ThePagesAndTheImage(unittest.TestCase):
     dockerfile = read("Dockerfile")
     ci = read(".github", "workflows", "ci.yml")
-    build = read("build_web.sh")
+    build = read("build_web.sh") + read("build_site.sh")          # (the public build copies the game's files, the site's build the others)
 
     def test_a_canonical_link_names_the_clean_address_of_its_own_page_and_loads_nothing(self):
         conf = read("docker", "nginx.conf")
@@ -107,7 +107,7 @@ class ThePagesAndTheImage(unittest.TestCase):
             if "/" in ref or ref.startswith("favicon."):
                 continue
             self.assertRegex(self.ci, r"ls -l [^\n]*\b%s\b" % re.escape(ref), "%s (loaded by %s) is not in the CI's check of the image" % (ref, ", ".join(pages)))
-            self.assertIn(BUILT[ref][1] if ref in BUILT else "web/site\"" if in_the_site_folder(ref) else "web/" + ref, self.build, "%s (loaded by %s) is not copied by build_web.sh" % (ref, ", ".join(pages)))
+            self.assertIn(BUILT[ref][1] if ref in BUILT else "web/site\"" if in_the_site_folder(ref) else "web/" + ref, self.build, "%s (loaded by %s) is not copied by build_web.sh or build_site.sh" % (ref, ", ".join(pages)))
 
     def test_the_stub_root_of_the_routes_test_has_every_script_and_stylesheet_that_the_routes_check_asks_for(self):
         asked = set(re.findall(r"""\(\s*["']/([A-Za-z0-9_.-]+\.(?:js|css))["']\s*,""", read("tests", "scripts", "web_routes_check.py")))

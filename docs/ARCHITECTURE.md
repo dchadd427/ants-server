@@ -187,6 +187,8 @@ ants-cross-platform/
 │   │                                   # README's version line (--dry-run, --open-pr)
 │   ├── mutate.py                       # The mutation runner of the deep tier: one change at a time, always restored,
 │   │                                   # baselines of the unmutated tree
+│   ├── serve_web.py                    # Serves the web build (dist/) with the headers and the page addresses that
+│   │                                   # the pages expect, for the browser checks and a developer's eyes
 │   ├── web_without_docker.py           # The web image without Docker (Linux): the Dockerfile's commands on
 │   │                                   # this machine, the pages served with nginx, for the browser checks
 │   ├── ci_light.sh                     # Does a pull request need all of CI or only the light checks? (the first job
@@ -231,7 +233,7 @@ ants-cross-platform/
 ├── Dockerfile.hub                      # The chat hub alone (Python, standard library only; docs/HUB.md)
 ├── hub/                                # The chat hub's code: WebSocket framing, text rules, limits, SQLite store,
 │                                       # the admin command line (docs/HUB.md)
-├── build_web.sh                        # Local WebAssembly build into dist/
+├── build_web.sh                        # Local WebAssembly build into dist/: the game, the Map Maker, the catalog
 ├── run_tests.sh                        # Master test suite runner script
 ├── run_tests.bat                       # Windows runner (part of the suites only, see docs/BUILD_AND_RUN.md)
 ├── start_game.sh                       # One-click build and launch script (macOS / Linux)

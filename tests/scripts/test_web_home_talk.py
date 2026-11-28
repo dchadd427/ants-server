@@ -394,7 +394,7 @@ class TheWayIntoTheImage(unittest.TestCase):
 
     def test_the_dockerfile_copies_the_folder_to_where_nginx_serves_home_and_the_local_build_packs_it(self):
         self.assertIn("COPY web/home/ /usr/share/nginx/html/home/\n", read("Dockerfile"))
-        self.assertIn('cp -f "${SCRIPT_DIR}/web/home"/* "${DIST_DIR}/home/"', read("build_web.sh"))
+        self.assertIn('cp -f "${SCRIPT_DIR}/web/home"/* "${DIST_DIR}/home/"', read("build_site.sh"))
 
 
 @unittest.skipUnless(NODE, "node is not installed: the buttons were NOT run (tests/scripts/web_home_talk_check.js)")
@@ -409,7 +409,7 @@ class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/home_talk_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make the checks fail, and the
     copy with nothing changed must pass"""
     FILES = (["tools/size_limits.py", "web/lobby.html", "web/front/name_letters.js", "web/home/names.js", "web/home/names.css", "web/rejoin_key.js", "web/alert_core.js", "web/hub_here.js", "web/front/player_name.js", "web/shapes.js", "web/home/home.js", "web/home/home.css", "web/home/chat.js", "web/home/chat.css", "web/home/talk.js", "web/home/talk.css",
-              "tests/scripts/test_web_home_talk.py", "tests/scripts/web_home_talk_check.js", "tests/scripts/web_page_harness.js", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml",
+              "tests/scripts/test_web_home_talk.py", "tests/scripts/web_home_talk_check.js", "tests/scripts/web_page_harness.js", "Dockerfile", "build_site.sh", ".github/workflows/ci.yml",
               "web/matches.html", "web/match.html", "web/legal.html", "web/mapmaker.html", "web/shell.html", "web/admin.html", "docs/HOME_CHAT.md",
               "hub/__init__.py", "hub/text.py", "hub/limits.py"]
              + ["web/front/" + n for n in ("classic.css", "lobby_rules.js", "lobby_net.js", "lobby_chat.js", "lobby_chat.css", "rematch.js", "game_modes.js", "game_type.js", "room_fog.js", "room_sheet.js", "seat_menu.js", "map_picker.js", "map_maker_link.js")])
