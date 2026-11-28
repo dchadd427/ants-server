@@ -244,17 +244,6 @@
    "expect": "N2.116"
   },
   {
-   "id": "game_stamps_no_order",
-   "file": "src/ants_net/netgame_match.cpp",
-   "old": "    const uint32_t at_turn = plan ? static_cast<uint32_t>(std::min<uint64_t>(plan->tick, kMaxHintTick)) : 0u;",
-   "new": "    const uint32_t at_turn = 0u;",
-   "build": [
-    "test_prediction_link"
-   ],
-   "test": "ANTS_TEST_FILTER=LK18 timeout 1500 ./build/tests/test_app_server/test_prediction_link",
-   "expect": "late * 10u <= orders"
-  },
-  {
    "id": "game_numbers_no_order",
    "file": "src/ants_net/netgame_match.cpp",
    "old": "    const uint32_t seq = plan ? plan->seq : 0u;",

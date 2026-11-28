@@ -1,0 +1,16 @@
+{
+ "note": "The private half of tests/data/order_tick_mutants.json (tools/mutate.py runs it together with the public half): the mutants of files that are not in the public repository, and the ones that only a test that is not there catches. Mutants of the tick of an order (network protocol 30, docs/NETWORK_PORT.md 'The tick of an order') for tools/mutate.py (docs/TESTING.md, 'Mutation checks'): the product rules that the lock-step, prediction, netgame and glide tests hold. The sequencer seals an order into the turn that its sender stamped it with when that turn is still open, else into the first open one, never more than 16 turns beyond it, an order of a seat never before an earlier one of that seat, what is held is bounded, charged and gone with its seat or a new host; the host answers every order that carries a number with the first open turn and the order's own message carries both; the game stamps and numbers every order that the prediction applies and hands the answers to it; the lead is the longest lag of the fresh orders, no more than two ticks above their middle, learned from the answers, the older lags more than four ticks above a newer answer forgotten (a stall ends with the first answer at the link's pace), the number of an order taken when it is planned and never repeated; the host does not answer an order over the budget; a seat that is only held keeps the orders the host holds for it, a seat that is dropped does not; a guest sends the orders that no turn carries to the new host after a host change, once, with their stamp and number; the picture holds an ant whose engine snap went back along its walk until the engine's ant has passed that place, and carries it by the slide when it turns another way, stops, or has been held 600 ms.",
+ "mutants": [
+  {
+   "id": "game_stamps_no_order",
+   "file": "src/ants_net/netgame_match.cpp",
+   "old": "    const uint32_t at_turn = plan ? static_cast<uint32_t>(std::min<uint64_t>(plan->tick, kMaxHintTick)) : 0u;",
+   "new": "    const uint32_t at_turn = 0u;",
+   "build": [
+    "test_prediction_link"
+   ],
+   "test": "ANTS_TEST_FILTER=LK18 timeout 1500 ./build/tests/test_app_server/test_prediction_link",
+   "expect": "late * 10u <= orders"
+  }
+ ]
+}
