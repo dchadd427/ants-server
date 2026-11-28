@@ -54,7 +54,7 @@ Work that is not released yet is written in the same template under a heading th
 - In Home's "Your name" sheet, a box that you are typing in is never locked, so erasing the text of a box no longer closes the phone's keyboard: when the nickname changed lately, the line still says when it can change again and Save stays off, but you can keep typing or type your old nickname back.
 
 **For operators:**
-- The web server's logs (access and error, which name the visitor's address) are deleted after 14 days, as the Legal page says: nginx writes them in `/var/log/ants/` and the image cuts them (`docker logs ants-beta` shows no request; [how](docs/BUILD_AND_RUN.md#what-the-images-nginx-sends-checks-and-logs)).
+- The web server's logs (access and error, which name the visitor's address) are deleted after 14 days, as the Legal page says: nginx writes them in `/var/log/ants/` and the image cuts them (`docker logs ants-beta` shows no request; [how](docs/private/BUILD_AND_RUN_DOCKER.md#what-the-images-nginx-sends-checks-and-logs)).
 - The hub holds a name that was given up for 7 days, no longer 30: the first time it opens a database that the earlier hub made it cuts the holds it finds to 7 days from the day each name was given up (a note in `meta` says that it is done), and a `you` frame no longer has `tagfree`; the table `nicknames` keeps its column `tag_at`, which nothing writes or reads any more ([`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md#the-rules)).
 
 **Details:** [commits](https://github.com/dchadd427/ants-server/compare/f3ed14f2...1177b255)
@@ -82,7 +82,7 @@ Work that is not released yet is written in the same template under a heading th
 
 **For operators:**
 - The log tells a slow pass of the server's main loop (over 25 ms) in one line with where its time went, `slow pass: 36.0 ms (rooms 5.1, store 21.0)`, at most one line in ten seconds ([`docs/SERVER.md`](docs/SERVER.md#the-slow-pass-log)). The replay store's look at its folder runs in 2 ms slices, and its own saves and deletes no longer call for one ([`docs/SERVER_REPLAYS.md`](docs/SERVER_REPLAYS.md)).
-- For search engines the game page now names `/play` as its address (it still says `noindex`, so no `/play?...` address is listed), and a `.txt` file of the site, such as the licence text of the front page's font, sends `X-Robots-Tag: noindex` ([`docs/BUILD_AND_RUN.md`](docs/BUILD_AND_RUN.md#search-engines-and-share-cards)).
+- For search engines the game page now names `/play` as its address (it still says `noindex`, so no `/play?...` address is listed), and a `.txt` file of the site, such as the licence text of the front page's font, sends `X-Robots-Tag: noindex` ([`docs/BUILD_AND_RUN.md`](docs/private/BUILD_AND_RUN_DOCKER.md#search-engines-and-share-cards)).
 
 **Details:** [commits](https://github.com/dchadd427/ants-server/compare/bb9239fc...f3e8fea2)
 
