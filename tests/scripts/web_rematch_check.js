@@ -1,4 +1,4 @@
-// Runs the pages' side of the rematch (web/front/rematch.js; docs/SERVER.md "Lobby rooms", docs/PLAY_IN_BROWSER.md "After a match") without a browser: what the game says when the match of a server's room
+// Runs the pages' side of the rematch (web/front/rematch.js; docs/SERVER.md "Lobby rooms", docs/private/PLAY_IN_BROWSER_HOME.md "After a match") without a browser: what the game says when the match of a server's room
 // is over (the lines of tests/data/match_over.txt, which test_network_app N5.99 holds the game's own text to), who won in words, the key of the seat in the game's storage, the hand-over to the front page
 // (this tab's session storage) and what the front page reads back, the people of the game page's strip (back in the room, or still on the results screen: the same rule as the server's and as
 // web/front/lobby_rules.js modelOf), the front page's strip and its link to the match's stats and replay, and both strips built and driven with a small fake of the DOM (a name is TEXT: the fake throws when

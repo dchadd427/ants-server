@@ -1,4 +1,4 @@
-/* The helpers that the pages of the match history share (docs/REPLAYS.md "The match pages"): the list of every match (matches.html), one match (match.html) and the
+/* The helpers that the pages of the match history share (docs/private/REPLAYS_SERVER.md "The match pages"): the list of every match (matches.html), one match (match.html) and the
    "Stats" of the game page in replay mode (shell.html). Plain functions with no page in them, so that tests/scripts/web_history_check.js runs them on a table, and two small parts that touch a document
    (which they are given): the pictures of the maps and the panel of stats on the game page. Everything that comes from the server (a name that a player typed, a map, an id) is TEXT: the pages put it in with textContent and
    never as markup. The pages that load this file (match.html, matches.html) ship together with it, and the site serves .html and .js with Cache-Control "no-cache, must-revalidate" (docker/nginx.conf), so the two are never from different releases. A record is read defensively: a key that this file does not know is skipped, a number that is not one is 0, a word that is not one of the server's falls back to a plain default. */
@@ -210,7 +210,7 @@
         return encodeURIComponent(s).replace(/[!'()*~]/g, function (c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); });
     }
     // What to ask the server for a state: the list with no query at all (the newest 50, cached by the site and not held to the server's budget) serves the first two pages of the default view; every
-    // filter, search, sort and later page is a query (docs/REPLAYS.md "The match history": 2 a second for each address, a box of 15 ms) that asks for exactly one page
+    // filter, search, sort and later page is a query (docs/private/REPLAYS_SERVER.md "The match history": 2 a second for each address, a box of 15 ms) that asks for exactly one page
     function planOf(st) {
         var d = defaults(), plain = ['who', 'format', 'result', 'rec', 'color', 'mode', 'sort', 'q'].every(function (k) { return st[k] === d[k]; }) && st.page <= 2;
         if (plain) return { query: '', skip: (st.page - 1) * PAGE, take: PAGE };

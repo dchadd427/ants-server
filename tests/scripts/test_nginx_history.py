@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """docker/nginx.conf routes the match history: GET /history[?filters] and GET /history/<id> (run by ./run_tests.sh --fast and by the CI where docker works).
 
-ants_server keeps one record in its database for every match it recorded, for good (docs/REPLAYS.md "The match history"), and answers the list and one match on the same read-only port as the recorded matches and
+ants_server keeps one record in its database for every match it recorded, for good (docs/private/REPLAYS_SERVER.md "The match history"), and answers the list and one match on the same read-only port as the recorded matches and
 the live ones (--replay-port: no secret; the records hold the names that the players typed, and no address, room code or chat). The stack file starts it that way, so both are PUBLIC; the page's nginx
 forwards the two addresses like /replays and /live (tests/scripts/test_nginx_replays.py, test_nginx_live.py), as the one request each takes and nothing else:
 

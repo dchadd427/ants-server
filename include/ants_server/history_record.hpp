@@ -1,6 +1,6 @@
 #pragma once
 
-// What one match came to, as the match history keeps it (docs/REPLAYS.md "The match history"). The record is made from a recording that was played once more with no screen (replay::play(): the engine's own
+// What one match came to, as the match history keeps it (docs/private/REPLAYS_SERVER.md "The match history"). The record is made from a recording that was played once more with no screen (replay::play(): the engine's own
 // MatchResult says what each seat came to), by make_history_record(), which is pure: no clock, no disk, no database. The store that keeps the records is history_store.hpp.
 //
 // WHO WON depends on the room's game mode (every record says which: `mode`, "highest-score" or "187", the names of sim::game_mode_name and of network protocol 17):

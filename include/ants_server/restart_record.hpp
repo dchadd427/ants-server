@@ -1,6 +1,6 @@
 #pragma once
 
-// Restart records: what a game server keeps on its results volume so that the matches that are running survive a restart of the server (docs/NETWORK_PORT.md "Restart records"). A deploy
+// Restart records: what a game server keeps on its results volume so that the matches that are running survive a restart of the server (docs/private/NETWORK_PORT_SERVER.md "Restart records"). A deploy
 // recreates the container and a crash ends the process: without a record every running match ended with it and its players were thrown out of the game. With one, the server that starts again
 // rebuilds the room from the file (the engine from the match's start message, every sealed turn replayed, checked against state hashes that the old server stored), holds the seat of every person,
 // and the players come back with their keys (protocol 10, "Reconnect").

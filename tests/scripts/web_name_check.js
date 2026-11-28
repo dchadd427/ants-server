@@ -1399,7 +1399,7 @@ async function codeBox(env) {
     gs.receive(roomMessage([[C, 'Maya'], [C, 'Sam'], [E, ''], [E, '']], { you: 1, leader: 0, flags: 7, inGame: 1, ready: 2 }));
     check('START is pressed: the button is off (nothing is asked any more) and is no switch', big.disabled === true && big.getAttribute('aria-pressed') === null && marks(guest)[1] === '');
 }
-// ---- 5.5c the rematch (front/rematch.js, docs/PLAY_IN_BROWSER.md "After a match"): the tab comes back from its match with the room's code and the key of its seat (the game page's hand-over in the
+// ---- 5.5c the rematch (front/rematch.js, docs/private/PLAY_IN_BROWSER_HOME.md "After a match"): the tab comes back from its match with the room's code and the key of its seat (the game page's hand-over in the
 // tab's session storage); the strip "Back from the match." at the top, the colors' words, the note under START, START that the room answers, the host who comes back
 {
     const roomChat = (text) => { const w = [9, 255, 0]; str8(w, text); return Uint8Array.from(w); };

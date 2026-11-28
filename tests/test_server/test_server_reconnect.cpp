@@ -1291,7 +1291,7 @@ void run_reconnect_tests() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Restart records (restart_record.hpp, docs/NETWORK_PORT.md "Restart records"): S3.82 and on
+// Restart records (restart_record.hpp, docs/private/NETWORK_PORT_SERVER.md "Restart records"): S3.82 and on
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 

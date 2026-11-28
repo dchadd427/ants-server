@@ -1,4 +1,4 @@
-// Tests of the match history's store in the server's SQLite database (ants_server/history_store.hpp, docs/REPLAYS.md "The match history"): records kept and read back, the list's filters, sorts and search (a
+// Tests of the match history's store in the server's SQLite database (ants_server/history_store.hpp, docs/private/REPLAYS_SERVER.md "The match history"): records kept and read back, the list's filters, sorts and search (a
 // LIKE pattern whose wildcards in the text are literal, values that are never part of the SQL), the markers of the owner's deletes, the indexes the list uses, the feeder that counts the replay store's
 // matches one at a time (real recordings played again on the shipped TINY map), a database that stops answering (the store degrades, the routes say 503, it comes back), and the routes of the control
 // interface and of the public door in front of a room manager. The rule that decides who won is test_history_record.cpp; whole rooms are test_history_rooms.cpp.

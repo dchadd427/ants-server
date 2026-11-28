@@ -1,4 +1,4 @@
-// Tests of what a record of the match history says of a match (ants_server/history_record.hpp, docs/REPLAYS.md "The match history"): WHO WON, by the rule of the room's game mode, for every kind of tie and for teams,
+// Tests of what a record of the match history says of a match (ants_server/history_record.hpp, docs/private/REPLAYS_SERVER.md "The match history"): WHO WON, by the rule of the room's game mode, for every kind of tie and for teams,
 // a quitter and a seat that dropped out; the format, the computers, the JSON of a record. The matches are made up here as the engine's MatchResult (numbers per seat, alliances, the quitter, the side left standing
 // in mode 187): the rule is a pure function of them, so every case says the numbers and the answer it must give. The real recordings (a match played again by the engine) are test_history_store.cpp and
 // test_history_rooms.cpp; the engine's own outcome of play() is test_replay (RP2.11, RP2.12).

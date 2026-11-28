@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OPT-IN, not part of ./run_tests.sh: the front page, which is the lobby, and the way into and out of a game in a real browser (docs/PLAY_IN_BROWSER.md, "The front page"): Quick host (Invite only), pressed on the page that "/" opens, makes a ROOM on the
+# OPT-IN, not part of ./run_tests.sh: the front page, which is the lobby, and the way into and out of a game in a real browser (docs/private/PLAY_IN_BROWSER_HOME.md, "The front page"): Quick host (Invite only), pressed on the page that "/" opens, makes a ROOM on the
 # game server and seats the visitor in it (a first visit: Treasure, You at Green, the other three colors open; a code of six letters and numbers and its link; the line of numbers; Screen with the shape nearest the screen
 # checked; 23 widths from 320 to 1600 px; the contrast of all text), the lobby with several people (one host and guests, each a browser of its own: the link and its name card, drag and swap, Team 1 and
 # Team 2, a bot, the pencil, Remove with its question, a typed code, a reload, a phone, and START, which hands everybody into the real game), START in THIS tab against bots (no new tab; the game's

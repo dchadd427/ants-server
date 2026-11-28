@@ -1,4 +1,4 @@
-// Runs the Room's two small overlays in node with a small fake DOM: the seat menu (web/front/seat_menu.js: the choice of a color, docs/PLAY_IN_BROWSER.md "Your room") and the Rules sheet
+// Runs the Room's two small overlays in node with a small fake DOM: the seat menu (web/front/seat_menu.js: the choice of a color, docs/private/PLAY_IN_BROWSER_HOME.md "Your room") and the Rules sheet
 // (web/front/room_sheet.js: the card that holds the room's rules). Neither knows the room, so each is run on its own:
 //   1. the menu: the five choices and their words ("Nobody" of the plan is "Closed"), what open() shows (the chosen one, the ones that are off, the focus, the place under the button), what a choice does
 //      (a pick, the same choice again, a choice that is off), every way of closing (Escape gives the focus back, Tab, a press elsewhere, a scroll that moves the button, a resize, a second menu) and the keys;

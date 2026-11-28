@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""robots.txt and sitemap.xml of the site (docs/BUILD_AND_RUN.md, "Search engines and share cards").
+"""robots.txt and sitemap.xml of the site (docs/private/BUILD_AND_RUN_DOCKER.md, "Search engines and share cards").
 
 usage: seo_files.py ORIGIN OUT_DIR [--pages FILE]
 

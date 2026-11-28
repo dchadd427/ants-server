@@ -1,6 +1,6 @@
 #pragma once
 
-// The matches that the game server keeps (docs/REPLAYS.md "On the game server"): every match that is played in a room of the server is recorded (ants_replay/recorder.hpp, fed by the referee's
+// The matches that the game server keeps (docs/private/REPLAYS_SERVER.md "On the game server"): every match that is played in a room of the server is recorded (ants_replay/recorder.hpp, fed by the referee's
 // own runner) and, when it is over, its .antsrep file is kept in one folder of the results volume. The files are small (a heavy half hour of four players is under 200 KiB) and are kept
 // for `keep_days`, and never more than `max_bytes` of them together (the oldest are deleted first): that volume also holds the control secret, the restart records and the site's
 // counters, so a full disk must never stop the server and the store gives way before it does.

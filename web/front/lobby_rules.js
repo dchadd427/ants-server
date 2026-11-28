@@ -293,7 +293,7 @@
     // plays it alone (the original's single player).
     function startsAlone(model) { return playing(model).length === 1; }
 
-    // ---- the rematch (web/front/rematch.js, docs/PLAY_IN_BROWSER.md "After a match"): a lobby room that the server opened again when its match was over ----------------------------------------------
+    // ---- the rematch (web/front/rematch.js, docs/private/PLAY_IN_BROWSER_HOME.md "After a match"): a lobby room that the server opened again when its match was over ----------------------------------------------
     // ctx.back is the match that this page came back from ({ people: the names of the match }, null: none). A person of that match who is on the results screen (modelOf) is not back yet: the room keeps
     // their seat for them and START waits for them. The seats of those people, in order.
     function notBack(model, ctx) {

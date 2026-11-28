@@ -1,6 +1,6 @@
 #pragma once
 
-// The `details` of a match's record (docs/REPLAYS.md "The match pages"): what the replay pass counted (ants_replay/match_stats.hpp) as the small JSON that `history_matches.details` keeps and
+// The `details` of a match's record (docs/private/REPLAYS_SERVER.md "The match pages"): what the replay pass counted (ants_replay/match_stats.hpp) as the small JSON that `history_matches.details` keeps and
 // GET /history/<id> gives back under "details". Pure: no clock, no disk, no database. The page reads it defensively (a plain object, every key it does not know skipped), so a later version adds keys.
 //
 // Layout v1 (the key "v"; seats are indexed 0 Green, 1 Red, 2 Blue, 3 Black, an array for a seat that did not play is []):

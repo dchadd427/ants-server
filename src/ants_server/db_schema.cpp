@@ -1,4 +1,4 @@
-// The migrations of the server's database (docs/SERVER.md "The database"). Version 1 is the foundation (`meta`); version 2 holds the match history (docs/REPLAYS.md "The match history"); version 3 the play counts of the maps; version 4 the site statistics; version 7 the map of deaths of a match; version 8 retires the accounts of the admin page; version 9 the schedules of the server's own bot matches; version 10 the lists of their rotation; version 11 the action of a match.
+// The migrations of the server's database (docs/SERVER.md "The database"). Version 1 is the foundation (`meta`); version 2 holds the match history (docs/private/REPLAYS_SERVER.md "The match history"); version 3 the play counts of the maps; version 4 the site statistics; version 7 the map of deaths of a match; version 8 retires the accounts of the admin page; version 9 the schedules of the server's own bot matches; version 10 the lists of their rotation; version 11 the action of a match.
 #include "ants_server/db_schema.hpp"
 
 namespace ants::server {

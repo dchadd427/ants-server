@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The chat of the front page in REAL browsers (opt-in; see tests/scripts/test_web_lobby_chat.sh and docs/PLAY_IN_BROWSER.md "Chat in the lobby").
+"""The chat of the front page in REAL browsers (opt-in; see tests/scripts/test_web_lobby_chat.sh and docs/private/PLAY_IN_BROWSER_HOME.md "Chat in the lobby").
 
 Needs the web image of this tree served by nginx (tools/web_without_docker.py builds and serves it without Docker), the native `ants_server` of this tree, a Chromium-based browser and Python 3. The
 check starts the server (with the options of docker-compose.stack.yml), puts a front door before the site (/ws goes to the server, everything else to the site), and drives the front page like people:

@@ -892,7 +892,7 @@ inline std::string hex_of(const net::SeatKey& key) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Restart records (restart_record.hpp, docs/NETWORK_PORT.md "Restart records"): a server that can be stopped and started again over the same folder of records, with machines that
+// Restart records (restart_record.hpp, docs/private/NETWORK_PORT_SERVER.md "Restart records"): a server that can be stopped and started again over the same folder of records, with machines that
 // find it again by themselves, and the helpers of the record tests
 // ---------------------------------------------------------------------------------------------------------------------------------
 

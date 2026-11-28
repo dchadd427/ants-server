@@ -1,4 +1,4 @@
-// The routes of the match history (docs/REPLAYS.md "The match history", control.hpp): GET /history, GET /history/<id> and GET /history/deaths?map=NAME (the sum of the maps of deaths of a map's matches) on both
+// The routes of the match history (docs/private/REPLAYS_SERVER.md "The match history", control.hpp): GET /history, GET /history/<id> and GET /history/deaths?map=NAME (the sum of the maps of deaths of a map's matches) on both
 // doors, DELETE /history/<id> on the control door only.
 #include <algorithm>
 #include <cctype>

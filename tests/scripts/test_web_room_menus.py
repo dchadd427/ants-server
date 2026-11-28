@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The Room's two small overlays of the front page (web/front/seat_menu.js and web/front/room_sheet.js, web/lobby.html, docs/PLAY_IN_BROWSER.md "Your room"; run by ./run_tests.sh --fast and by CI).
+"""The Room's two small overlays of the front page (web/front/seat_menu.js and web/front/room_sheet.js, web/lobby.html, docs/private/PLAY_IN_BROWSER_HOME.md "Your room"; run by ./run_tests.sh --fast and by CI).
 
 The leader chooses a color's player in a short menu under the color's button (Open, Easy bot, Medium bot, Hard bot, Closed), and the room's rules (who can join, Fog of War, Direct connection) are in a card that the
 Rules button opens. Neither knows the room. What this file checks:

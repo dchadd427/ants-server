@@ -1,4 +1,4 @@
-// Runs the Room's four colors of web/lobby.html in the fake browser of tests/scripts/web_home_games_rig.js (the page's own code, a scripted game server; docs/PLAY_IN_BROWSER.md "Your room", docs/HOME_SCREEN.md "The Room"):
+// Runs the Room's four colors of web/lobby.html in the fake browser of tests/scripts/web_home_games_rig.js (the page's own code, a scripted game server; docs/private/PLAY_IN_BROWSER_HOME.md "Your room", docs/HOME_SCREEN.md "The Room"):
 //   1. the host's page: a card for each of the four colors in the order of the hills (Black, Green, Red, Blue); the host's own color is the one of "You" and "Host"; a free color is a button with its choice that opens a menu of
 //      Open, Easy bot, Medium bot, Hard bot and Closed ("Nobody" of the plan is shown as "Closed"), and every choice goes to the room as a plan (the plan's bytes: Open 0, Easy 1, Medium 2, Hard 3, Nobody 4);
 //      the Team 1 and Team 2 buttons under a person (they send a plan too); Remove on another person's color and not on the host's own; the big button says START!;

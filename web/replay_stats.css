@@ -1,6 +1,6 @@
-/* The stats of a match on the game page in replay mode (docs/REPLAYS.md "The match pages"), and the page in the frame of a match page (embed mode). Loaded by web/shell.html next to its own style; the
+/* The stats of a match on the game page in replay mode (docs/private/REPLAYS_SERVER.md "The match pages"), and the page in the frame of a match page (embed mode). Loaded by web/shell.html next to its own style; the
    panel is built by AntsHistory.replayStats (web/history_page.js). The colors are the page's. */
-/* ================= THE STATS OF THE MATCH (docs/REPLAYS.md "The match pages"): a replay of a match that the server has a record of. The "Stats" button of the header (wide screens) opens a panel under it, over the
+/* ================= THE STATS OF THE MATCH (docs/private/REPLAYS_SERVER.md "The match pages"): a replay of a match that the server has a record of. The "Stats" button of the header (wide screens) opens a panel under it, over the
    corner of the picture; a phone has a row under the controls instead, that opens in the page. Both hold the same numbers (the record's, final: they do not follow the picture). ================= */
 #stats-btn[hidden], .mstats[hidden] { display: none !important; }
 .mstats { --won-bg: #2a2408; --won-edge: #7c6a1d; background: var(--inset); color: var(--cream); border: 3px solid var(--frame); border-color: var(--frame-hi) var(--frame-lo) var(--frame-lo) var(--frame-hi); border-radius: 4px; box-shadow: 0 0 0 2px var(--edge), 3px 4px 0 2px var(--shadow); font-size: 15px; line-height: 1.4; padding: 14px 16px 12px; text-align: left; user-select: text; -webkit-user-select: text; }

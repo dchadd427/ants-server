@@ -1,4 +1,4 @@
-// The choice of a color on the front page's Room (web/lobby.html; docs/PLAY_IN_BROWSER.md "Your room", docs/HOME_SCREEN.md "The Room"): the leader presses an open color's button and a short menu opens under it: Open, Easy bot, Medium bot, Hard bot, Closed.
+// The choice of a color on the front page's Room (web/lobby.html; docs/private/PLAY_IN_BROWSER_HOME.md "Your room", docs/HOME_SCREEN.md "The Room"): the leader presses an open color's button and a short menu opens under it: Open, Easy bot, Medium bot, Hard bot, Closed.
 // It is drawn by the page (not the browser's own menu), so that it looks like the rest of the room on a phone too. It knows nothing of the room: the page says what is chosen and what is off (open) and is told what was picked
 // (onPick) or pressed while off (onBlocked: the three bots are off with Fog of War, and the page says why).
 //   * A menu of items (role "menu", each item "menuitemradio"); the pressed button has aria-expanded. Open: a press on the button. Choose: a press on an item, or Up, Down, Home, End and Enter or Space. Escape closes and gives the focus

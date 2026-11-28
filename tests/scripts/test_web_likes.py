@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The plays and the hearts of the match pages (web/replay_likes.js, the sorts of web/history_page.js, and their wiring in web/matches.html and web/match.html; docs/REPLAYS.md "The match pages",
+"""The plays and the hearts of the match pages (web/replay_likes.js, the sorts of web/history_page.js, and their wiring in web/matches.html and web/match.html; docs/private/REPLAYS_SERVER.md "The match pages",
 docs/REPLAY_COUNTS.md; run by ./run_tests.sh --fast and by the CI).
 
 A card of the list and the result of a match page show how often a replay was played and how many people like it; a logged-in visitor can like it with a heart. What this file checks:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OPT-IN, not part of ./run_tests.sh: the pages of the match history (docs/REPLAYS.md "The match pages") in a real browser: the list of every match (the cards, the filters and the search with the requests
+# OPT-IN, not part of ./run_tests.sh: the pages of the match history (docs/private/REPLAYS_SERVER.md "The match pages") in a real browser: the list of every match (the cards, the filters and the search with the requests
 # that they make, the pager, a busy server, a phone), one match with its stats (a match of people, mode 187, a recording of an older version, one that is gone, one that is not counted yet), the replay in
 # the frame of the match page (nothing of the game is asked for before "Show replay", then one frame in embed mode, taken away by "Hide replay" and by the game's own Quit), and the Stats of the replay
 # page (a button, the panel, a phone's row, none for a live match, a frame or a match with no record), and the plays and hearts (part likes: the cards and the match page against a fake door of the counts, a like and an unlike, the way in, a plain count for a recording that is gone, the sorts Most watched and Most liked, and a Sort box that does not cut its words).

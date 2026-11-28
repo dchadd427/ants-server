@@ -1,4 +1,4 @@
-/* The chat box of the front page's lobby (front/lobby_chat.js, docs/PLAY_IN_BROWSER.md "Chat in the lobby"). It is the lobby's own look: the black box with the green frame (.panel), the cream words,
+/* The chat box of the front page's lobby (front/lobby_chat.js, docs/private/PLAY_IN_BROWSER_HOME.md "Chat in the lobby"). It is the lobby's own look: the black box with the green frame (.panel), the cream words,
    the four color accents of the cards (.slot[data-c]), the teal button, and the page's tokens (:root of web/lobby.html), which is why the page links this sheet after its own <style>. In Home the box is a tab of the chat dock (web/home/roomchat.css);
    these rules are its look there and where that part has not come: in the room's panel, under the notice. */
 
