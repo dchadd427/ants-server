@@ -1,6 +1,6 @@
 # Plays and likes of replays
 
-How often a replay was played, and how many people like it: two numbers on every match of [the history](private/REPLAYS_SERVER.md#the-match-history), shown on the list of matches and on a match's page, with two sorts, **Most watched** and **Most liked**. This page is the home of what is counted, the door that counts it, the pass that tells the door which person is asking, what is kept (only numbers, and for a like one opaque reference), and how it is tested. What a person sees is in [REPLAYS.md](private/REPLAYS_SERVER.md#the-match-pages); the hub's side is in [HUB_ROLES.md](HUB_ROLES.md#the-admin-pages-door) (the gate) and [HUB_LOGIN.md](HUB_LOGIN.md#login) (Forget me).
+How often a replay was played, and how many people like it: two numbers on every match of [the history](private/REPLAYS_SERVER.md#the-match-history), shown on the list of matches and on a match's page, with two sorts, **Most watched** and **Most liked**. This page is the home of what is counted, the door that counts it, the pass that tells the door which person is asking, what is kept (only numbers, and for a like one opaque reference), and how it is tested. What a person sees is in [REPLAYS_SERVER.md](private/REPLAYS_SERVER.md#the-match-pages); the hub's side is in [HUB_ROLES.md](HUB_ROLES.md#the-admin-pages-door) (the gate) and [HUB_LOGIN.md](HUB_LOGIN.md#login) (Forget me).
 
 ## What is counted
 
