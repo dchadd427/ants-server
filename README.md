@@ -28,7 +28,8 @@ The script builds the game each time it starts (quick when nothing changed) and 
 
 **Playing**
 
-- [Play in the browser](docs/PLAY_IN_BROWSER.md): the front page, rooms and rejoining, the game page and its addresses, the Legal page, hidden tabs and the screen lock
+- [Play in the browser](docs/PLAY_IN_BROWSER.md): the game page: starting at once and the sound, hidden tabs, the screen lock, your own orders at once
+- [The front page and the site's addresses](docs/private/PLAY_IN_BROWSER_HOME.md): the front page (Home and the Room), rooms and rejoining, the game page and its addresses, the Legal page
 - [Setting up a match in the browser](docs/PLAY_MATCH_SETUP.md): players' maps, choosing a map, Game type and Fog of War in a room
 - [The browser's picture and sound](docs/PLAY_PICTURE.md): the data package, the 16:9 picture and mouse lock, sound, the asset catalog (a page of every sprite, sound and animation of `ants.chd`)
 - [Home and the Room](docs/HOME_SCREEN.md): the front page's two screens, the top bar, My room, the Menu, the addresses and the START hand-off
@@ -40,13 +41,15 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [The settings menu](docs/GAME_MENU.md): what Esc opens in a match (sound, video, controls, Leave game), the one table of rows, and the browser's panel
 - [Touch](docs/TOUCH.md): playing with a finger on a phone or a tablet
 - [Network play and bots](docs/MULTIPLAYER.md): LAN and server games, lag and drop-outs, computer players
-- [Replays](docs/REPLAYS.md): recording a match in the desktop game, the file, and the tool that lists every order of a recorded match
+- [Replays](docs/REPLAYS.md): recording a match in the desktop game, the file, watching a replay, and the tool that lists every order of a recorded match
+- [Replays on the game server](docs/private/REPLAYS_SERVER.md): what the server keeps, the match history and the match pages
 - [Heatmaps](docs/HEATMAPS.md): where ants died and where the action was in a match: the map of deaths and the activity curve of the replay page
 - [Command-line options](docs/COMMAND_LINE.md): every option of the game and its environment variables
 
 **Building, running and testing**
 
-- [Build and run](docs/BUILD_AND_RUN.md): prerequisites, building, the launch scripts, sanitizers, Docker
+- [Build and run](docs/BUILD_AND_RUN.md): prerequisites, building, the launch scripts, sanitizers, the web build
+- [Self-hosting with Docker](docs/private/BUILD_AND_RUN_DOCKER.md): the site's image, its nginx, search engines and share cards, how the images are built
 - [The dedicated server](docs/SERVER.md): `ants_server`, its options, the control interface, reconnecting, the Docker stack
 - [Kept matches on the server](docs/SERVER_REPLAYS.md): the replay store, its limits and matches of computer players
 - [Public rooms and the list of games](docs/PUBLIC_ROOMS.md): the leader's choice, the idle rule and `GET /lobbies` of the game server (network protocol 22)
@@ -62,8 +65,11 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [Images in the chat](docs/HUB_IMAGES.md): who may post images, the converter that re-encodes them, the limits, moderation and `/noimages`, how they are stored and served
 - [Testing and CI](docs/TESTING.md): the tiers, how to run a suite, the rules for tests and mutants, the E2E runner, continuous integration
 - [What the test suites cover](docs/TESTING_SUITES.md): the table of the C++ suites by number and what each one checks
+- [The game server's suites](docs/private/TESTING_SUITES_SERVER.md): the table of the suites of the server, its database, the control interface and the application against a real room manager
 - [The python tests](docs/TESTING_PYTHON.md): suite 5.2: what the scripts of `tests/scripts` cover
-- [Workflow](docs/WORKFLOW.md): branches, pull requests, releases and the deploy; the rules for contributors are in [`AGENTS.md`](AGENTS.md)
+- [The python tests of the site and the server](docs/private/TESTING_PYTHON_SITE.md): the groups of suite 5.2 for the front page, the site's pages, the hub, nginx and the server's scripts
+- [Workflow](docs/WORKFLOW.md): the test tiers, branches, pull requests, releases, the version policy and the changelog; the rules for contributors are in [`AGENTS.md`](AGENTS.md)
+- [Deploy and light checks](docs/private/WORKFLOW_DEPLOY.md): the light checks of a pull request, the deploy, base images and the browser checks without Docker
 - [The export lists](export/README.md): which files go to the public repository and which stay private, the check that every file is on exactly one list (suite 5.3), and which list a new file goes on
 
 **How it works**
@@ -78,6 +84,7 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [`MAP_AI.md`](docs/MAP_AI.md): a person's own AI in the open Map Maker tab: the keys (made on the Connect an AI sheet, look or edit, 7, 30 or 90 days), the hub's HTTP and MCP doors and the relay to the one tab that is armed, the tools the AI may call and what they never reach, the six skills served under `/ai/skills/`, the limits, the switch (`ANTS_HUB_AI_KEYS`) and what is never logged
 - [`MAP_SUBMISSIONS.md`](docs/MAP_SUBMISSIONS.md): a player sends a map for approval and the maintainer decides: the rules, the API that the editor's Submit button uses (limits, states, error codes), the admin page at `/admin` and its door (no accounts of its own: the chat hub's Discord login decides who may use it, and the server checks the hub's signed pass), the lists the lobby reads (`/maps`, `/maps/all`, including approved Extended maps with an `Extended` badge in the lobby and map maker), how to deploy it and what is off until it is configured
 - [`NETWORK_PORT.md`](docs/NETWORK_PORT.md): the network design and the protocol by version
+- [`NETWORK_PORT_SERVER.md`](docs/private/NETWORK_PORT_SERVER.md): the dedicated server's design and its restart records
 - [`BOTS.md`](docs/BOTS.md): the computer players: the rule, fairness, the architecture and interfaces, the levels, the standard bot, running bots (and [`docs/reverse_engineering/bomb_gates.md`](docs/reverse_engineering/bomb_gates.md) for the bomb-gate analysis and universal gate-goal planner)
 - [`BOT_TACTICS.md`](docs/BOT_TACTICS.md): the standard bot's tactics: task ranks, strategy, power-ups and the flowers, defence, raids and thieves, aggression and fights, the war and stand batches
 - [`BOT_PLAY.md`](docs/BOT_PLAY.md): how the standard bot plays: styles, the gate, the stall detector, the can't-go loop, bombs on the way, alliances, walled maps and the game type 187
