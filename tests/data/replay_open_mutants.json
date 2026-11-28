@@ -292,8 +292,8 @@
   {
    "id": "the_stats_of_a_local_file_are_asked_for",
    "file": "web/shell.html",
-   "old": "ANTS_REPLAY_FILE && typeof fetch === 'function') window.AntsHistory.replayStats",
-   "new": "(ANTS_REPLAY_FILE || ANTS_OWN_MODE) && typeof fetch === 'function') window.AntsHistory.replayStats",
+   "old": "ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats",
+   "new": "(ANTS_REPLAY_FILE || ANTS_OWN_MODE) && antsSite.replayStats) antsSite.replayStats",
    "test": "python3 tests/scripts/test_web_replay_open.py TheStrip ThePlayer",
    "why": "the site is asked about a match that it never saw"
   },

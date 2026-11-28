@@ -6,7 +6,7 @@
 REPORT ONLY: it prints a summary and exits 0, however many files it finds, until the changes that cut the crossings have brought the count to zero (export/README.md, "The scan of
 words"); then --strict, which exits 1 when anything is found, becomes the gate of the export.
 For every tracked text file that classify.py puts on the public list it counts the mentions of private headers and targets, private paths, private documents, private web files,
-private tools, the program ants_server, nginx and the stack, and private test targets (KINDS). --list prints one row for every file (area, file, hits, kinds, examples); --tsv writes the
+private tools, the site's half of the seam (its folder, the Map Maker's part of it and the tests that read them), the program ants_server, nginx and the stack, and private test targets (KINDS). --list prints one row for every file (area, file, hits, kinds, examples); --tsv writes the
 same rows to a file. Extend KINDS when a new private name appears.
 """
 import argparse
@@ -34,6 +34,7 @@ KINDS = collections.OrderedDict([
     ('nginx/stack', re.compile(r'\bnginx\b|portainer|docker compose|docker-compose', re.I)),
     ('server::', re.compile(r'\bserver::|ants::server\b')),
     ('private-test', re.compile(r'\b(?:test_server|test_db|test_ctl|test_history_service|test_wss_match|test_rejoin\b|test_network_app|test_start_menu_app|test_rejoin_app|test_prediction_link)\b')),
+    ('site-seam', re.compile(r'\bmapmaker_site\b|(?<![A-Za-z_./-])web/site/|\bsite_pages\b|\btest_web_site_hooks\b|\bweb_site_hooks(?:_check|_mutants)?\b')),
     ('private-path', re.compile(r'tests/(?:test_server|test_db|test_ctl|test_app_server)|tests/scripts/(?:test_hub|test_nginx|web_home|web_lobby|test_web_home|test_web_lobby)|third_party/sqlite|imgconv/|ai_skills/')),
 ])
 

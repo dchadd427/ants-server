@@ -22,7 +22,8 @@ NODE = shutil.which("node")
 @unittest.skipUnless(NODE, "node is not installed: the activity curve was NOT run (tests/scripts/web_activity_check.js)")
 class TheCurve(unittest.TestCase):
     def test_the_curve_is_built_and_shown_from_the_data_of_a_record(self):
-        done = subprocess.run([NODE, CHECK_JS, os.path.join(REPO, "web", "replay_activity.js"), os.path.join(REPO, "web", "history_page.js"), os.path.join(REPO, "web", "shell.html")], capture_output=True, text=True, timeout=120)
+        done = subprocess.run([NODE, CHECK_JS, os.path.join(REPO, "web", "replay_activity.js"), os.path.join(REPO, "web", "history_page.js"), os.path.join(REPO, "web", "shell.html"), os.path.join(REPO, "web", "site", "site_hooks.js")],
+                              capture_output=True, text=True, timeout=120)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertRegex(done.stdout, r"^ok: \d+ checks")
 

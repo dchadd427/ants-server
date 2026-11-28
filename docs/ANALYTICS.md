@@ -6,7 +6,7 @@ Built so far (part 1 of three): the counter, and the views **Overview**, **Visit
 
 ## What is counted
 
-The pages tell the hub, with `navigator.sendBeacon`, a few small events (`web/analytics.js`, loaded by every public page after the update notice; not by the admin page, not in a frame):
+The pages tell the hub, with `navigator.sendBeacon`, a few small events (`web/analytics.js`, loaded by every public page (the game page and the Map Maker get it from the site's hooks, `web/site/site_hooks.js`); not by the admin page, not in a frame):
 
 | Event | What it holds | What it is for |
 |---|---|---|
@@ -19,6 +19,8 @@ The pages tell the hub, with `navigator.sendBeacon`, a few small events (`web/an
 Nothing else is sent: no cookie, no local or session storage, no id, no mouse, no keys, no fingerprint (the script reads none of the browser's properties for one; `tests/scripts/test_web_analytics.py` pins that it does not touch them). A request that comes from a crawler, a monitor or a script (the User-Agent) is not counted.
 
 The hub checks every field and keeps only the cut-down form (`hub/analytics_events.py`): a path is one of the site's pages (`/`, `/play`, `/matches`, `/match`, `/mapmaker`, `/map-library`, `/legal`, `/changelog`, `/map` for any `/map/<name>`, else `other`); a referrer is a lower-case host name of letters, digits, dots and dashes (no `www.`, no address, never the site itself) cut to its **registered name**, so that a personal address does not name a person (`mail.google.com` is `google.com`, `alice.github.io` is `github.io`, `www.shop.example.co.uk` is `example.co.uk`; the public endings of two labels such as `co.uk` are a short list in `hub/analytics_events.py`, and a name under an ending that is not on it only loses a label, never keeps one); a width is one of five sizes; a language is its first part (`de`); a timing is a whole number of milliseconds from 1 to 600,000; an error message is plain printable ASCII of at most 160 characters with every URL, email, address, long number and token and the text inside double quotes replaced, and a word in single quotes kept only when it is short with no blank (a property name); the file is the site's own script and its line.
+
+**Where the counter loads (and what that does to the error counts).** On the game page and the Map Maker the counter's script is written by the site's hooks (the seam, `docs/PLAY_IN_BROWSER.md`), at the place of the hook's second tag. On the game page that is before the bar's script and the update notice's (it came after both); on the Map Maker it is before all of the editor's scripts (it came after all of them, at the very end). Its listener for errors is therefore there when those scripts load, and a script that throws while it loads is now counted as a `Page` error where it was not: the counts of page errors on those two pages may rise at the release that brought the seam, with no new fault in the pages. Read a rise at that release against this, not as a regression.
 
 ## What is not counted as an error
 

@@ -278,7 +278,8 @@ class TheFolder(unittest.TestCase):
             self.assertLess(len(data), SUBMIT_BUDGET, "%s is %d bytes" % (name, len(data)))
             self.assertLess(len(gzip.compress(data, 9)), SUBMIT_GZIP_BUDGET, "%s gzipped" % name)
             self.assertNotIn(name, read("web", "mapmaker.html"), "a lazily loaded script has no tag in the page")
-            self.assertIn("'front/%s'" % name, read("web", "front", "mapmaker_app.js"), "the page loads it itself, when it is needed")
+            self.assertIn("'front/%s'" % name, read("web", "site", "mapmaker_site.js"), "the site's part of the page loads it itself, when it is needed")
+            self.assertNotIn(name, read("web", "front", "mapmaker_app.js"), "the page itself does not name it")
 
     def test_the_ants_box_is_loaded_on_demand_and_has_budgets_of_its_own(self):
         import gzip
@@ -337,9 +338,9 @@ class TheFolder(unittest.TestCase):
             self.assertNotIn(name, read("web", "mapmaker.html"), "a lazily loaded file has no tag in the page")
         self.assertLess(raw, AI_BUDGET, "Connect an AI's two scripts and its style are %d bytes" % raw)
         self.assertLess(zipped, AI_GZIP_BUDGET, "and %d bytes gzipped" % zipped)
-        app = read("web", "front", "mapmaker_app.js")
+        site = read("web", "site", "mapmaker_site.js")
         for ask in ("c.href = 'front/mapmaker_ai.css';", "t.src = 'front/mapmaker_ai_tools.js';", "p.src = 'front/mapmaker_ai.js';"):
-            self.assertIn(ask, app, "the page loads all three itself, when the button is pressed: the tools first, then the part that needs them")
+            self.assertIn(ask, site, "the site's part of the page loads all three itself, when the button is pressed: the tools first, then the part that needs them")
 
     def test_play_this_map_is_loaded_on_demand_and_has_budgets_of_its_own(self):
         import gzip

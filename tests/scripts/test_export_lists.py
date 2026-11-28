@@ -224,6 +224,15 @@ class TheScanOfWords(unittest.TestCase):
         self.assertRegex(out, r"pub/b\.md .*private-doc=1")
         self.assertNotIn("pub/clean.md", out)
 
+    def test_the_names_of_the_sites_half_of_the_seam_are_counted_and_the_stub_is_not(self):
+        code, out = self.scan({"pub/a.md": "the Map Maker's part is web/site/mapmaker_site.js\n", "pub/b.py": "import site_pages\nTEST = 'test_web_site_hooks.py'\nMUT = 'tests/data/web_site_hooks_mutants.json'\n",
+                               "pub/stub.md": "a site serves its own file in the place of web/site_hooks.js\n"}, "--list")
+        self.assertEqual(code, 0)
+        self.assertIn("2 of 3 public text files", out)
+        self.assertRegex(out, r"pub/a\.md .*site-seam=2")
+        self.assertRegex(out, r"pub/b\.py .*site-seam=3")
+        self.assertNotIn("pub/stub.md", out)
+
     def test_a_private_file_may_name_anything(self):
         code, out = self.scan({"priv/a.cpp": '#include "ants_server/room.hpp"\n', "pub/clean.txt": "nothing\n"})
         self.assertEqual(code, 0)

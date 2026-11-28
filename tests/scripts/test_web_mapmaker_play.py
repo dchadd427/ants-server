@@ -226,7 +226,12 @@ class ThePageWiring(unittest.TestCase):
         self.assertIn("ANTS_LOCAL_FILE = local.file; ANTS_TEST = local.test;", shell)
         self.assertIn("else if (ANTS_TEST && !window.AntsTestGame.begin(ANTS_TEST, window, function () { return Module; })) { /* a card says why the test game cannot start */ } else window.AntsMapFiles.beforeLocalGame(", shell, "a test game that cannot start shows its card and starts nothing; otherwise it goes through the page's one gate like every game on this computer")
         self.assertEqual(len(re.findall(r"ANTS_NAME_GATE\.when\(startGame\)", shell)), 2, "no third way to start a game")
-        self.assertIn("if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return; var sent = fetch('/stats/local'", shell, "a test game is not counted for the front page")
+
+    @unittest.skipUnless(NODE, "node is not installed: the page's report of a game on this computer was NOT run (tests/scripts/web_seam_check.js)")
+    def test_a_test_game_is_not_reported_to_the_site_that_counts_games_for_the_front_page(self):
+        """the page's own function is RUN with a site that counts its calls (web_seam_check.js): a game on this computer is reported once, a test game from the map maker never"""
+        done = subprocess.run([NODE, os.path.join(REPO, "tests", "scripts", "web_seam_check.js"), os.path.join(REPO, "web", "site_hooks.js"), os.path.join(REPO, "web", "shell.html")], capture_output=True, text=True, timeout=WATCHDOG_S)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_the_way_back_and_the_strip_say_their_words(self):
         for needle in ("Leave the test game?", "The game stops here. You go back to the map exactly as you left it.", "Keep playing", "Back to editor", "Not saved. Not counted.", "min-height:44px"):

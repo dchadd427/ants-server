@@ -79,8 +79,12 @@ const server = http.createServer((req, res) => {
     if (p === '/history' || p === '/history/') return send(200, TYPES['.json'], JSON.stringify({ history: [REC, Object.assign({}, REC, { id: 'ants-TINY-20261015-041557Z' })], count: 2, total: 2 }));
     if (p.indexOf('/history/') === 0) return send(200, TYPES['.json'], JSON.stringify(REC));
     if (p === '/') return send(200, TYPES['.html'], '<!doctype html><title>front</title><p>front page');
-    const file = path.join(ROOT, p.indexOf('/asset_catalog/') === 0 ? '' : 'web', p);
-    if (file.indexOf(ROOT) === 0 && fs.existsSync(file) && fs.statSync(file).isFile()) return send(200, TYPES[path.extname(file)] || 'application/octet-stream', fs.readFileSync(file));
+    // The site's half of the seam (web/site/) is served at the root, as the image does, so that its file takes the place of the stub web/site_hooks.js and writes the tags of the bar
+    const dirs = p.indexOf('/asset_catalog/') === 0 ? [''] : ['web/site', 'web'];
+    for (const dir of dirs) {
+        const file = path.join(ROOT, dir, p);
+        if (file.indexOf(ROOT) === 0 && fs.existsSync(file) && fs.statSync(file).isFile()) return send(200, TYPES[path.extname(file)] || 'application/octet-stream', fs.readFileSync(file));
+    }
     return send(404, 'text/plain', 'no');
 });
 

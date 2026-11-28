@@ -1,9 +1,9 @@
 // The front page's side of network protocol 29 (docs/NETWORK_PORT.md "Protocol 16", "Protocol 17", "Protocol 20" and "Protocol 22", docs/MATCH_COUNTDOWN.md; 18 to 21, 23 to 26 and 28 moved no message layout that a lobby page uses: 21 gave the Begin a second byte, which a page leaves to the game page): the codec of the messages that a lobby page sends and hears, the guard of a color move, and the client that keeps
 // a page in its lobby room (a keyed way back, the answers to the server's pings, what each refusal means). No screen is drawn here: the page reads the client's state and its events.
-//   * ES5 and no module system, as the site's other scripts: a page gets the global AntsLobbyNet, node gets module.exports (tests/scripts/web_lobby_net_check.js runs it). It needs front/name_letters.js loaded before it
+//   * ES5 and no module system, as the site's other scripts: a page gets the global AntsLobbyNet, node gets module.exports (a test runs it). It needs front/name_letters.js loaded before it
 //     (the letters of a name, and names as UTF-8: a name is UTF-8 on the wire since protocol 29, docs/NETWORK_PORT.md "Protocol 29").
 //   * Every layout is the C++ one (src/ants_net/protocol.cpp), little endian, and every decoder refuses what the C++ decoder refuses; tests/data/lobby_messages.txt holds bytes that the C++ encoders wrote,
-//     which both sides read (tests/test_net/test_lockstep_protocols.cpp N2.111, tests/scripts/web_lobby_net_check.js).
+//     which both sides read (tests/test_net/test_lockstep_protocols.cpp N2.111, and a test of this file).
 (function (root, factory) {
     var api = factory();
     if (typeof module === 'object' && module.exports) module.exports = api;
@@ -114,7 +114,7 @@
     function printableOnly(s, max) { return NL.wireOnly(s, max); }
     // the hub's pass for a name (net::valid_pass_shape): digits, a dot and 32 lower-case hex digits; anything else is no pass and is not sent
     function validPass(p) { return typeof p === 'string' && /^[0-9]{1,12}\.[0-9a-f]{32}$/.test(p); }
-    // the names that are a computer player's (ai::is_reserved_bot_name; the page's nameCheck says the same, and tests/scripts/web_lobby_rules_check.js compares them): the word bot first and a bracket after it, or a bracket, the word bot
+    // the names that are a computer player's (ai::is_reserved_bot_name; the page's nameCheck says the same, and a test compares them): the word bot first and a bracket after it, or a bracket, the word bot
     // and then a sign or a blank; blanks, signs between the letters and case ignored, a 0 reads as o; the letters stand one after the other or each pair parted ("b o t", not "Bo T"), and a parted word is one only when no letter follows its blanks
     function reservedName(name) {
         var s = String(name).toLowerCase().replace(/0/g, 'o');
@@ -129,7 +129,7 @@
     // ---- messages that a page sends ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // Hello of a lobby page (client kind 1). h: { name, room, key (16 bytes, none: a new player), platform (0: not told), create: { map ('' keeps the server's) } or none, kind: 'game' for the game page's Hello
-    // on its results screen (client kind 0, never a block: it holds the reserved seat of its key in the lobby room of the rematch and leaves it reserved, docs/SERVER.md "Lobby rooms") }.
+    // on its results screen (client kind 0, never a block: it holds the reserved seat of its key in the lobby room of the rematch and leaves it reserved) }.
     // A lobby block is four seats with the leader starting (valid_create_block); its teams are ignored by the server (the plan decides), so they travel as "none".
     // The server refuses a Hello whose name is not UTF-8 of what the wire takes (or is longer than 32 characters) and a block whose map is no map name: here the name is made as the game's client makes it (the characters outside
     // the table are left out); h.pass is the hub's pass for the name (protocol 29), left out when it has not the shape of one, a map that is no map name is left out (the room is made with the server's own), a platform that is none is "not told" and a key that is none is a new player's.
@@ -302,7 +302,7 @@
             var leaderLeft = prev.leader !== movedFrom && gone.indexOf(prev.leader) !== -1;
             var before = prev.slots[prev.leader].name;
             if (leaderLeft || next.slots[next.leader].name !== before) {
-                // back: the rematch (docs/SERVER.md "Lobby rooms"): the one who leads now was on the results screen of the match a moment ago (the room counted the seat as a game before any START) and is back
+                // back: the rematch (a lobby room's): the one who leads now was on the results screen of the match a moment ago (the room counted the seat as a game before any START) and is back
                 var back = !prev.starting && !next.starting && personIn(prev, next.leader) && ((prev.inGame >> next.leader) & 1) === 1 && ((next.inGame >> next.leader) & 1) === 0;
                 events.push({ type: 'host', seat: next.leader, name: next.slots[next.leader].name, you: next.leader === next.you, before: before, back: back });
             }
@@ -383,8 +383,8 @@
     // the second finds 0.99 of a token (seen once on the macOS CI for the chat, then reproduced for a rename and a plan). So every kind keeps a request in reserve (a burst one smaller than the server's: the server always
     // has a whole request more than the page believes) and a pace of 0.8 of the server's rate (a request every 1.25 s where the server refills 1 a second, every 312.5 ms where it refills 4). A page does not wait for
     // the room's answer to a request before the next, so each kind has this margin. What it absorbs: one request that is held up while the ones after it arrive on time, by about 0.37 s for a color move or a plan
-    // and about 1.5 s for a name, a removal or a line; a longer hold-up can still lose a request (then the screen follows the room). tests/scripts/web_lobby_client_check.js replays the page's requests of every kind
-    // through the server's own bucket (it reads the limits from flood.hpp) with delays of 0 to 150 ms on every request and a hold-up of 333 or 1400 ms on one; tests/scripts/web_lobby_server_check.js sends them
+    // and about 1.5 s for a name, a removal or a line; a longer hold-up can still lose a request (then the screen follows the room). a test replays the page's requests of every kind
+    // through the server's own bucket (it reads the limits from flood.hpp) with delays of 0 to 150 ms on every request and a hold-up of 333 or 1400 ms on one; another test sends them
     // through a link that jitters by 150 ms to the real server.
     var BUDGETS = { move: [5, 3.2], plan: [5, 3.2], rename: [2, 0.8], remove: [2, 0.8], visibility: [2, 0.8], ready: [2, 0.8], chat: [4, 0.8] };
     function LobbyClient(opts) {

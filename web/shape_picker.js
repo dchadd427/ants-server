@@ -2,7 +2,7 @@
 // (or over it, where the screen has no room), made by this script and not by the browser (docs/PLAY_PICTURE.md, "Which shape"; docs/GAME_MENU.md).
 //   * Why not a <select>: its list is the system's, drawn by the browser outside the page. In fullscreen it can fail to open, and under the pointer lock of a fullscreen page (the page moves its own cursor and hands the
 //     replay's bar synthetic events: a script's click cannot open a native list) it never does. This list is a child of the control, so it is inside the fullscreen element, and a click, a tap or a key opens it.
-//     The front page keeps its native dropdown (web/lobby.html: never fullscreen).
+//     The front page keeps its native dropdown (never fullscreen).
 //   * create(shapes, opts): `shapes` is AntsShapes (the table). opts: doc, win (default: the document's), host (the element that gets the button and the list), id (the button's; the list's and the rows' follow it),
 //     labelledBy (the id of the words that name it), describedBy (the id of the quiet line), className (more classes for the button), title, value (the shape shown), onPick(name) (called for a row that is not the
 //     shown row: the page changes the picture and calls set() with what it has now), now (a clock, for tests); automatic (a function that says the shape that Automatic gives now: the list then has the first row

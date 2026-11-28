@@ -136,6 +136,7 @@ tests/scripts/login_*
 tests/scripts/map_pages_rig.py
 tests/scripts/measure_tick_rate.py
 tests/scripts/mini_websocket.js
+tests/scripts/site_pages.py
 tests/scripts/stack_command.py
 tests/scripts/submissions_server_check.py
 tests/scripts/test_ai_skills.py
@@ -193,6 +194,7 @@ tests/scripts/test_web_rematch_title.py
 tests/scripts/test_web_report.py
 tests/scripts/test_web_room_*
 tests/scripts/test_web_seo.py
+tests/scripts/test_web_site_hooks.py
 tests/scripts/test_web_site_nav.py
 tests/scripts/test_web_stats.py
 tests/scripts/test_web_without_docker.py
@@ -301,7 +303,7 @@ web/replay_activity.*
 web/replay_likes.js
 web/replay_plays.js
 web/replay_stats.css
-web/site_*
+web/site_nav.*
 
 # planned new files of the split: the private halves of pure-move document splits, the hook files that the public CMake and run_tests.sh include when present, the private halves of split mutant files
 cmake/private.cmake

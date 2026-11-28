@@ -1,4 +1,4 @@
-/* The update notice: the strip at the top of every page and the "What's new" window (web/update_notice.js, docs/SITE_NAV.md "The update notice"). The look of the site: black inset boxes with the green frame, a gold line for
+/* The update notice: the strip at the top of every page and the "What's new" window (web/update_notice.js). The look of the site: black inset boxes with the green frame, a gold line for
    a notice, teal bevelled buttons with the red shadow. Every color is the page's own token with the same value as a fallback, so one file serves every page (the pages that have no token are the admin page and the changelog:
    the first allows no inline style, so nothing here is set from script). */
 .upd, .upd * { box-sizing: border-box; }

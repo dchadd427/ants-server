@@ -942,8 +942,8 @@
     {
       "id": "app_play_menu_missing",
       "file": "web/front/mapmaker_app.js",
-      "old": ", { text: '\\u25b6 Play this map', cls: 'gold', hint:",
-      "new": ", { text: '\\u25b6 Play this map', hint:",
+      "old": "[{ text: '\\u25b6 Play this map', cls: 'gold', hint:",
+      "new": "[{ text: '\\u25b6 Play this map', hint:",
       "test": "python3 -m unittest tests.scripts.test_web_mapmaker_play.ThePageWiring"
     },
     {

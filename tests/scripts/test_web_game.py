@@ -16,6 +16,7 @@ import os
 import re
 import struct
 import unittest
+from html.parser import HTMLParser
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FRONT = os.path.join(REPO, "web", "front")
@@ -25,6 +26,43 @@ GITHUB = "https://github.com/dchadd427/ants-cross-platform"
 def read(*parts):
     with open(os.path.join(REPO, *parts), encoding="utf-8") as f:
         return f.read()
+
+
+class _Loading(HTMLParser):
+    """the tags of a page that load or start something, in document order: ("link", href), ("script", src, data-page), ("inline", text of a script with no src), ("element", "header", class), ("button", data-act)"""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.found = []
+        self._inline = None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "link" and a.get("rel") == "stylesheet":
+            self.found.append(("link", a.get("href", "")))
+        elif tag == "script" and a.get("src"):
+            self.found.append(("script", a["src"], a.get("data-page", "")))
+        elif tag == "script":
+            self._inline = []
+        elif tag == "header":
+            self.found.append(("element", "header", a.get("class", "")))
+        elif tag == "button" and a.get("data-act"):
+            self.found.append(("button", a["data-act"]))
+
+    def handle_data(self, data):
+        if self._inline is not None:
+            self._inline.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self._inline is not None:
+            self.found.append(("inline", "".join(self._inline)))
+            self._inline = None
+
+
+def loading_order(page):
+    parser = _Loading()
+    parser.feed(page)
+    return parser.found
 
 
 def style_of(page):
@@ -347,11 +385,20 @@ class TheBar(PageCase):
             self.assertNotIn(gone, self.page, gone)
         self.assertNotIn("Reset", re.sub(r"<script.*?</script>", "", self.page, flags=re.S).replace("Reset Game", ""))
 
-    def test_the_bar_files_load_once_the_site_script_first_and_before_the_page_script(self):
-        self.assertEqual(self.page.count('<link rel="stylesheet" href="site_nav.css"><link rel="stylesheet" href="game_bar.css">'), 1)
-        self.assertEqual(self.page.count('<script src="site_nav.js"></script><script src="game_bar.js"></script>'), 1)
-        self.assertLess(self.page.index("game_bar.js"), self.page.index("AntsGameBar.start("))
-        self.assertLess(self.page.index('<header class="sb"'), self.page.index("site_nav.js"))
+    def test_the_bar_files_load_once_the_site_hooks_first_and_before_the_page_script(self):
+        """the page's resources in the order a browser meets them (a parser reads its tags; where a site's hook stands it writes its own, so what comes before it is loaded before them)"""
+        loads = loading_order(self.page)
+        hooks = [n for n, x in enumerate(loads) if x == ("script", "site_hooks.js", "play")]
+        self.assertEqual(len(hooks), 2, "the hook's tag: in the head and where a site's scripts come")
+        styles = [n for n, x in enumerate(loads) if x == ("link", "game_bar.css")]
+        scripts = [n for n, x in enumerate(loads) if x == ("script", "game_bar.js", "")]
+        self.assertEqual((len(styles), len(scripts)), (1, 1), "the bar's own files load once")
+        self.assertLess(hooks[0], styles[0], "a site's styles are written before the bar's own rules")
+        self.assertLess(hooks[1], scripts[0], "a site's scripts are written before the bar's own script")
+        self.assertLess(loads.index(("element", "header", "sb")), hooks[1], "a site's script for the bar comes after the bar's markup")
+        started = [n for n, x in enumerate(loads) if x[0] == "inline" and "AntsGameBar.start(" in x[1]]
+        self.assertEqual(len(started), 1)
+        self.assertLess(scripts[0], started[0], "the bar's script is there before the page's own script starts it")
 
     def test_the_bar_is_as_high_as_the_header_it_replaced_so_the_picture_keeps_its_size(self):
         css = read("web", "game_bar.css")
@@ -428,12 +475,7 @@ class TheGamePageHasNoFrameModeButTheMatchPages(PageCase):
         # play.html?replay=<file>&embed=1, in the frame of web/match.html (docs/REPLAYS.md "The match pages"): only a replay, never a match played, a room or a live match
         self.assertIn("if (/(^|[?&])replay=/.test(window.location.search) && /(^|[?&])embed=1(&|$)/.test(window.location.search)) document.body.className += ' embed';", self.page)
         self.assertIn("var ANTS_EMBED = ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && !ANTS_OWN_MODE && /(^|[?&])embed=1(&|$)/.test(window.location.search);", self.page)
-        embed_css = read("web", "replay_stats.css")                                                                  # (its own stylesheet: the game page may not grow, tools/check_hygiene.py)
-        self.assertIn('<link rel="stylesheet" href="replay_stats.css">', self.page)
-        self.assertEqual(embed_css.count("body.embed header, body.embed #mobile-tip-banner, body.embed .mstats, body.embed #stats-btn { display: none !important; }"), 1)
-        self.assertEqual(embed_css.count("body.embed::after { content: none; }"), 1)                               # (the page's own frame line: the match page has its own)
-        self.assertEqual(embed_css.count("body.embed { padding-top: 10px; padding-left: 12px; padding-right: 12px; --side: 12px; }"), 1)
-        self.assertNotIn("body.embed", self.style)                                                                   # (nothing of the frame mode in the page's own style)
+        self.assertNotIn("body.embed", self.style)                                                                   # (nothing of the frame mode in the page's own style: a site's stylesheet has it)
 
 
 class TheFullscreenStageIsStillBlack(PageCase):

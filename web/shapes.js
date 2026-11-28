@@ -1,4 +1,4 @@
-// The shapes of the picture, as the web pages know them: ONE table, read by the game page (web/shell.html), the front page (web/lobby.html) and the settings menu (web/game_menu.js).
+// The shapes of the picture, as the web pages know them: ONE table, read by the game page (web/shell.html), the front page and the settings menu (web/game_menu.js).
 // The game has the same rows in include/ants_app/canvas_layout.hpp (kAspectTable); tests/scripts/test_web_shapes.py fails when the two tables differ, and when a page keeps a list of its own.
 //   * A row is a shape: its name (the text of `?aspect=`, `--aspect` and the remembered value: "4:3"), its words, the game's canvas in pixels and the widest the page's slot gets. The rows are in the order of the
 //     dropdowns, narrowest to widest, and a shape's place in them is the number that the game's `ants_set_aspect` takes.

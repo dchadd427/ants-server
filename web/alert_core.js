@@ -1,13 +1,13 @@
-// The alerts that need no permission (docs/HOME_SCREEN.md, "Alerts"): what the front page (web/home/alerts.js) and the game page (web/shell.html) share. Nothing here is sent anywhere and nothing is asked of the browser.
+// The alerts that need no permission: what the front page and the game page (web/shell.html) share. Nothing here is sent anywhere and nothing is asked of the browser.
 //   * settings(win): the person's switches, kept in this browser only (localStorage `ants.alerts.v1`, every read and write guarded: a browser that refuses keeps them for the visit). Every switch is on until it is turned off. The list of alerts that
-//     the bell shows is not here: it is the account's own on the hub, and a visitor's in web/home/alerts.js.
+//     the bell shows is not here: it is the account's own on the hub, and a visitor's is the front page's own.
 //   * flasher({ win, doc }): the tab alert. While the page is in the background (hidden, or not the window that has the focus) the tab's title alternates once a second with a line of its own and the tab's icon gets a red
 //     dot; it stops, and the title and the icon are put back, as soon as the page is shown and has the focus again (or goes away).
 //   * watchMatch(env): for the game page: when the countdown card of a match comes up and the page is in the background, the tab alert starts ("Your match is starting!"), and when the card goes it says "Your match has
 //     started!" until the page is looked at. The game says whether a card is up (env.ask(60): the seconds left, -1 for none), the page says whether it is ready.
 //   * sounds: SOUNDS below is the table of the sound files. NO SOUND IS ASSIGNED: the maintainer hears and approves each one first. A sound exists for an event only when its path is written there; until then no sound
 //     plays, no switch for it is drawn, and nothing else changes.
-// ES5 and no module system, as the site's other scripts: a page gets the global AntsAlertCore, node gets module.exports (tests/scripts/web_home_alerts_check.js runs it with fakes).
+// ES5 and no module system, as the site's other scripts: a page gets the global AntsAlertCore, node gets module.exports (a test runs it with fakes).
 (function (root, factory) {
     var api = factory();
     if (typeof module === 'object' && module.exports) module.exports = api;
@@ -22,7 +22,7 @@
     var SOUND_VOLUME = 0.5;
     var NAMES = ['invite', 'mention', 'join', 'start', 'soundJoin', 'soundStart', 'room'];    // the switches: an alert when a person invites me, when one mentions me, when one joins my room, the tab alert of my match, and (only where a sound is wired) a sound for each
     var SOUND_SWITCH = { join: 'soundJoin', start: 'soundStart' };
-    // THE SOUNDS: the path of the file of each event, '' for none. To assign an approved sound, write its path here (the file goes in web/home/, which the image copies whole), for example join: '/home/alert_join.mp3';
+    // THE SOUNDS: the path of the file of each event, '' for none. To assign an approved sound, write its path here (the file goes in the folder of the front page's own files, which the image copies whole), for example join: '/home/alert_join.mp3';
     // nothing else changes: the switch for it appears in the sheet and the sound plays with the alert.
     var SOUNDS = { join: '', start: '' };
     var TEXT = { starting: '\u25B6 Your match is starting!', started: '\u25B6 Your match has started!', sheet: 'Alerts', sheetSounds: 'Alerts and sounds' };

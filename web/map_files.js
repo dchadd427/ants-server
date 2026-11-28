@@ -16,7 +16,7 @@
     var RETRY_MS = 600;
     var PENDING = 0, READY = 1, FAILED = 2;    // what status() says (the game reads the number)
 
-    // The address of a map file: everything but the unreserved characters is %XX, as the server writes the thumbnails' addresses (src/ants_server/map_store.cpp percent_encode)
+    // The address of a map file: everything but the unreserved characters is %XX, as the server writes the thumbnails' addresses (the server's map store)
     function fileUrl(name) {
         var out = '';
         for (var i = 0; i < name.length; i++) {
@@ -35,7 +35,7 @@
         return tail === '.LVL' || tail === '.lvl';
     }
 
-    var ORIGINALS = /^(TINY|SMALL|MEDIUM|GAUNTLET|TREASURE|ISLANDS)\.LVL$/i;       // the six maps that the game's data holds (lobby_rules.js MAPS)
+    var ORIGINALS = /^(TINY|SMALL|MEDIUM|GAUNTLET|TREASURE|ISLANDS)\.LVL$/i;       // the six maps that the game's data holds (the front page's MAPS)
 
     function hex8(n) { return ('00000000' + (n >>> 0).toString(16)).slice(-8); }
 

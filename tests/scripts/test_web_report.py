@@ -2,8 +2,8 @@
 """The web game counts a single-player game for the front page (run by ./run_tests.sh --fast and by the CI). Online matches AND single-player games are both counted; a single-player
 game runs in the browser tab, so the page tells the server when one begins (docs/SERVER.md "The site statistics, GET /stats and POST /stats/local").
 
-  - the page's own function is RUN (node, when it is installed): antsReportLocalGame makes one POST of /stats/local with nothing in it for each call, and no failure of any kind reaches the
-    game or is retried (tests/scripts/web_report_check.js);
+  - the page's own function and the site's hook that it calls (web/site/site_hooks.js) are RUN (node, when it is installed): antsReportLocalGame makes one POST of /stats/local with nothing in it
+    for each call, and no failure of any kind reaches the game or is retried (tests/scripts/web_report_check.js; the page's part with the stub alone is tests/scripts/test_web_seam.py);
   - the game's side is read from the source: the web build (and only the web build) installs a hook that calls that page function, the hook is called in one place (the first tick of a game
     on this computer, never in a match of the network: tests/test_app/test_app_integration_input.cpp 7.6h and test_network_app_basics.cpp N5.90 run it);
   - the front page itself never reports (its frames are matches of the network, and a game on this computer opens the game page, which reports it): web/lobby.html has no POST to /stats/local.
@@ -16,6 +16,7 @@ import unittest
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SHELL = os.path.join(REPO, "web", "shell.html")
+HOOKS = os.path.join(REPO, "web", "site", "site_hooks.js")
 LOBBY = os.path.join(REPO, "web", "lobby.html")
 CHECK_JS = os.path.join(REPO, "tests", "scripts", "web_report_check.js")
 
@@ -72,8 +73,10 @@ class ThePage(unittest.TestCase):
         self.assertEqual(page.count("ANTS_REPORT_BEGIN"), 1)
         self.assertEqual(page.count("ANTS_REPORT_END"), 1)
         self.assertEqual(len(re.findall(r"^        function antsReportLocalGame\(\) \{", page, re.M)), 1)      # a top-level function of the page's script, as the game's EM_JS code needs it
-        self.assertEqual(page.count("/stats/local"), 1)                                     # one place posts a report
-        self.assertIn("fetch('/stats/local', { method: 'POST', keepalive: true })", page)
+        self.assertEqual(page.count("/stats/local"), 0)                                     # the page asks the site's hook ...
+        hooks = read("web", "site", "site_hooks.js")
+        self.assertEqual(hooks.count("/stats/local"), 1)                                    # ... and one place posts a report
+        self.assertIn("win.fetch('/stats/local', { method: 'POST', keepalive: true })", hooks)
         lobby = read("web", "lobby.html") if os.path.exists(LOBBY) else ""
         self.assertNotIn("/stats/local", lobby)
 
@@ -90,7 +93,7 @@ class ThePage(unittest.TestCase):
 @unittest.skipUnless(shutil.which("node"), "node is not installed: the page's own code for counting a game was NOT run (tests/scripts/web_report_check.js)")
 class ThePagesOwnCode(unittest.TestCase):
     def test_one_post_for_each_call_and_no_failure_reaches_the_game(self):
-        done = subprocess.run([shutil.which("node"), CHECK_JS, SHELL], capture_output=True, text=True, timeout=120)
+        done = subprocess.run([shutil.which("node"), CHECK_JS, SHELL, HOOKS], capture_output=True, text=True, timeout=120)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn(" 0 failures", done.stdout)
 

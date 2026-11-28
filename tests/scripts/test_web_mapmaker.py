@@ -887,14 +887,15 @@ class ThePage(unittest.TestCase):
 
     def test_the_scripts_are_loaded_in_their_order_with_the_core_first_and_the_app_last(self):
         tags = re.findall(r'<script src="([^"]+)"></script>', self.page)
-        self.assertEqual(tags[-3:], ["site_nav.js", "update_notice.js", "analytics.js"], "the site bar's Menu, the update notice and the counter come after the editor's own scripts")
-        tags = tags[:-3]
+        self.assertEqual(tags[-1:], ["update_notice.js"], "the update notice comes after the editor's own scripts")
+        tags = tags[:-1]
+        self.assertEqual(len(re.findall(r'<script src="/?site_hooks\.js" data-page="mapmaker"></script>', self.page)), 2, "the hooks of a site (the stub, when there is none): in the head and before the editor's own scripts (tests/scripts/test_web_seam.py)")
         wanted = ["lvl_core.js", "lvl_core_api.js"] + ["front/" + name for name in SCRIPTS]
         self.assertEqual(sorted(tags), sorted(wanted), "the page loads these scripts and no other")
         order = [tags.index(name) for name in wanted]
         self.assertEqual(order, sorted(order), "the core first, then the helpers before the dialogs, the canvas and the app (the app last)")
         self.assertEqual(tags[-1], "front/mapmaker_app.js")
-        self.assertEqual(self.page.count("<script"), len(tags) + 3, "no inline script (and the site bar's, the update notice's and the counter's)")
+        self.assertEqual(self.page.count("<script"), len(tags) + 1 + 2, "no inline script (and the update notice's, and the two tags of the site's hooks)")
         self.assertLess(self.page.index("front/mapmaker_app.js"), self.page.index("</body>"))
 
     def test_every_id_that_the_code_asks_for_is_in_the_page_once(self):
@@ -933,7 +934,7 @@ class ThePage(unittest.TestCase):
 
     def test_every_button_that_the_page_has_is_wired_and_starts_off_until_the_core_is_there(self):
         acts = re.findall(r'data-act="([a-z-]+)"', self.page)
-        self.assertEqual(sorted(set(acts)), ["ai", "check", "convert", "copy", "download", "menu", "mine", "new", "open", "play", "props", "resize", "save", "submit", "zoom-in", "zoom-out"])
+        self.assertEqual(sorted(set(acts)), ["check", "convert", "copy", "download", "menu", "mine", "new", "open", "play", "props", "resize", "save", "zoom-in", "zoom-out"])
         for button in re.findall(r"<button[^>]*data-act[^>]*>", self.page):
             self.assertIn(" disabled", button, button)
         self.assertIn("'new': function () { leave(newMap); }, open: function () { leave(openMap); }, download: download, check: showChecks,", self.app)
@@ -962,8 +963,8 @@ class ThePage(unittest.TestCase):
         self.assertIn("createLvlCore", self.app.split("function boot()")[1], "a module that did not load at all is told too")
 
     def test_a_map_is_read_as_a_place_that_takes_both_kinds_and_the_limits_come_from_the_core(self):
-        self.assertEqual(self.app.count("core.checkMap("), 6, "the open map's three, the two of My maps (a saved map is read as a place that takes both kinds too) and the one of Submit for approval (the bytes that are sent are the bytes that were judged)")
-        self.assertEqual(len(re.findall(r"core\.(?:checkMap|readReport)\([^)]*'extended'\)", self.app)), 7)
+        self.assertEqual(self.app.count("core.checkMap("), 5, "the open map's three and the two of My maps (a saved map is read as a place that takes both kinds too); the one of Submit for approval is a site's part's, which the site's own tests hold")
+        self.assertEqual(len(re.findall(r"core\.(?:checkMap|readReport)\([^)]*'extended'\)", self.app)), 6)
         self.assertIn("core.limits('new_map')", self.app)
         self.assertIn("core.limits('extended')", self.app)
         self.assertNotRegex(self.code["mapmaker_dialog.js"], r"\b(10000|10,000|262144|262,144|130|512)\b", "a limit is the core's, never a number of the dialog")
@@ -1118,21 +1119,14 @@ class ThePage(unittest.TestCase):
         self.assertIn("function enc(t) { return encodeURIComponent(t); }", submit, "a space is %20 and a plus stays a plus")
         self.assertIn("var ready = works && !twin && !big && door !== 'off' && door !== 'checking' && !bad() && !sending;", submit, "the button works only for a map that the checker says works, when the door is on")
         self.assertIn("if (sending || bad() || !works) return;", submit)
-        # the bytes that are sent are the bytes the dialog judged: the dialog takes both from one answer of the page
-        self.assertIn("return { name: map.name, bytes: made.bytes, file: file, report: r.json };", self.app)
         self.assertIn("own()[0], bytes, function (res)", submit, "a send never uses a token that came from a link")
-        # the script is loaded when it is needed; nothing in the page fails without it
+        # the script is loaded when it is needed, by a site's part of the page (the site's own tests hold that); nothing in the page fails without it
         self.assertNotIn("mapmaker_submit.js", self.page)
-        self.assertIn("tag.src = 'front/mapmaker_submit.js';", self.app)
-        self.assertIn("submit: function () { if (!dialogs.isOpen() && !canvas.isStroking()) submitOr(function () { sent.open(); }); }", self.app)
-        self.assertIn("{ text: 'Submit for approval...', onClick: ACTIONS.submit }, { text: 'My submissions', onClick: ACTIONS.subs }", self.app, "the phone's Menu has both")
-        self.assertRegex(self.page, r'<button class="btn sm" type="button" data-act="submit" disabled>Submit for approval\.\.\.</button>')
         self.assertIn('id="mine-tabs"', self.page)
         self.assertIn("var NEEDED = [", self.app)
         self.assertNotIn("'MapSubmit'", self.app.split("var NEEDED = [")[1].split("]")[0], "the page starts without the script that sends maps")
-        # a status link keeps the token in the fragment, never in a request line
+        # a status link keeps the token in the fragment, never in a request line (the address loses it once it is taken in: the site's part of the page does that)
         self.assertIn("'#sent=' + tokens.join(',')", submit)
-        self.assertIn("win.history.replaceState(null, '', win.location.pathname + win.location.search)", self.app, "the address loses the token once it is taken in")
 
     def test_my_maps_is_in_the_page_and_the_menu_and_only_the_players_own_saved_copy_can_be_deleted(self):
         ids = re.findall(r'\bid="([^"]+)"', self.page)
@@ -1251,11 +1245,10 @@ class ThePage(unittest.TestCase):
         Download, Open, Submit, Play and the work that is kept never change a word, so a map that is opened and saved again under its own name is not upgraded"""
         convert = read("web", "front", "mapmaker_convert.js")
         lines = [l.strip() for l in self.app.splitlines() if "withLongOrders(" in l]
-        self.assertEqual(len(lines), 4, lines)
+        self.assertEqual(len(lines), 3, lines)
         self.assertTrue(lines[0].startswith("function withLongOrders(bytes) {"))
         self.assertIn("var bytes = withLongOrders(made.bytes);", lines[1], "Save as a new map")
         self.assertIn("setMap(withLongOrders(bytes), NEW_NAME)", lines[2], "New map")
-        self.assertIn("setMap(withLongOrders(made.bytes), name)", lines[3], "New map, as the AI's tool new_map makes it (the same rule; the person's unsaved work was kept first)")
         self.assertIn("if (!f.ok || f.kind !== 'extended' || MapSizes.newRules(f.rules, f.rows) === f.rules) return bytes;", self.app, "only an Extended map whose word is not the one the rule gives")
         self.assertEqual(self.app.count("core.convertToLongOrders("), 1, "the page's own call: in withLongOrders")
         self.assertIn("MapSizes.resizedRules(f.rules, f.rows, newRows)", self.app, "Resize")
@@ -1264,7 +1257,7 @@ class ThePage(unittest.TestCase):
         self.assertEqual(convert.count("core.convertToLongOrders("), 2, "Copy and Start an Extended map")
         self.assertIn("Sizes.newRules(cur.file.rules, cur.file.rows) === 2", convert)
         self.assertIn("Sizes.newRules(0, cur.file.rows) === 2", convert, "a Classic map has the word 0")
-        for part in ("fileBytes", "download", "openBytes", "openFile", "restoreWork", "keepNow", "submitEnv", "playMap"):
+        for part in ("fileBytes", "download", "openBytes", "openFile", "restoreWork", "keepNow", "playMap"):
             start = self.app.index("function %s(" % part)
             end = self.app.index("\n    }\n", start)
             self.assertNotIn("LongOrders", self.app[start:end], part + " never changes the rules word of a map")
