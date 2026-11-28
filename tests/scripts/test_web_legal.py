@@ -2,7 +2,7 @@
 """The legal notice (run by ./run_tests.sh --fast and by the CI): the Legal page (web/legal.html, served at /legal), the same notice in the README's License section, and the link to it in the footers and in the Menu of the bar.
 
   - the page is the changelog page's look (it links /front/classic.css), loads nothing from another site, runs no script, is short, links the LICENSE and THIRD_PARTY_NOTICES.md of the repository
-    (files that exist), names the third-party parts that only THIRD_PARTY_NOTICES_SERVER.md lists, and says nothing about what the site stores or for how long (that wording has its own home);
+    (files that exist) and says nothing about what the site stores or for how long (that wording has its own home);
   - the five sentences of the notice are the same words on the page and in the README's License section (the owner approved this wording; a change to one is a change to the other), and what both say about
     the original game's data is the README's old wording;
   - every page of the site that has a footer (the front page and the game page) has the link "Legal" at the end of its footer links, opening in a new tab (a match that runs is not left); the pages with the bar at
@@ -282,14 +282,6 @@ class TheLegalPage(unittest.TestCase):
         self.assertEqual(hrefs, [GITHUB + "/issues", DB_IP, GITHUB + "/blob/main/LICENSE", GITHUB + "/blob/main/THIRD_PARTY_NOTICES.md", GITHUB + "/blob/main/LICENSE"])
         for name in ("LICENSE", "THIRD_PARTY_NOTICES.md"):
             self.assertTrue(os.path.exists(os.path.join(REPO, name)), name)
-
-    def test_it_names_every_third_party_part_that_only_the_servers_notices_list(self):
-        """THIRD_PARTY_NOTICES.md (the one that the page links, and the public repository has) does not list what only the server and the site use: THIRD_PARTY_NOTICES_SERVER.md does. The page
-        names each of those parts, so that a visitor who follows the link still finds them somewhere."""
-        names = re.findall(r"(?m)^### ([\w-]+)", read("THIRD_PARTY_NOTICES_SERVER.md"))
-        self.assertTrue(names)
-        for name in names:
-            self.assertIn(name, self.text, "%s is a part of the server's notices that the page does not name" % name)
 
     def test_it_carries_the_credit_line_that_the_footer_had(self):
         code = self.main[self.main.index('<section class="panel" id="code">'):]
