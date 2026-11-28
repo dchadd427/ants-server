@@ -26,28 +26,23 @@ Work that is not released yet is written in the same template under a heading th
 `tools/release.py X.Y.Z "title"` turns that heading into "## vX.Y.Z - date - title" and refuses when there is no "## Next" or it is empty.
 -->
 
-## Next
+## v0.23.0 - 2026-11-28 - Your own ants stay where you sent them
 
 **For players:**
-- An ant that walks and is given a new order no longer hops by up to half a tile in the picture: the game puts it on the middle of its tile at once, as the original does, and the picture now carries it there in a moment instead of jumping, for your own ants and everybody else's, in a game on one computer and online.
-- In a match the chat, the score labels and the countdown card show your name without the clan tag, so a long name fits (the tag stays on the results and on the pages).
-- **A settings menu in the game itself.** In the desktop game, Esc (when there is nothing to cancel), Ctrl+O and the Options button open a menu drawn in the game's own clay and steel, with the same sections and rows as the browser's: Sound, Video, Controls, Game and the new Quick Chat. The original's options window is gone, and every setting it had is a row of the menu with the same name and numbers.
-- **Quick Chat.** The four texts that F9 to F12 say are edited in the menu's new Quick Chat tab (in the browser too, where a phone's own keyboard opens for them).
-- **Show FPS.** The frame rate and its graph in the corner are now a setting in Video, off by default (the version stays; `--show-fps on` for one run). With it off, the ping takes the frame rate's place beside the version.
-- A name that does not fit its score label is set smaller (14, then 12, then 10 pixels) before any of it is cut.
-- Your own ants no longer slide back after you give an order. The game tells the server which tick it applied the order at and the server runs it there: at round trips of 0 to 210 ms with jitter, orders that were corrected fell from 20 - 67 % to under 3 %. An ant that walks on after a new order waits where it was drawn until the game's ant has caught up, instead of stepping back.
+- An ant that walks and is given a new order no longer hops by up to half a tile in the picture: the game puts it on the middle of its tile at once, as the original does, and the picture now carries it there in a moment instead of jumping, for your own ants and everybody else's, in a game on one computer and online. Your own ants no longer slide back after you give an order. The game tells the server which tick it applied the order at and the server runs it there: at round trips of 0 to 210 ms with jitter, orders that were corrected fell from 20 - 67 % to under 3 %. An ant that walks on after a new order waits where it was drawn until the game's ant has caught up, instead of stepping back.
+- In a match the chat, the score labels and the countdown card show your name without the clan tag, so a long name fits (the tag stays on the results and on the pages); a name that still does not fit its score label is set smaller (14, then 12, then 10 pixels) before any of it is cut.
+- **A settings menu in the game itself.** In the desktop game, Esc (when there is nothing to cancel), Ctrl+O and the Options button open a menu drawn in the game's own clay and steel, with the same sections and rows as the browser's: Sound, Video, Controls, Game and the new Quick Chat. The original's options window is gone, and every setting it had is a row of the menu with the same name and numbers. **Quick Chat.** The four texts that F9 to F12 say are edited in the menu's new Quick Chat tab (in the browser too, where a phone's own keyboard opens for them). **Show FPS.** The frame rate and its graph in the corner are now a setting in Video, off by default (the version stays; `--show-fps on` for one run). With it off, the ping takes the frame rate's place beside the version.
 
 **Rules / network:** network protocol 30, a v0.22 game cannot join: an order carries the tick it was applied at, which the server seals it into when still open (at most 0.8 s ahead) and answers.
 
 **Fixes:**
-- A recording or a live match that you watch has no chat to write in any more (the input box is covered and the Send to buttons are gone; the players' lines stay readable): what a watcher typed showed in its own log under the name of the first player, and went nowhere else.
-- The ants' heads in the ranked rows of the results screen are no longer cut off at the top of their feelers on large screens.
+- A recording or a live match that you watch has no chat to write in any more (the input box is covered and the Send to buttons are gone; the players' lines stay readable): what a watcher typed showed in its own log under the name of the first player, and went nowhere else. The ants' heads in the ranked rows of the results screen are no longer cut off at the top of their feelers on large screens.
 - The activity curve above the timeline now shows in the replay on a match page too, as on the replay's own page.
 
 **For operators:**
-- Analytics: the image's build got no country list (db-ip.com answers 403 to Python's own client name); it now names itself, tries this month and the one before, and logs which list it has ([how](docs/ANALYTICS.md#the-country-list)).
-- Analytics: the browser's `ResizeObserver loop` notes are no longer counted as page errors ([list](docs/ANALYTICS.md#what-is-not-counted-as-an-error)).
-- Analytics: a proxy that passes no `X-Forwarded-For` makes every visitor the proxy's own address; the hub now logs it and lets that address make more than a household's 50 new visitors a day ([how](docs/ANALYTICS.md#the-door)).
+- Analytics: the image's build got no country list (db-ip.com answers 403 to Python's own client name); it now names itself, tries this month and the one before, and logs which list it has ([how](docs/ANALYTICS.md#the-country-list)). Analytics: the browser's `ResizeObserver loop` notes are no longer counted as page errors ([list](docs/ANALYTICS.md#what-is-not-counted-as-an-error)). Analytics: a proxy that passes no `X-Forwarded-For` makes every visitor the proxy's own address; the hub now logs it and lets that address make more than a household's 50 new visitors a day ([how](docs/ANALYTICS.md#the-door)).
+
+**Details:** [commits](https://github.com/dchadd427/ants-server/compare/2104634d...26a6dddb)
 
 ## v0.22.3 - 2026-11-27 - Tags any time, nicknames once a day, web logs kept 14 days
 
