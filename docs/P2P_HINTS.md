@@ -12,12 +12,12 @@ Both are a **hint**. A hint is a guess and the sealed turn is the truth: the con
 A direct connection between two browsers shows each its peer's public IP address. So:
 
 - **Every player is on the relay by default.** The browser's ICE transport policy is `relay`: it gathers, sends and accepts only relay candidates, so that no player's address ever reaches another player. The relay is the operator's own coturn.
-- **A direct connection is a choice of each player**: a switch in the room (the Room of the front page, [`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md#your-room)), off by default, remembered by the browser, with a plain explanation the first time it is turned on ("Players you connect to directly can see your IP address"). A pair of players is connected directly only when **both** turned it on; every other pair stays on the relay.
+- **A direct connection is a choice of each player**: a switch in the room (the Room of the front page, [`PLAY_IN_BROWSER.md`](private/PLAY_IN_BROWSER_HOME.md#your-room)), off by default, remembered by the browser, with a plain explanation the first time it is turned on ("Players you connect to directly can see your IP address"). A pair of players is connected directly only when **both** turned it on; every other pair stays on the relay.
 - **The rule is kept in three places.** The sending page never emits a candidate, or an SDP that holds an address, to a peer that did not allow direct; the receiving page never accepts one from it, and closes a channel whose chosen path is not the relay's for such a pair (`web/p2p.js`); and the server does not pass one on between two players who did not both allow it, and counts the sender's violation (`signal_allowed`, `include/ants_net/p2p.hpp`). A page that breaks the rule is thrown out by the server's violation count; it never reaches a player who did not opt in.
 - **If the relay cannot be reached the game falls back silently to the server's stream**, which always runs. It never falls back to a direct connection for a player who did not opt in.
 - Nothing about addresses is shown on any screen. The room's rows carry one small word for each other player once a channel to that player is up: `relay` or `direct` (see below).
 
-The relay's own log holds addresses and the random labels of credentials; it is kept short by the stack (three files of 10 MB). The Legal page says what is shared and with whom ([`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md#the-legal-page)).
+The relay's own log holds addresses and the random labels of credentials; it is kept short by the stack (three files of 10 MB). The Legal page says what is shared and with whom ([`PLAY_IN_BROWSER.md`](private/PLAY_IN_BROWSER_HOME.md#the-legal-page)).
 
 ## The messages
 
