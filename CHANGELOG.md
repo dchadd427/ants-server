@@ -42,8 +42,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - A recording or a live match that you watch has no chat to write in any more (the input box is covered and the Send to buttons are gone; the players' lines stay readable): what a watcher typed showed in its own log under the name of the first player, and went nowhere else.
 - The ants' heads in the ranked rows of the results screen are no longer cut off at the top of their feelers on large screens.
-
-**Fixes:**
 - The activity curve above the timeline now shows in the replay on a match page too, as on the replay's own page.
 
 **For operators:**
