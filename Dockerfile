@@ -250,8 +250,9 @@ COPY web/matches.css /usr/share/nginx/html/matches.css
 COPY web/site_nav.css /usr/share/nginx/html/site_nav.css
 COPY web/site_nav.js /usr/share/nginx/html/site_nav.js
 # The seam between the pages and the site (docs/PLAY_IN_BROWSER.md, "The seam to a site"): web/site_hooks.js is the stub that a tree without a site serves; this image serves the site's own half in its place, and the Map Maker's
-# part of the site beside it (web/site/, at the root of the site: site_hooks.js and mapmaker_site.js), so that the pages name no file of the site
-COPY web/site/ /usr/share/nginx/html/
+# part of the site beside it (both at the root of the site), so that the pages name no file of the site
+COPY web/site/site_hooks.js /usr/share/nginx/html/site_hooks.js
+COPY web/site/mapmaker_site.js /usr/share/nginx/html/mapmaker_site.js
 # The update notice (docs/SITE_NAV.md "The update notice"): the strip and the "What's new" window that every page with the version stamped loads (update_notice.js, update_notice.css); the data file whats_new.json is made below, with the changelog
 COPY web/update_notice.css /usr/share/nginx/html/update_notice.css
 COPY web/update_notice.js /usr/share/nginx/html/update_notice.js

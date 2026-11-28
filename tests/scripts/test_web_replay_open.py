@@ -24,6 +24,7 @@ import unittest
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 NODE = shutil.which("node")
 CHECK_JS = os.path.join(REPO, "tests", "scripts", "web_replay_open_check.js")
+SEAM_CHECK = os.path.join(REPO, "tests", "scripts", "web_seam_check.js")
 FIXTURE = os.path.join(REPO, "tests", "data", "replay_bots_tiny.antsrep")
 
 
@@ -130,9 +131,14 @@ class ThePlayer(unittest.TestCase):
         self.assertEqual(re.findall(r"fetch\(([^,)]*)", self.glue), ["'/live/' + LIVE_ID", "'/replays/' + file", "'/replays/' + FILE"])      # (the list of the page's own requests: none of them is made for a file of your own; the list of the kept matches is the site's hook's)
         has(self, "if (got.error) return;                    // (its card is up already)", self.glue)                    # (no record, no game)
         has(self, "if (got.error === 'gone' || got.error === 'again') card(got.error);", self.glue)
-        self.assertIn("ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats(", self.page)           # (the stats are asked for by the server's own file name, which a local address has none of)
         has(self, "var OWN = ", self.glue.replace("var LIVE_ID = ANTS_LIVE_ID, OWN = ", "var OWN = "))
         self.assertIn("ANTS_OWN_MODE ? R.ownPageOf(window, ", self.glue)
+
+    @unittest.skipUnless(NODE, "node is not installed: the page's asking of the site for the stats of a recording was NOT run (tests/scripts/web_seam_check.js)")
+    def test_the_site_is_asked_for_the_stats_of_a_recording_of_its_own_store_and_never_of_a_file_of_yours(self):
+        """the page's line that asks the site's hook is RUN on fakes (web_seam_check.js): the stats are asked for by the server's own file name, which a local address has none of"""
+        done = subprocess.run([NODE, SEAM_CHECK, os.path.join(REPO, "web", "site_hooks.js"), os.path.join(REPO, "web", "shell.html")], capture_output=True, text=True, timeout=120)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_a_file_of_your_own_has_no_copy_link_no_stats_and_no_download(self):
         has(self, "body.ownfile [data-dl], body.ownfile #copy-btn, body.ownfile #stats-btn { display: none !important; }", self.page)
@@ -240,7 +246,7 @@ class TheChecksAreNotVacuous(unittest.TestCase):
     FILES = ("web/replay_page.js", "web/matches.html", "web/matches.css", "web/shell.html", "web/map_files.js", "docs/REPLAYS.md", "docs/ARCHITECTURE.md", "tools/check_hygiene.py", ".gitattributes",
              "include/ants_replay/replay.hpp", "src/ants_replay/player.cpp", "src/ants_sim/movement_tables_data.inc",
              "web/lobby.html", "web/match.html",
-             "tests/scripts/web_replay_open_check.js", "tests/scripts/web_map_files_check.js", "tests/scripts/replay_file_tools.js", "tests/scripts/test_web_replay_open.py",
+             "tests/scripts/web_replay_open_check.js", "tests/scripts/web_map_files_check.js", "tests/scripts/replay_file_tools.js", "tests/scripts/test_web_replay_open.py", "tests/scripts/web_seam_check.js", "web/site_hooks.js",
              "tests/data/replay_bots_tiny.antsrep", "tests/data/replay_head.hex", "tests/data/replay_tmap.hex", "Community-Maps/eze jungal.lvl") + tuple("Original-Ants/Maps/%s.LVL" % m for m in ("TINY", "SMALL", "MEDIUM", "GAUNTLET", "TREASURE", "ISLANDS")) + tuple("Community-Maps/" + n for n in sorted(os.listdir(os.path.join(REPO, "Community-Maps"))) if n.lower().endswith(".lvl") and n != "eze jungal.lvl")       # (the library, for the check that no map of it is refused)
 
     @classmethod

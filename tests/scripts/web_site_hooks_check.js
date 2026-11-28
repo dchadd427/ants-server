@@ -172,6 +172,131 @@ same('the pages that the file knows', Object.keys(SITE.PAGES).sort(), Object.key
         same('an address with a status link loads the part for sending maps at once', r.heads.map((n) => n.src), ['front/mapmaker_submit.js']);
     }
 
+    // ---- the sending of maps, the AI and the page's own functions that they call, run on the real script with fakes of the page (the parts that the page hands over are recorders) ----
+    function pageOf(r, over) {
+        const log = [];
+        const state = { open: false, stroking: false };
+        const base = {
+            win: r.win, $: () => ({ textContent: '' }), dialogs: { isOpen: () => state.open, message: (title) => log.push(['message', title]) }, canvas: { isStroking: () => state.stroking, showCell() {}, state: () => ({}) },
+            tools: {}, core: { checkMap: () => ({ status: 0, json: '{"ok":1}' }), blank: () => ({ status: 0, bytes: new Uint8Array([1]) }), blankExtended: () => ({ status: 0, bytes: new Uint8Array([2]) }) },
+            store: {}, limits: {}, mine: { tabs: () => log.push(['tabs']), show: (w) => log.push(['show', w]) }, map: () => ({ name: 'My map', file: { rows: 31 } }), actions: {}, menu: [], onChange() {}, sent() {}, blank: { ground: 1, eggs: 2, minutes: 3 },
+            fileBytes: () => ({ bytes: new Uint8Array([7, 7]) }), alive: () => log.push(['alive']), setMap: (bytes, name) => { log.push(['setMap', Array.from(bytes), name]); return ''; }, withLongOrders: (bytes) => { log.push(['long']); return Uint8Array.from([9, 9]); },
+            leave: (f) => f(), rebase() {}, keepAs() {}, freeName: (n) => n, loadFill() {}, canvasOf() {}, fillTags() {}, showChecks: () => log.push(['checks'])
+        };
+        return { page: Object.assign(base, over || {}), log, state };
+    }
+    function richRig(hash) {
+        const r = makerRig(hash);
+        r.win.MapChecks.capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+        r.win.MapFile = { parse: (bytes) => ({ ok: true, rows: 31, bytes }) };
+        r.win.history = { replaceState: (...a) => { r.replaced = (r.replaced || []).concat([a]); } };
+        return r;
+    }
+    {   // Submit for approval: loaded at the first press and never before; nothing happens over a dialog or in a stroke; one script however many presses; a script that does not load is told, and asked for again
+        const r = richRig();
+        const made = { creates: 0, opened: 0, env: null };
+        r.win.MapSubmit = { create: (env) => { made.creates++; made.env = env; return { load: (done) => done(), open: () => { made.opened++; }, count: () => 0, hide() {}, show() {}, fromAddress() {} }; } };
+        const { page, log, state } = pageOf(r);
+        r.win.AntsSite.mapMaker(page);
+        state.open = true; page.actions.submit();
+        state.open = false; state.stroking = true; page.actions.submit();
+        check('a press over a dialog or in the middle of a stroke loads nothing', r.heads.length === 0 && made.opened === 0);
+        state.stroking = false;
+        page.actions.submit();
+        same('the first press loads the script that sends maps, and no other', r.heads.map((n) => n.src), ['front/mapmaker_submit.js']);
+        check('... and opens nothing before it is there', made.opened === 0 && made.creates === 0);
+        r.heads[0].onload();
+        check('when it is there its screens are made once and the dialog opens', made.creates === 1 && made.opened === 1);
+        check('... and My maps is told (its second tab)', log.some((l) => l[0] === 'tabs'));
+        page.actions.submit();
+        check('a second press opens the dialog again and loads nothing', made.opened === 2 && r.heads.length === 1 && made.creates === 1);
+        state.open = true; page.actions.subs(); state.open = false; state.stroking = true; page.actions.subs(); state.stroking = false;
+        check('My submissions does not open over a dialog or in a stroke', !log.some((l) => l[0] === 'show'));
+        page.actions.subs();
+        same('... and opens the second tab of My maps otherwise', log.filter((l) => l[0] === 'show'), [['show', 'sent']]);
+        // the bytes that are sent are the bytes that were judged, in the form that Download hands over
+        const sentBytes = new Uint8Array([4, 5, 6]);
+        const asked = [];
+        const r2 = richRig();
+        const { page: page2, log: log2 } = pageOf(r2, { fileBytes: () => ({ bytes: sentBytes }), core: { checkMap: (b, kind) => { asked.push([b, kind]); return { status: 0, json: '{"ok":1}' }; } } });
+        r2.win.MapSubmit = { create: (env) => { made.env = env; return { load: (done) => done(), open() {}, count: () => 0, hide() {}, show() {}, fromAddress() {} }; } };
+        r2.win.AntsSite.mapMaker(page2);
+        page2.actions.submit(); r2.heads[0].onload();
+        const got = made.env.current();
+        check('what is sent is the bytes that the checker judged, as extended', got.bytes === sentBytes && asked.length === 1 && asked[0][0] === sentBytes && asked[0][1] === 'extended', JSON.stringify([got.name, asked.length]));
+        same('... with the map\'s name and the checker\'s report', [got.name, got.report], ['My map', '{"ok":1}']);
+        check('the rules word of the map is never changed on its way (no conversion is asked for)', !log2.some((l) => l[0] === 'long'));
+        const refused = richRig();
+        const rf = pageOf(refused, { core: { checkMap: () => ({ status: 1, error: 'the map has no ants' }) } });
+        refused.win.MapSubmit = { create: (env) => { made.env = env; return { load: (done) => done(), open() {}, count: () => 0, hide() {}, show() {}, fromAddress() {} }; } };
+        refused.win.AntsSite.mapMaker(rf.page);
+        rf.page.actions.submit(); refused.heads[0].onload();
+        same('a map that the checker refuses is not sent: its reason is the answer, in a sentence', made.env.current(), { error: 'The map has no ants.' });
+        check('... and the page is asked to see that its core is alive (a refusal of the core itself)', rf.log.some((l) => l[0] === 'alive'));
+        check('... and a map that cannot even be written is the page\'s answer', (() => { const e = richRig(); const p = pageOf(e, { fileBytes: () => ({ error: 'Too big.' }) }); e.win.MapSubmit = { create: (env) => { made.env = env; return { load: (done) => done(), open() {}, count: () => 0, hide() {}, show() {}, fromAddress() {} }; } }; e.win.AntsSite.mapMaker(p.page); p.page.actions.submit(); e.heads[0].onload(); return JSON.stringify(made.env.current()) === JSON.stringify({ error: 'Too big.' }); })());
+        // a script that does not load
+        const f = richRig();
+        const fp = pageOf(f);
+        f.win.AntsSite.mapMaker(fp.page);
+        fp.page.actions.submit();
+        f.heads[0].onerror();
+        check('a script that does not load is told in a dialog, in plain words', fp.log.some((l) => l[0] === 'message' && l[1] === 'This part did not load'));
+        fp.page.actions.submit();
+        check('... and the next press asks for it again', f.heads.length === 2 && f.heads[1].src === 'front/mapmaker_submit.js');
+    }
+    {   // a status link: the part is loaded at once; its token joins the browser's, the address loses its fragment, and the list opens
+        const r = richRig('#sent=abc');
+        r.win.location.search = '?lang=en';
+        const seen = {};
+        r.win.MapSubmit = { create: () => ({ load: (done) => done(), open() {}, count: () => 0, hide() {}, show() {}, fromAddress: (hash, taken, opened) => { seen.hash = hash; seen.taken = taken; seen.opened = opened; } }) };
+        const { page, log } = pageOf(r);
+        r.win.AntsSite.mapMaker(page);
+        same('an address with a status link loads the part at once', r.heads.map((n) => n.src), ['front/mapmaker_submit.js']);
+        r.heads[0].onload();
+        same('the page hands the link to the part', seen.hash, '#sent=abc');
+        check('the address keeps its path and its query and loses the token once it is taken in', (() => { seen.taken(); return JSON.stringify(r.replaced) === JSON.stringify([[null, '', '/mapmaker?lang=en']]); })(), JSON.stringify(r.replaced));
+        seen.opened();
+        check('the list of the player\'s submissions opens', log.some((l) => l[0] === 'show' && l[1] === 'sent'));
+        const plain = richRig('#something-else');
+        plain.win.MapSubmit = { create: () => { throw new Error('not wanted'); } };
+        plain.win.AntsSite.mapMaker(pageOf(plain).page);
+        check('any other fragment loads nothing', plain.heads.length === 0);
+    }
+    {   // Connect an AI: its style and tools first, then the part; the part counts every change of the map; the tool that makes a new map uses the page's rule for the rules word
+        const r = richRig();
+        const part = { opened: 0, touched: 0 };
+        let aiEnv = null;
+        r.win.MapAi = { create: (env) => { aiEnv = env; return { open: () => { part.opened++; }, touch: () => { part.touched++; } }; } };
+        const changes = [];
+        const { page, log, state } = pageOf(r, { onChange: (f) => changes.push(f) });
+        r.win.AntsSite.mapMaker(page);
+        state.open = true; page.actions.ai(); state.open = false;
+        check('a press over a dialog loads nothing', r.heads.length === 0);
+        page.actions.ai();
+        same('the first press loads the style and the tools', r.heads.map((n) => n.href || n.src), ['front/mapmaker_ai.css', 'front/mapmaker_ai_tools.js']);
+        r.heads[1].onload();
+        same('the tools come before the part that needs them', r.heads.map((n) => n.href || n.src), ['front/mapmaker_ai.css', 'front/mapmaker_ai_tools.js', 'front/mapmaker_ai.js']);
+        check('nothing opens before all three are there', part.opened === 0 && aiEnv === null);
+        r.heads[0].onload(); r.heads[2].onload();
+        check('the part is made once and opens', part.opened === 1 && aiEnv !== null);
+        page.actions.ai();
+        check('a second press opens it again and loads nothing', part.opened === 2 && r.heads.length === 3);
+        changes[0]();
+        check('the part counts a change of the map, whoever made it', part.touched === 1);
+        // the AI's tool that makes a new map: the same rule for the rules word as the page's New map, and the person's work was kept first (the page's own functions do it)
+        const result = aiEnv.tools.newMap('extended', 31, 31, 'AI map');
+        same('a new map from the AI goes through the page\'s rule for the rules word', [result, log.filter((l) => l[0] === 'long').length, log.filter((l) => l[0] === 'setMap')], ['', 1, [['setMap', [9, 9], 'AI map']]]);
+        const classic = aiEnv.tools.newMap('classic', 20, 20, 'Old map');
+        check('a Classic map is made by the core\'s Classic call', classic === '' && log.filter((l) => l[0] === 'setMap').length === 2);
+        // a part that does not load
+        const bad = richRig();
+        const bp = pageOf(bad);
+        bad.win.AntsSite.mapMaker(bp.page);
+        bp.page.actions.ai();
+        bad.heads[0].onerror(); bad.heads[1].onerror();
+        check('a part that does not load is told in plain words', bp.log.some((l) => l[0] === 'message' && l[1] === 'This part did not load'));
+    }
+
     if (failures) { console.log(failures + ' of ' + checks + ' checks failed'); process.exit(1); }
     console.log('ok: ' + checks + ' checks');
 })().catch((e) => { console.log('FAIL the check stopped: ' + (e && e.stack || e)); process.exit(1); });

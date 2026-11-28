@@ -24,6 +24,7 @@ let playwright;
 for (const name of ['playwright', 'playwright-core']) { try { playwright = require(name); break; } catch (e) { /* the next one */ } }
 if (!playwright) { console.log((required ? 'FAIL' : 'SKIP') + ': Playwright is not installed: the real browser was NOT run (tests/scripts/web_replay_open_browser.js)'); process.exit(required ? 1 : 0); }
 const WEB = path.resolve(__dirname, '..', '..', 'web');
+const SITE = path.join(WEB, 'site');
 const FIXTURE = fs.readFileSync(path.resolve(__dirname, '..', 'data', 'replay_bots_tiny.antsrep'));
 const TINY_MAP = fs.readFileSync(path.resolve(__dirname, '..', '..', 'Original-Ants', 'Maps', 'TINY.LVL'));
 const FILLED = { '@@SITE_TITLE@@': '', '@@SITE_FOOTER@@': '', '@@GAME_VERSION@@': 'v0.0.0', '@@BUILD_ID@@': '20260101-0000', '@@BUILD_DATE@@': '2026-01-01 00:00 PT', '@@BUILD_TIMESTAMP@@': '0', '@@DATA_SIZE@@': '2000' };
@@ -82,7 +83,7 @@ function makeSite(o) {
         req.on('data', (c) => chunks.push(c));
         req.on('end', () => {
             const url = new URL(req.url, 'http://x');
-            const hit = { method: req.method, path: url.pathname, query: url.search, bodyLength: Buffer.concat(chunks).length, contentLength: req.headers['content-length'] || '' };
+            const hit = { method: req.method, path: url.pathname, query: url.search, bodyLength: Buffer.concat(chunks).length, contentLength: req.headers['content-length'] || '', body: url.pathname === COUNTER ? Buffer.concat(chunks).toString('utf8') : '' };
             site.hits.push(hit);
             const send = (code, body, type) => { const b = Buffer.isBuffer(body) ? body : Buffer.from(body); res.writeHead(code, { 'Content-Type': type || 'text/plain', 'Content-Length': b.length, 'Cache-Control': 'no-store' }); res.end(b); };
             if (req.method !== 'GET' && req.method !== 'HEAD') return send(405, 'no');
@@ -100,8 +101,9 @@ function makeSite(o) {
             if (p === '/index.wasm') return send(200, Buffer.from([0, 0x61, 0x73, 0x6d]), 'application/wasm');
             const CLEAN = { '/play': 'shell.html', '/matches': 'matches.html', '/match': 'match.html', '/legal': 'legal.html', '/changelog': 'changelog.html', '/mapmaker': 'mapmaker.html' };       // (the clean addresses of docker/nginx.conf)
             const rel = CLEAN[p] || p.replace(/^\/+/, '');
-            const file = path.resolve(WEB, rel);
-            if (file.startsWith(WEB + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile()) {
+            // the site's half of the seam, when this tree has one, is served at the root, as the image does: its hooks file takes the place of the stub, so the page has the site's hooks and the checks that the visit asked for no stats and no recording mean something (a tree with the stub alone is the game page with no hooks)
+            const file = [SITE, WEB].map((dir) => path.resolve(dir, rel)).find((f) => f.startsWith(WEB + path.sep) && fs.existsSync(f) && fs.statSync(f).isFile());
+            if (file) {
                 let body = fs.readFileSync(file);
                 const type = TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
                 if (path.extname(file) === '.html') { let text = body.toString('utf8'); Object.keys(FILLED).forEach((k) => { text = text.split(k).join(FILLED[k]); }); body = Buffer.from(text); }
@@ -202,7 +204,12 @@ async function chooseFile(page, trigger, file) {
 }
 const text = (page, selector) => page.evaluate((sel) => { const e = document.querySelector(sel); return e ? e.textContent : null; }, selector);
 const LOCAL_URL = /\/play\?local=[0-9a-f]{32}$/;
-const bodiless = (hits) => hits.every((h) => h.method === 'GET' && h.bodyLength === 0 && h.contentLength === '');
+// The site's counter (web/analytics.js, docs/ANALYTICS.md) sends a few small beacons about the page itself (its path, its width, how long it took) to one door, /hub/a: they are not requests about the file, so the
+// checks of "no body, no POST" are about every other request, and the counter's own check is that none of its beacons names the file or its name
+const COUNTER = '/hub/a';
+const bodiless = (hits) => hits.filter((h) => h.path !== COUNTER).every((h) => h.method === 'GET' && h.bodyLength === 0 && h.contentLength === '');
+const counterSilent = (hits) => hits.filter((h) => h.path === COUNTER).every((h) => h.method === 'POST' && h.body.indexOf('antsrep') === -1 && h.body.indexOf(NAME) === -1);
+const notCounter = (h) => h.url !== COUNTER;                                             // (for the hits that a page's request events make: url, not path)
 const askedFor = (hits, re) => hits.filter((h) => re.test(h.path));
 // a page of the site in a fresh context, with what the stand-in game says (window.__stubReport) set before the page's own scripts run
 async function newPage(browser, context, report, extra) {
@@ -239,6 +246,7 @@ async function partHand(browser, shot) {
         await page.waitForURL(LOCAL_URL);
         await stubStarted(page);
         let url = page.url();
+        if (fs.existsSync(path.join(SITE, 'site_hooks.js'))) check('the page has the site\'s own hooks and scripts (the site\'s half of the seam is served, not the stub), so the checks of "no stats, no recording asked for" are made on a page that could ask', await page.evaluate(() => !!window.AntsHistory && !!window.AntsActivity && !!window.AntsHubHere));
         check('the player gets exactly the bytes of the file (SHA-256)', (await stubSha(page, '/replay.antsrep')) === sha256(FIXTURE));
         const args = await page.evaluate(() => window.__stub.args);
         check('the game is started with --replay and the file, and not as a live match', args.join(' ').indexOf('--replay /replay.antsrep') !== -1 && args.indexOf('--replay-live') === -1, args.join(' '));
@@ -246,13 +254,13 @@ async function partHand(browser, shot) {
         check('the header says the map, Your file, the name of the file and its length', /^Treasure/.test(head) && /Your file/.test(head) && head.indexOf(NAME) !== -1 && /16:43/.test(head), head);
         check('the header holds no date (a desktop file name has the local time: nothing is guessed from it)', !/Today|Yesterday|Oct \d|\d+:\d\d (AM|PM)/.test(head), head);
         check('the chips are the players of the report', (await page.$$eval('#r-meta .chip .nm', (n) => n.map((x) => x.textContent))).join('|') === 'Mika|Bot (Medium)|Bot (Medium)|Bot (Medium)');
-        check('the buttons: Matches and Fullscreen, no Copy link, no Stats, no Download', await page.isVisible('#all-btn') && (await text(page, '#all-btn')).trim() === '‹ Matches' && await page.isVisible('#fullscreen-btn-r')
+        check('the buttons: Matches and Fullscreen, no Copy link, no Stats, no Download', await page.isVisible('#all-btn') && (await text(page, '#all-btn')).trim() === '‹ Matches' && await page.isVisible('#fullscreen-btn')
               && !(await page.isVisible('#copy-btn')) && !(await page.isVisible('#stats-btn')) && (await page.$$eval('[data-dl]', (n) => n.every((x) => x.getClientRects().length === 0))));
         check('the body says replay and ownfile, not live', await page.evaluate(() => document.body.classList.contains('replay') && document.body.classList.contains('ownfile') && !document.body.classList.contains('live')));
         await sleep(300);
         await shot(page, 'built_d_desktop_player');
         const all = site.hits.slice();
-        check('no request of the whole visit carries a body, none is a POST, none asks the site for a recording or its stats', bodiless(all) && askedFor(all, /^\/(replays|history\/|stats)/).length === 0, JSON.stringify(askedFor(all, /^\/(replays|history\/|stats)/)));
+        check('no request of the whole visit carries a body, none is a POST, none asks the site for a recording or its stats', bodiless(all) && counterSilent(all) && askedFor(all, /^\/(replays|history\/|stats)/).length === 0, JSON.stringify(askedFor(all, /^\/(replays|history\/|stats)/)));
         check('no request names the file or its bytes', all.every((h) => (h.path + h.query).indexOf(NAME) === -1));
         // 1b. a drop of the file anywhere on the Matches page (a computer): the same bytes arrive
         await page.goto(site.url('/matches'));
@@ -268,7 +276,7 @@ async function partHand(browser, shot) {
         await page.waitForURL(LOCAL_URL);
         await stubStarted(page);
         check('a dropped file (two were dropped: the first is taken) is taken over by the page and the game gets exactly its bytes', dropped === true && (await stubSha(page, '/replay.antsrep')) === sha256(FIXTURE) && (await text(page, '#r-title')).indexOf(NAME) !== -1);
-        check('the drop made no request with a body either', bodiless(site.hits.slice()) && askedFor(site.hits, /^\/(replays|history\/|stats)/).length === 0);
+        check('the drop made no request with a body either', bodiless(site.hits.slice()) && counterSilent(site.hits.slice()) && askedFor(site.hits, /^\/(replays|history\/|stats)/).length === 0);
         url = page.url();                                                        // (the record of the drop is the one that a reload must find)
         // 2. the player is reloaded: the record is still there
         await page.reload();
@@ -365,7 +373,7 @@ async function partHand(browser, shot) {
         const more = await page.$$eval('#sbm .gb-own', (n) => n.filter((x) => x.getClientRects().length > 0).map((x) => x.textContent));
         check('the Menu leads with one thing on a phone: Open another file', more.length === 1 && more[0] === 'Open another file', JSON.stringify(more));
         const url = page.url();
-        await chooseFile(page, '#sbm .gb-own', asFile('other.antsrep', FIXTURE));
+        await chooseFile(page, '#sbm .gb-file', asFile('other.antsrep', FIXTURE));
         await page.waitForFunction((u) => location.href !== u, url);
         check('another file from the Menu goes to the player at its own address', LOCAL_URL.test(page.url()));
         await ctx.close();
@@ -715,7 +723,7 @@ async function partReal(browser, shot) {
         await page.waitForFunction(() => { try { return Module._ants_replay_get(1) > 3000 && Module._ants_replay_get(0) !== 4; } catch (e) { return false; } }, null, { timeout: 60000, polling: 250 });
         check('a click on the middle of the timeline jumps there (the game plays the match again up to it)', (await state(page)).turn > 3000);
         await shot(page, 'built_real_player');
-        check('no request of the visit carries a body, none is a POST, none asked the site for a recording, its stats or the file', hits.every((h) => h.method === 'GET' && !h.body) && !hits.some((h) => /^\/(replays|history\/|stats)/.test(h.url)));
+        check('no request of the visit carries a body, none is a POST, none asked the site for a recording, its stats or the file', hits.filter(notCounter).every((h) => h.method === 'GET' && !h.body) && !hits.some((h) => /^\/(replays|history\/|stats)/.test(h.url)));
         await page.reload();
         const s3 = await up(page);
         check('a reload plays it again (the record stays)', s3.total === 7205 && (s3.state === 2 || s3.state === 3));
@@ -778,7 +786,7 @@ async function partReal(browser, shot) {
         const took = Date.now() - started;
         check(label + ': the card "This replay can’t be played here" with the count, no download, within 60 s (the page was held for seconds to minutes before)', card.title === 'This replay can’t be played here' && words.test(card.body.replace(/\s+/g, ' ')) && card.downloads === 0 && took < 60000, took + ' ms ' + JSON.stringify(card));
         check('... the page still answers (its buttons are there and the way to the list works)', await page.isVisible('#all-btn') && (await page.evaluate(() => new Promise((resolve) => { const t0 = performance.now(); setTimeout(() => resolve(performance.now() - t0), 50); }))) < 2000);
-        check('... no request of the visit carries a body or asks the site for the map', hits.every((h) => h.method === 'GET' && !h.body) && !hits.some((h) => /^\/maps\/files\//.test(h.url)));
+        check('... no request of the visit carries a body or asks the site for the map', hits.filter(notCounter).every((h) => h.method === 'GET' && !h.body) && !hits.some((h) => /^\/maps\/files\//.test(h.url)));
         if (picture) { await sleep(400); await shot(page, picture); }
         await ctx.close();
     }

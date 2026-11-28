@@ -1,61 +1,145 @@
 {
- "note": "Mutants of the seam between the pages of the game and a site, as a tree with the stub alone has it (web/site_hooks.js and the game page's own part of it in web/shell.html: the stub's hooks that do nothing, a second load that changes nothing, a site's own object that is never replaced, the report of a game on this computer that asks a site once and never for a test game) for tools/mutate.py (docs/TESTING.md, 'Mutation checks'). Run from the checkout: tools/mutate.py tests/data/seam_stub_mutants.json --keep-going --jobs 1; every mutant must be caught. tests/scripts/test_web_seam.py runs them on copies.",
+ "note": "Mutants of the seam between the pages of the game and a site, as a tree with the stub alone has it (web/site_hooks.js and the game page's own part of it in web/shell.html: the stub's hooks that do nothing, a second load that changes nothing, a site's own object that is never replaced, the report of a game on this computer that asks a site once and never for a test game, the game page's other calls of the hooks and the Map Maker's own part of the hook: its changes, menu lines and submissions) for tools/mutate.py (docs/TESTING.md, 'Mutation checks'). Run from the checkout: tools/mutate.py tests/data/seam_stub_mutants.json --keep-going --jobs 1; every mutant must be caught. tests/scripts/test_web_seam.py runs them on copies.",
  "mutants": [
   {
    "id": "a_second_load_replaces_the_object",
    "file": "web/site_hooks.js",
    "old": "    if (root.AntsSite) return;                   // (the second load of a page)\n",
    "new": "",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "a_hook_throws",
    "file": "web/site_hooks.js",
    "old": "localGameReport: function () { /* nothing */ },",
    "new": "localGameReport: function () { throw new Error('no site'); },",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "a_hook_has_something_to_say",
    "file": "web/site_hooks.js",
    "old": "replayEntry: function (file, done) { /* nothing */ },",
    "new": "replayEntry: function (file, done) { done(null); },",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "a_hook_is_missing",
    "file": "web/site_hooks.js",
    "old": "mapMaker: function (page) { /* nothing */ }",
    "new": "mapMakerX: function (page) { /* nothing */ }",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "a_hook_touches_the_document",
    "file": "web/site_hooks.js",
    "old": "gameStarted: function (ms) { /* nothing */ },",
    "new": "gameStarted: function (ms) { document.title; },",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "the_page_reports_a_test_game",
    "file": "web/shell.html",
    "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
    "new": "\n",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "the_page_never_asks_the_site",
    "file": "web/shell.html",
    "old": "if (antsSite.localGameReport) antsSite.localGameReport();",
    "new": ";",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   },
   {
    "id": "the_page_asks_the_site_twice",
    "file": "web/shell.html",
    "old": "if (antsSite.localGameReport) antsSite.localGameReport();",
    "new": "if (antsSite.localGameReport) { antsSite.localGameReport(); antsSite.localGameReport(); }",
-   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html"
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_stats_of_a_live_match_are_asked_for",
+   "file": "web/shell.html",
+   "old": "ANTS_REPLAY_MODE && !ANTS_LIVE_MODE && ANTS_REPLAY_FILE && antsSite.replayStats",
+   "new": "ANTS_REPLAY_MODE && ANTS_REPLAY_FILE && antsSite.replayStats",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_stats_of_a_file_of_your_own_are_asked_for",
+   "file": "web/shell.html",
+   "old": "ANTS_REPLAY_FILE && antsSite.replayStats) antsSite.replayStats",
+   "new": "(ANTS_REPLAY_FILE || ANTS_OWN_MODE) && antsSite.replayStats) antsSite.replayStats",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_frame_of_a_match_page_is_not_told",
+   "file": "web/shell.html",
+   "old": "antsSite.replayStats({ file: ANTS_REPLAY_FILE, embed: ANTS_EMBED })",
+   "new": "antsSite.replayStats({ file: ANTS_REPLAY_FILE, embed: false })",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_start_of_the_page_is_not_told",
+   "file": "web/shell.html",
+   "old": "if (antsSite.onPageStart) antsSite.onPageStart({",
+   "new": "if (antsSite.onPageStart) antsSite.gameStarted({",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "a_test_game_is_told_as_a_game",
+   "file": "web/shell.html",
+   "old": "replay: ANTS_REPLAY_MODE, test: !!ANTS_TEST });",
+   "new": "replay: ANTS_REPLAY_MODE, test: false });",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_time_of_the_game_is_not_told",
+   "file": "web/shell.html",
+   "old": "antsSite.gameStarted(performance.now());",
+   "new": "antsSite.gameStarted(0);",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_entry_of_a_match_is_asked_of_nobody",
+   "file": "web/shell.html",
+   "old": "if (antsSite.replayEntry) antsSite.replayEntry(overFile, done);",
+   "new": "if (antsSite.replayEntry) antsSite.replayEntry(overFile);",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "a_new_map_is_not_told_to_the_site",
+   "file": "web/front/mapmaker_app.js",
+   "old": "        if (mine) mine.hide();                               // (the list of My maps gives way to the map that took the screen)\n        siteChanged();\n",
+   "new": "        if (mine) mine.hide();                               // (the list of My maps gives way to the map that took the screen)\n",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "a_change_of_the_map_is_not_told_to_the_site",
+   "file": "web/front/mapmaker_app.js",
+   "old": "    function edited() {\n        siteChanged();",
+   "new": "    function edited() {\n",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_site_s_lines_come_before_download",
+   "file": "web/front/mapmaker_app.js",
+   "old": "{ text: 'Download', onClick: download }].concat(siteMenu, [",
+   "new": "{ text: 'Download', onClick: download }].concat([",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "my_maps_has_no_tabs_for_the_submissions",
+   "file": "web/front/mapmaker_app.js",
+   "old": "sent: function (x) { mineEnvironment.sent = x || null; mine.tabs(); },",
+   "new": "sent: function (x) { mineEnvironment.sent = x || null; },",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
+  },
+  {
+   "id": "the_site_s_part_is_not_given_the_pages_parts",
+   "file": "web/front/mapmaker_app.js",
+   "old": "win.AntsSite.mapMaker(sitePage());",
+   "new": "win.AntsSite.mapMaker({});",
+   "test": "node tests/scripts/web_seam_check.js web/site_hooks.js web/shell.html web/front/mapmaker_app.js"
   }
  ]
 }

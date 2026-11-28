@@ -115,6 +115,126 @@
    "new": "if (false) withSubmit(function () {});",
    "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
    "why": "a status link that nobody reads"
+  },
+  {
+   "id": "the_send_opens_over_a_dialog",
+   "file": "web/site/mapmaker_site.js",
+   "old": "ACTIONS.submit = function () { if (!dialogs.isOpen() && !canvas.isStroking()) submitOr(",
+   "new": "ACTIONS.submit = function () { if (!canvas.isStroking()) submitOr(",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a dialog is open: a press must not put another over it"
+  },
+  {
+   "id": "the_send_opens_in_a_stroke",
+   "file": "web/site/mapmaker_site.js",
+   "old": "ACTIONS.submit = function () { if (!dialogs.isOpen() && !canvas.isStroking()) submitOr(",
+   "new": "ACTIONS.submit = function () { if (!dialogs.isOpen()) submitOr(",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a stroke is under way: a press must not take the canvas from it"
+  },
+  {
+   "id": "the_sent_map_is_judged_as_classic",
+   "file": "web/site/mapmaker_site.js",
+   "old": "core.checkMap(made.bytes, 'extended')",
+   "new": "core.checkMap(made.bytes, 'classic')",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the bytes that are sent are judged by the rules that every map is judged by"
+  },
+  {
+   "id": "the_sent_bytes_are_not_the_judged_bytes",
+   "file": "web/site/mapmaker_site.js",
+   "old": "return { name: map().name, bytes: made.bytes, file: file, report: r.json };",
+   "new": "return { name: map().name, bytes: page.withLongOrders(made.bytes), file: file, report: r.json };",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "what is sent must be what was judged, not a converted copy"
+  },
+  {
+   "id": "the_core_is_not_asked_to_see_that_it_lives",
+   "file": "web/site/mapmaker_site.js",
+   "old": "if (!file || !file.ok) { page.alive(); return",
+   "new": "if (!file || !file.ok) { return",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a refusal of the core itself is the page's to tell"
+  },
+  {
+   "id": "the_token_stays_in_the_address",
+   "file": "web/site/mapmaker_site.js",
+   "old": "try { win.history.replaceState(null, '', win.location.pathname + win.location.search); } catch (e) {}",
+   "new": "try { } catch (e) {}",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a status link's token must not stay in the address bar"
+  },
+  {
+   "id": "the_address_loses_its_query",
+   "file": "web/site/mapmaker_site.js",
+   "old": "win.location.pathname + win.location.search",
+   "new": "win.location.pathname",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "only the fragment goes"
+  },
+  {
+   "id": "a_status_link_opens_no_list",
+   "file": "web/site/mapmaker_site.js",
+   "old": "function () { mine.show('sent'); });\n        }",
+   "new": "function () { });\n        }",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the player came to see the submissions"
+  },
+  {
+   "id": "a_status_link_loads_nothing",
+   "file": "web/site/mapmaker_site.js",
+   "old": "if (/^#sent=/.test(win.location.hash)) withSubmit(function () {});",
+   "new": "if (false) withSubmit(function () {});",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a link of a submission must be taken in when the page opens"
+  },
+  {
+   "id": "a_part_that_did_not_load_is_never_told",
+   "file": "web/site/mapmaker_site.js",
+   "old": "tag.onerror = function () { end(false); };",
+   "new": "tag.onerror = function () { };",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a press that does nothing and says nothing"
+  },
+  {
+   "id": "the_ai_does_not_count_the_changes",
+   "file": "web/site/mapmaker_site.js",
+   "old": "page.onChange(function () { if (aiPart) aiPart.touch(); });",
+   "new": "page.onChange(function () { });",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a call of the AI that names an old version of the map must be refused"
+  },
+  {
+   "id": "the_ai_new_map_has_its_own_rules_word",
+   "file": "web/site/mapmaker_site.js",
+   "old": "page.setMap(page.withLongOrders(made.bytes), name)",
+   "new": "page.setMap(made.bytes, name)",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a new map by the AI is made by the rule of New map"
+  },
+  {
+   "id": "the_ai_opens_over_a_dialog",
+   "file": "web/site/mapmaker_site.js",
+   "old": "ACTIONS.ai = function () { if (dialogs.isOpen() || canvas.isStroking()) return;",
+   "new": "ACTIONS.ai = function () { if (canvas.isStroking()) return;",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a dialog is open"
+  },
+  {
+   "id": "my_maps_is_not_refreshed_when_the_part_is_there",
+   "file": "web/site/mapmaker_site.js",
+   "old": "if (ok) { mine.tabs(); linkOpened(); }",
+   "new": "if (ok) { linkOpened(); }",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "the second tab of My maps appears when its part is there"
+  },
+  {
+   "id": "my_submissions_opens_over_a_dialog",
+   "file": "web/site/mapmaker_site.js",
+   "old": "ACTIONS.subs = function () { if (!dialogs.isOpen() && !canvas.isStroking()) mine.show('sent'); };",
+   "new": "ACTIONS.subs = function () { mine.show('sent'); };",
+   "test": "node tests/scripts/web_site_hooks_check.js web/site/site_hooks.js web/site/mapmaker_site.js web/site_hooks.js",
+   "why": "a dialog is open or a stroke is under way"
   }
  ]
 }

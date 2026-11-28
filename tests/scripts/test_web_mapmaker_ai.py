@@ -6,8 +6,8 @@ the strip and the socket that let it.
     person, the sheet on a fake page and the socket (tests/scripts/web_mapmaker_ai_check.js);
   - the checks are shown able to fail: broken copies of the two scripts (tests/data/mapmaker_ai_mutants.json, which tools/mutate.py runs too, with `--keep-going --jobs 1`) are each refused by them;
   - what the code must never do is read from the source, because no run can show a call that is never made: nothing here writes markup, stores, evaluates or asks any address but the hub's key pages, its
-    socket and the skills of the site (a defect that a run cannot see is the one call that nobody thought of); the page's side is the button, the menu entry, the lazy loading in the order that it needs and
-    the map maker's version.
+    socket and the skills of the site (a defect that a run cannot see is the one call that nobody thought of); the page's side is that it has no button and loads no part, and the map maker's version; what a site's part
+    does with the button, the menu entry and the lazy loading in the order that it needs is run (tests/scripts/web_site_hooks_check.js).
 """
 import json
 import os
@@ -18,9 +18,13 @@ import sys
 import tempfile
 import unittest
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from test_web_game import loading_order  # noqa: E402  (the tags of a page in the order that a browser meets them)
+
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FRONT = os.path.join(REPO, "web", "front")
 CHECK = os.path.join(REPO, "tests", "scripts", "web_mapmaker_ai_check.js")
+SITE_CHECK = os.path.join(REPO, "tests", "scripts", "web_site_hooks_check.js")
 NODE = shutil.which("node")
 PARTS = ("mapmaker_ai.js", "mapmaker_ai_tools.js")
 WATCHDOG_S = 60
@@ -108,19 +112,18 @@ class ThePagesOwnCode(unittest.TestCase):
         self.assertNotIn("fetch(", tools, "the tools ask the page for what they fetch (env.fetchText, env.fetchMap), never an address of their own")
         self.assertIn("'/ai/skills/' + skill + '/SKILL.md'", tools, "a guide is a file of the skills, by a name from a fixed table")
 
-    def test_the_site_adds_the_button_the_menu_entry_and_the_loading_in_the_order_it_needs(self):
-        html, app, site, css = read("web", "mapmaker.html"), read("web", "front", "mapmaker_app.js"), read("web", "site", "mapmaker_site.js"), read("web", "front", "mapmaker.css")
-        self.assertNotIn('data-act="ai"', html, "the page has no button for it: the site's part adds it (web/site/mapmaker_site.js)")
-        self.assertIn('<button class="btn sm ghost aik-btn dsk" type="button" data-act="ai" disabled>', site, "the button is for a window with room; a phone has the File menu")
+    def test_the_page_has_no_button_for_it_and_a_site_adds_the_button_the_menu_entry_and_the_loading_in_the_order_it_needs(self):
+        html, css = read("web", "mapmaker.html"), read("web", "front", "mapmaker.css")
+        loads = loading_order(html)
+        self.assertNotIn("ai", {x[1] for x in loads if x[0] == "button"}, "the page has no button for it: a site's part adds it, and a tree with the stub alone has none")
+        loaded = {x[1].lstrip("/") for x in loads if x[0] in ("link", "script")}
         for name in PARTS + ("mapmaker_ai.css",):
-            self.assertNotIn(name, html, "a lazily loaded file has no tag in the page")
-            self.assertNotIn(name, app, "and the page itself does not name it")
-        self.assertIn("{ text: 'Connect an AI...', onClick: ACTIONS.ai }", site)
-        self.assertLess(site.index("t.src = 'front/mapmaker_ai_tools.js';"), site.index("p.src = 'front/mapmaker_ai.js';"), "the tools come before the part that needs them")
-        self.assertIn("if (aiPart) aiPart.touch();", site, "every change of the map is counted, whoever made it")
-        self.assertIn("function siteChanged() {", app, "the page tells the site's part of every change of the map and of every new map")
-        self.assertEqual(app.count("siteChanged();"), 2)
+            self.assertNotIn("front/" + name, loaded, "a lazily loaded file has no tag in the page")
         self.assertIn(".aik-btn", css)
+        # what the site's part does is RUN on a fake page (the button next to the tags, the entry of the phone's File menu, the style and the tools before the part that needs them, every change of the map
+        # counted by the part, the new map by the page's rule for the rules word), and what the page does for it (it tells every change and every new map) is run by test_web_seam.py
+        done = subprocess.run([NODE, SITE_CHECK, os.path.join(REPO, "web", "site", "site_hooks.js"), os.path.join(REPO, "web", "site", "mapmaker_site.js"), os.path.join(REPO, "web", "site_hooks.js")], capture_output=True, text=True, timeout=120)
+        self.assertEqual(done.returncode, 0, done.stdout[-3000:] + done.stderr[-1000:])
         version = read("web", "MAPMAKER_VERSION").strip()
         self.assertIn('data-maker="v%s"' % version, html)
         self.assertGreaterEqual(tuple(int(n) for n in version.split(".")), (1, 9, 0), "Connect an AI is the map maker's 1.9.0")

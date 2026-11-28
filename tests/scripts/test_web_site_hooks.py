@@ -5,7 +5,7 @@ The pages carry the stub's tag (web/site_hooks.js: tests/scripts/test_web_seam.p
   - the lists of what each page loads of the site are what the pages loaded before the seam, in the same order (the game page: the bar's style and script, the counter, the hub's socket, the history, the map of
     deaths and the activity curve; the Map Maker: the bar's style and script and the counter; the catalog: the bar's style and script), every file of them is in web/ and in the image, and a page that has the
     hooks names one of the lists;
-  - the image serves web/site/ at the root of the site (so its site_hooks.js is the one that a page gets) and never the stub; the local web build copies the stub and then web/site/, the CI lists both files;
+  - the image serves the two files of web/site/ at the root of the site (so its site_hooks.js is the one that a page gets), each by its own COPY line, and never the stub; the local web build copies the stub and then web/site/, the CI lists both files;
   - the code RUNS in node (tests/scripts/web_site_hooks_check.js): the tags that a page gets in its head and at its end, the hooks of the game page, the Map Maker's buttons, actions, menu lines and loading;
   - the tests of the scripts that the hooks load (hub, counter, history, deaths, activity, plays, statistics) read those scripts and the pages as the browser builds them (tests/scripts/site_pages.py);
   - tests/data/web_site_hooks_mutants.json changes one thing at a time in a COPY of the files: the node check must then fail (the last class of this file; tools/mutate.py runs the same list).
@@ -22,6 +22,7 @@ import unittest
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import site_pages  # noqa: E402
+from test_web_game import loading_order  # noqa: E402  (the tags of a page in the order that a browser meets them)
 from test_web_wake_lock import location_of  # noqa: E402  (nginx's choice of a location: the one place of this helper)
 
 CHECK = os.path.join(REPO, "tests", "scripts", "web_site_hooks_check.js")
@@ -64,13 +65,15 @@ class ThePagesAndTheLists(unittest.TestCase):
                 name = url.lstrip("/")
                 in_site = os.path.isfile(os.path.join(REPO, "web", "site", name)) and not os.path.isfile(os.path.join(REPO, "web", name))
                 self.assertTrue(os.path.isfile(os.path.join(REPO, "web", "site" if in_site else "", name)), "%s: %s is not a file of web/" % (page, name))
-                self.assertRegex(dockerfile, r"(?m)^COPY web/%s " % re.escape(name) if not in_site else r"(?m)^COPY web/site/ /usr/share/nginx/html/$", "%s: %s is not copied into the image" % (page, name))
+                self.assertRegex(dockerfile, r"(?m)^COPY web/%s " % re.escape(name) if not in_site else r"(?m)^COPY web/site/%s /usr/share/nginx/html/%s$" % ((re.escape(name),) * 2), "%s: %s is not copied into the image" % (page, name))
                 self.assertRegex(ci, r"ls -l [^\n]*\b%s\b" % re.escape(name), "%s: %s is not in the CI's check of the image" % (page, name))
 
     def test_the_image_serves_the_site_folder_at_the_root_and_never_the_stub_and_the_local_build_copies_both(self):
         dockerfile, build, ci = read("Dockerfile"), read("build_web.sh"), read(".github", "workflows", "ci.yml")
-        self.assertEqual(dockerfile.count("COPY web/site/ /usr/share/nginx/html/\n"), 1)
-        self.assertEqual(re.findall(r"(?m)^(?:COPY|ADD) [^\n]*site_hooks[^\n]*", dockerfile), [], "the image serves the site's own file in the stub's place: no step copies the stub")
+        for name in ("site_hooks.js", "mapmaker_site.js"):
+            self.assertEqual(dockerfile.count("COPY web/site/%s /usr/share/nginx/html/%s\n" % (name, name)), 1, name)
+        self.assertEqual(re.findall(r"(?m)^COPY web/site/? [^\n]*", dockerfile), [], "the folder is not copied as a whole: its two files are listed, so that a file added there is not served by accident")
+        self.assertEqual(re.findall(r"(?m)^(?:COPY|ADD) web/site_hooks[^\n]*", dockerfile), [], "the image serves the site's own file in the stub's place: no step copies the stub")
         self.assertLess(build.index('web/site_hooks.js" "${DIST_DIR}/"'), build.index('"${SCRIPT_DIR}/web/site"/* "${DIST_DIR}/"'), "the site's folder is copied after the stub: its file replaces it")
         self.assertIn('if [ -d "${SCRIPT_DIR}/web/site" ]; then', build)
         self.assertRegex(ci, r"ls -l [^\n]*\bsite_hooks\.js mapmaker_site\.js\b")
@@ -92,43 +95,28 @@ class TheFrameModeStyle(unittest.TestCase):
         self.assertEqual(css.count("body.embed { padding-top: 10px; padding-left: 12px; padding-right: 12px; --side: 12px; }"), 1)
 
 
-class TheMapMakerPartIsWhatThePageDidBefore(unittest.TestCase):
-    """the wiring that mapmaker_app.js had before the seam for the buttons "Connect an AI..." and "Submit for approval...", My submissions and the script that sends maps, now in web/site/mapmaker_site.js"""
-    site = read("web", "site", "mapmaker_site.js")
-    app = read("web", "front", "mapmaker_app.js")
-    page = read("web", "mapmaker.html")
+class TheMapMakerPageAndTheSitesPart(unittest.TestCase):
+    """the Map Maker's own page, as the tree with the stub alone has it, has no button of the site's part and loads none of its files; what the site's part does (the buttons, the actions, the lines of the phone's
+    File menu, the loading of the AI and of the sending of maps, the status link, the bytes that are sent) is RUN by web_site_hooks_check.js (the class below), and the page's side of the hook (the changes that it counts,
+    the menu lines, the submissions of My maps) by test_web_seam.py"""
 
-    def test_the_page_has_no_button_for_them_and_names_none_of_their_files(self):
-        for name in ("mapmaker_submit.js", "mapmaker_ai.js", "mapmaker_ai_tools.js", "mapmaker_ai.css", "MapSubmit", "MapAi", "createSent"):
-            self.assertNotIn(name, self.app, name)
-        for text in ('data-act="ai"', 'data-act="submit"', "Connect an AI", "mapmaker_submit", "mapmaker_ai"):
-            self.assertNotIn(text, self.page, text)
+    def test_the_page_has_no_button_for_them_and_loads_none_of_their_files(self):
+        loads = loading_order(read("web", "mapmaker.html"))
+        self.assertEqual({x[1] for x in loads if x[0] == "button"} & {"ai", "submit"}, set(), "the buttons are the site's part's, put in the top bar when it is there")
+        loaded = {x[1].lstrip("/") for x in loads if x[0] in ("link", "script")}
+        for name in ("front/mapmaker_ai.js", "front/mapmaker_ai_tools.js", "front/mapmaker_ai.css", "front/mapmaker_submit.js", "mapmaker_site.js"):
+            self.assertNotIn(name, loaded, "the page names no file of the site's part: the hook's file loads them")
 
-    def test_the_site_part_has_the_buttons_the_actions_and_the_menu_lines_the_page_had(self):
-        self.assertRegex(self.site, r'<button class="btn sm" type="button" data-act="submit" disabled>Submit for approval\.\.\.</button>')
-        self.assertIn("tag.src = 'front/mapmaker_submit.js';", self.site)
-        self.assertIn("ACTIONS.submit = function () { if (!dialogs.isOpen() && !canvas.isStroking()) submitOr(function () { sent.open(); }); };", self.site)
-        self.assertIn("page.menu.push({ text: 'Connect an AI...', onClick: ACTIONS.ai }, { text: 'Submit for approval...', onClick: ACTIONS.submit }, { text: 'My submissions', onClick: ACTIONS.subs });", self.site, "the phone's Menu has all three")
-        # the bytes that are sent are the bytes the dialog judged: the dialog takes both from one answer of the page
-        self.assertIn("return { name: map().name, bytes: made.bytes, file: file, report: r.json };", self.site)
-        # a status link keeps the token in the fragment, never in a request line; the address loses it once it is taken in
-        self.assertIn("win.history.replaceState(null, '', win.location.pathname + win.location.search)", self.site)
-        self.assertIn("if (/^#sent=/.test(win.location.hash)) withSubmit(function () {});", self.site)
-
-    def test_the_menu_of_a_phone_has_the_lines_in_the_order_of_the_markup_and_the_page_lets_a_site_add_them_after_download(self):
-        self.assertRegex(self.app, r"\{ text: 'Download', onClick: download \}\]\.concat\(siteMenu, \[\{ text: '\\u25b6 Play this map',")
-        self.assertIn("mineEnvironment.sent = x || null; mine.tabs();", self.app, "My maps gets the player's submissions from the site's part")
-        self.assertNotIn("sent: sentProxy()", self.app)
-
-    def test_the_rules_word_is_given_by_the_ais_new_map_by_the_pages_rule_and_never_by_what_sends_a_map(self):
-        self.assertEqual(self.site.count("withLongOrders"), 1)
-        self.assertIn("page.setMap(page.withLongOrders(made.bytes), name)", self.site, "the AI's tool new_map makes a map by the same rule as New map (the person's unsaved work was kept first)")
-        start = self.site.index("function submitEnv(")
-        self.assertNotIn("LongOrders", self.site[start:self.site.index("\n        }\n", start)], "what sends a map never changes the rules word of one")
-
-    def test_the_page_keeps_the_checks_of_the_core_that_it_had_and_the_site_part_has_its_own(self):
-        self.assertEqual(self.app.count("core.checkMap("), 5, "the open map's three and the two of My maps: the one of Submit for approval is the site's part's now")
-        self.assertEqual(self.site.count("core.checkMap("), 1, "the bytes that are sent are the bytes that were judged")
+    def test_the_hooks_tag_comes_before_the_page_starts_and_the_page_starts_after_the_parts_of_the_site_are_written(self):
+        """document.write puts the site's tags where the hook's tag stands: the second tag, before the editor's own scripts, gives the site's part its place before the page's start"""
+        loads = loading_order(read("web", "mapmaker.html"))
+        hooks = [n for n, x in enumerate(loads) if x == ("script", "/site_hooks.js", "mapmaker")]
+        self.assertEqual(len(hooks), 2, "the one spelling, twice")
+        first_script = min(n for n, x in enumerate(loads) if x[0] == "script" and x[1] == "lvl_core.js")
+        app = min(n for n, x in enumerate(loads) if x[0] == "script" and x[1] == "front/mapmaker_app.js")
+        self.assertLess(hooks[0], min(n for n, x in enumerate(loads) if x == ("link", "/update_notice.css")), "a site's styles come before the page's own last sheet")
+        self.assertLess(hooks[1], first_script, "the site's part is there before the editor's scripts")
+        self.assertLess(first_script, app)
 
 
 @unittest.skipUnless(NODE, "node is not installed: the site's half of the seam was NOT run (tests/scripts/web_site_hooks_check.js)")

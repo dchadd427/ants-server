@@ -88,7 +88,7 @@ class ThePagesAndTheImage(unittest.TestCase):
                 self.assertIn(BUILT[ref][0], self.dockerfile, "%s (loaded by %s) is made by the web build: the image must copy it" % (ref, ", ".join(pages)))
                 continue
             if in_the_site_folder(ref):
-                self.assertIn("COPY web/site/ /usr/share/nginx/html/\n", self.dockerfile, ref)
+                self.assertRegex(self.dockerfile, r"(?m)^COPY web/site/%s /usr/share/nginx/html/%s$" % ((re.escape(ref),) * 2), ref + " (a file of the site's folder) is not copied into the image: add its COPY line")
                 continue
             self.assertTrue(os.path.isfile(os.path.join(REPO, "web", ref)), "%s (loaded by %s) is not a file of web/" % (ref, ", ".join(pages)))
             if ref.startswith("front/"):

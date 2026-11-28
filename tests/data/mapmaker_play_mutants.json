@@ -1042,14 +1042,14 @@
       "file": "web/shell.html",
       "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
       "new": "\n",
-      "test": "python3 -m unittest tests.scripts.test_web_report.ThePagesOwnCode"
+      "test": "python3 -m unittest tests.scripts.test_web_mapmaker_play.ThePageWiring"
     },
     {
       "id": "shell_everything_not_counted",
       "file": "web/shell.html",
       "old": "if (typeof ANTS_TEST !== 'undefined' && ANTS_TEST) return;\n",
       "new": "if (true) return;\n",
-      "test": "python3 -m unittest tests.scripts.test_web_report.ThePagesOwnCode"
+      "test": "python3 -m unittest tests.scripts.test_web_mapmaker_play.ThePageWiring"
     },
     {
       "id": "game_begin_no_return",

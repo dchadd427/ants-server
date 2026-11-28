@@ -962,7 +962,7 @@ class ThePage(unittest.TestCase):
         self.assertIn("createLvlCore", self.app.split("function boot()")[1], "a module that did not load at all is told too")
 
     def test_a_map_is_read_as_a_place_that_takes_both_kinds_and_the_limits_come_from_the_core(self):
-        self.assertEqual(self.app.count("core.checkMap("), 5, "the open map's three and the two of My maps (a saved map is read as a place that takes both kinds too); the one of Submit for approval is a site's part's, which tests/scripts/test_web_site_hooks.py holds")
+        self.assertEqual(self.app.count("core.checkMap("), 5, "the open map's three and the two of My maps (a saved map is read as a place that takes both kinds too); the one of Submit for approval is a site's part's, which the site's own tests hold")
         self.assertEqual(len(re.findall(r"core\.(?:checkMap|readReport)\([^)]*'extended'\)", self.app)), 6)
         self.assertIn("core.limits('new_map')", self.app)
         self.assertIn("core.limits('extended')", self.app)
@@ -1119,7 +1119,7 @@ class ThePage(unittest.TestCase):
         self.assertIn("var ready = works && !twin && !big && door !== 'off' && door !== 'checking' && !bad() && !sending;", submit, "the button works only for a map that the checker says works, when the door is on")
         self.assertIn("if (sending || bad() || !works) return;", submit)
         self.assertIn("own()[0], bytes, function (res)", submit, "a send never uses a token that came from a link")
-        # the script is loaded when it is needed, by the site's part of the page (tests/scripts/test_web_site_hooks.py); nothing in the page fails without it
+        # the script is loaded when it is needed, by a site's part of the page (the site's own tests hold that); nothing in the page fails without it
         self.assertNotIn("mapmaker_submit.js", self.page)
         self.assertIn('id="mine-tabs"', self.page)
         self.assertIn("var NEEDED = [", self.app)

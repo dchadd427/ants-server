@@ -3,7 +3,9 @@
 
 A tree with no site has only the stub, and its pages must work with it alone:
   - the stub's contract and the game page's own part of it are RUN with node (tests/scripts/web_seam_check.js): every hook is there and does nothing and throws nothing, a second load or a
-    site's own object is left alone, a game on this computer is reported to a site once and a test game never, and a site that throws is never the game's business;
+    site's own object is left alone, a game on this computer is reported to a site once and a test game never, a site that throws is never the game's business, the page's other calls of the hooks
+    (the start, the time the game took, the entry of a finished match, the stats of a recording of the site's own store and of no other) ask when they should and with what, and the Map Maker's part of
+    the hook (what it hands to a site's part, the count of changes, the lines of the phone's File menu, the submissions of My maps) works on the page's own functions;
   - every file that the game page, the Map Maker and the sprite and sound catalog name (their tags, and the scripts and styles that the page and the Map Maker load later by name) is a file of the
     public tree: a page that names a file of a site would load nothing there (the lists of export/ in a tree that has them; every file of the tree where it has none);
   - every mutant of tests/data/seam_stub_mutants.json is noticed by that check.
@@ -20,6 +22,7 @@ import unittest
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 STUB = os.path.join(REPO, "web", "site_hooks.js")
 SHELL = os.path.join(REPO, "web", "shell.html")
+APP = os.path.join(REPO, "web", "front", "mapmaker_app.js")
 CHECK = os.path.join(REPO, "tests", "scripts", "web_seam_check.js")
 MUTANTS = os.path.join(REPO, "tests", "data", "seam_stub_mutants.json")
 
@@ -93,7 +96,7 @@ class ThePagesNameOnlyFilesOfThePublicTree(unittest.TestCase):
 @unittest.skipUnless(shutil.which("node"), "node is not installed: the stub and the page's part of the seam were NOT run (tests/scripts/web_seam_check.js)")
 class TheStubAlone(unittest.TestCase):
     def test_every_hook_does_nothing_and_the_game_page_works_with_it(self):
-        done = subprocess.run([shutil.which("node"), CHECK, STUB, SHELL], capture_output=True, text=True, timeout=120)
+        done = subprocess.run([shutil.which("node"), CHECK, STUB, SHELL, APP], capture_output=True, text=True, timeout=120)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertRegex(done.stdout, r"ok: \d+ checks")
 
@@ -121,7 +124,8 @@ class TheChecksAreNotVacuous(unittest.TestCase):
                         f.write(text.replace(m["old"], m["new"]))
                     stub = mutated if m["file"].endswith("site_hooks.js") else STUB
                     shell = mutated if m["file"].endswith("shell.html") else SHELL
-                    done = subprocess.run([shutil.which("node"), CHECK, stub, shell], capture_output=True, text=True, timeout=120)
+                    app = mutated if m["file"].endswith("mapmaker_app.js") else APP
+                    done = subprocess.run([shutil.which("node"), CHECK, stub, shell, app], capture_output=True, text=True, timeout=120)
                     self.assertNotEqual(done.returncode, 0, "the check did not notice: " + m["id"])
 
 

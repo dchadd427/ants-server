@@ -230,6 +230,9 @@ class Door:
             name = path[1:] if path != "/index.js" else None
             body = open(os.path.join(WEB, name) if name else os.path.join(HERE, "web_live_stub.js"), "rb").read()
             return self.send(h, 200, body, "text/javascript")
+        if path == "/site_hooks.js":                                  # the seam to the site (docs/PLAY_IN_BROWSER.md): the image serves the site's own file at the root, in the place of the stub; the files that it names are served as before
+            site = os.path.join(WEB, "site", "site_hooks.js")
+            return self.send(h, 200, open(site if os.path.isfile(site) else os.path.join(WEB, "site_hooks.js"), "rb").read(), "text/javascript")
         if path == "/index.data":
             return self.send(h, 200, b"\0" * 2000, "application/octet-stream")
         if path == "/index.wasm":
