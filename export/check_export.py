@@ -5,7 +5,8 @@
 
 The scan of words is REPORT ONLY: it prints a summary and exits 0, however many files it finds, until the changes that cut the crossings have brought the count to zero (export/README.md,
 "The scan of words"); then --strict, which exits 1 when anything is found, becomes the gate of the export. With --links it also runs the check of the links, and that one is not report only: it reads every markdown file of the tree that the export
-makes (the overlay files at their public names) and exits 1 when a relative link names a file or a heading that this tree does not have, or when README.md does not reach a document of docs/.
+makes (the overlay files at their public names, and CHANGELOG.md as public_changelog.py makes it) and exits 1 when a relative link names a file or a heading that this tree does not have, when
+README.md does not reach a document of docs/, or when the changelog's newest release is not the file VERSION. The scan of words reads that text too.
 For every tracked text file that classify.py puts on the public list it counts the mentions of private headers and targets, private paths, private documents, private web files,
 private tools, the site's half of the seam (its folder, the Map Maker's part of it and the tests that read them), the program ants_server, nginx and the stack, and private test targets (KINDS). --list prints one row for every file (area, file, hits, kinds, examples); --tsv writes the
 same rows to a file. Extend KINDS when a new private name appears.
@@ -20,7 +21,9 @@ import urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import classify as C  # noqa: E402
+import public_changelog as PC  # noqa: E402
 
+DERIVED = {'CHANGELOG.md': PC.public_text}      # the files that the export writes from the working copy (a script of this folder), not copies: what the checks read is what it makes
 TEXT = ('.cpp', '.hpp', '.h', '.inc', '.in', '.txt', '.md', '.py', '.js', '.sh', '.bat', '.html', '.css', '.yml', '.yaml', '.json', '.cmake', '.tsv', '.csv', '.webmanifest', '')
 SKIP_PREFIX = ('Community-Maps/', 'asset_catalog/sprites', 'asset_catalog/sounds', 'third_party/mbedtls', 'tests/data/lvl_core')
 KINDS = collections.OrderedDict([
@@ -59,6 +62,13 @@ def area(f):
     return 'root/build/ci'
 
 
+def exported_text(repo, tracked):
+    """The text that the export puts at the public name of a tracked file: the file's own, or what the script of DERIVED makes from it."""
+    with open(os.path.join(repo, tracked), encoding='utf-8', errors='replace') as fh:
+        text = fh.read()
+    return DERIVED[tracked](text) if tracked in DERIVED else text
+
+
 def public_names(repo, allow, private):
     """{public name: the tracked file that the export copies there} (an overlay file stands at its name without its folder)."""
     pub = C.classify(C.tracked_files(repo), allow, private)[0]
@@ -76,8 +86,7 @@ def check_links(repo, allow, private):
 
     def text_of(name):
         if name not in texts:
-            with open(os.path.join(repo, names[name]), encoding='utf-8', errors='replace') as fh:
-                texts[name] = fh.read()
+            texts[name] = exported_text(repo, names[name])
         return texts[name]
 
     def anchors_of(name):
@@ -108,6 +117,12 @@ def check_links(repo, allow, private):
                     continue
                 if anchor and path in names and path.endswith('.md') and anchor not in anchors_of(path):
                     out.append((name, n, 'the link to %s#%s names no heading of the exported page' % (path, anchor)))
+    if 'CHANGELOG.md' in names and 'CHANGELOG.md' in DERIVED and os.path.isfile(os.path.join(repo, 'VERSION')):
+        top = re.search(r'^## v(\d+\.\d+\.\d+)\b', text_of('CHANGELOG.md'), re.M)
+        with open(os.path.join(repo, 'VERSION'), encoding='utf-8') as fh:
+            version = fh.read().strip()
+        if not top or top.group(1) != version:
+            out.append(('CHANGELOG.md', 0, 'the newest release of the exported changelog is %s, not the file VERSION (%s): a release that has only lines for operators is left out there, so it needs a line for players' % ('v' + top.group(1) if top else 'none', version)))
     seen, todo = {'README.md'}, ['README.md']
     while todo:
         for nxt in sorted(edges.get(todo.pop(), ())):
@@ -132,8 +147,7 @@ def scan(repo, allow, private):
         if f.startswith(SKIP_PREFIX) or not (os.path.splitext(f)[1].lower() in TEXT or base in ('LICENSE', 'VERSION', 'CMakeLists.txt', 'CODEOWNERS')):
             continue
         try:
-            with open(os.path.join(repo, f), encoding='utf-8', errors='replace') as fh:
-                text = fh.read()
+            text = exported_text(repo, f)
         except OSError:
             continue
         scanned += 1

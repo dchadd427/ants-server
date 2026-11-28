@@ -71,7 +71,6 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [Workflow](docs/WORKFLOW.md): the test tiers, branches, pull requests, releases, the version policy and the changelog; the rules for contributors are in [`AGENTS.md`](AGENTS.md)
 - [Deploy and light checks](docs/private/WORKFLOW_DEPLOY.md): the light checks of a pull request, the deploy, base images and the browser checks without Docker
 - [The export lists](export/README.md): which files go to the public repository and which stay private, the check that every file is on exactly one list and that the public documents link only each other (suite 5.3), which list a new file goes on, and the files that read differently in the public repository (README, AGENTS, SECURITY, the ignore and attribute files, the owners, the architecture page)
-- [What's new for operators](CHANGELOG_SERVER.md): the paragraphs for people who run the server or the site, which the public changelog does not have, and the commit range of every release
 - [Third-party notices of the server](THIRD_PARTY_NOTICES_SERVER.md): SQLite and the country list of the visit counter; the rest is in `THIRD_PARTY_NOTICES.md`
 
 **How it works**

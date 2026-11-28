@@ -6,8 +6,8 @@ usage: release.py X.Y.Z "title" [--date YYYY-MM-DD] [--dry-run] [--root DIR] [--
   - VERSION becomes X.Y.Z (it must be higher than the version now in the file)
   - the top draft section of CHANGELOG.md, the one headed "## Next" (above the newest release; the template at the top of that file), becomes
     "## vX.Y.Z - DATE - title"; the tool refuses, with a message, when there is no such section or it is empty
-  - the lines under "**For players:**" and "**Fixes:**" of the draft must not name the operator's side (the administration page, a setting, an environment variable, the database: they go in
-    the "For operators" notes, which are not written in CHANGELOG.md), because the site's "What's new" window shows those two labels to everybody (tools/changelog_to_html.py); the tool refuses a draft that does
+  - the lines under "**For players:**" and "**Fixes:**" of the draft must not name the operator's side (the administration page, a setting, an environment variable, the database: they go under
+    "**For operators:**"), because the site's "What's new" window shows those two labels to everybody (tools/changelog_to_html.py); the tool refuses a draft that does
   - the README's "Current version: vX.Y.Z" names the new version (the date of the heading is today's Pacific date unless --date says otherwise); so does the README of another
     tree that this one keeps beside it, when there is one
   - tools/check_version_consistency.py must be happy before the files are changed (else nothing is touched) and is run again when they are written
@@ -194,7 +194,7 @@ def run(args, root):
         print('release: warning: the draft has no "**For players:**" paragraph (the template at the top of CHANGELOG.md)', file=sys.stderr)
     named = [line for found in changelog.shipped_lines("## v%s - %s - %s\n\n%s\n" % (version, date, title, entry)) for line in changelog.operator_side(found[0], found[2], found[3])]
     if named:        # the "What's new" window of the site shows these two labels to everybody (tools/changelog_to_html.py)
-        raise Refused('the draft names the operator\'s side under "For players" or "Fixes": move it to the "For operators" notes, which are not written in CHANGELOG.md\n  ' + "\n  ".join(named))
+        raise Refused('the draft names the operator\'s side under "For players" or "Fixes": move it under "**For operators:**" (the template at the top of CHANGELOG.md)\n  ' + "\n  ".join(named))
 
     with tempfile.TemporaryDirectory() as scratch:                  # the result must pass the consistency check before anything is written
         for name, text in new.items():

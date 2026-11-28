@@ -265,7 +265,7 @@ class TheScanOfWords(unittest.TestCase):
 
 
 class TheLinksOfTheExportedTree(unittest.TestCase):
-    """`check_export.py --links`: the tree that the export makes (the overlay files at their public names) has no relative link to a file or a heading that it does not have."""
+    """`check_export.py --links`: the tree that the export makes (the overlay files at their public names, the changelog as export/public_changelog.py makes it) has no relative link to a file or a heading that it does not have."""
     README = "# Docs\n\n[a](docs/a.md)\n"
 
     def links(self, files):
@@ -304,6 +304,28 @@ class TheLinksOfTheExportedTree(unittest.TestCase):
     def test_code_and_comments_and_a_word_in_brackets_are_not_links(self):
         text = "# A\n\n`[x](nothing.md)` and [esp+0x14](arg)\n\n```\n[y](nope.md)\n```\n\n<!-- [z](gone.md) -->\n"
         code, out = self.links({"docs/a.md": text})
+        self.assertEqual(code, 0, out)
+
+    def changelog(self, text, version="1.2.3"):
+        files = {"README.md": "private readme\n", "export/overlay/README.md": "# Docs\n\n[a](docs/a.md)\n", "docs/a.md": "# A\n", "VERSION": version + "\n", "CHANGELOG.md": text, "priv/secret.md": "private\n"}
+        with Tree(files, ["docs/**", "export/overlay/**", "CHANGELOG.md", "VERSION"], ["priv/**", "export/**", "!export/overlay/**", "README.md"]) as t:
+            return run(CHECK, *t.args("--links"))
+
+    def test_the_changelog_is_read_as_export_public_changelog_makes_it(self):
+        entry = "## v1.2.3 - 2026-01-01 - T\n\n**For players:**\n- A [doc](docs/a.md).\n\n**For operators:**\n- B [secret](priv/secret.md).\n\n**Details:** [commits](https://example.org/compare/a...b)\n"
+        code, out = self.changelog("# What's new\n\n" + entry)
+        self.assertEqual(code, 0, out)                                         # (a link of a paragraph for operators does not count: the paragraph is not exported)
+        code, out = self.changelog("# What's new\n\n" + entry.replace("- A [doc](docs/a.md).", "- A [secret](priv/secret.md)."))
+        self.assertEqual(code, 1)
+        self.assertIn("CHANGELOG.md:6: the link to priv/secret.md names a file that the exported tree does not have", out)
+
+    def test_a_newest_release_that_has_only_lines_for_operators_is_a_problem_because_it_is_left_out_of_the_exported_changelog(self):
+        old = "## v1.2.2 - 2026-01-01 - Old\n\n**For players:**\n- A.\n"
+        new = "## v1.2.3 - 2026-01-02 - New\n\n**For operators:**\n- B.\n\n"
+        code, out = self.changelog("# What's new\n\n" + new + old)
+        self.assertEqual(code, 1)
+        self.assertIn("the newest release of the exported changelog is v1.2.2, not the file VERSION (1.2.3)", out)
+        code, out = self.changelog("# What's new\n\n" + new.replace("**For operators:**", "**For players:**") + old)
         self.assertEqual(code, 0, out)
 
     def test_the_real_repository_has_no_problem(self):
