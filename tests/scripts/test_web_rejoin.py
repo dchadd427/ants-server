@@ -322,7 +322,7 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
         self.assertLess(lobby.index('id="banner"'), lobby.index('id="rejoin"'))
         self.assertLess(lobby.index('id="rejoin"'), lobby.index('<header class="mast">'))
         for needle in ("`ants.rejoin.<room>.<seat>` = `{\"k\", \"s\", \"t\"}` (`rejoinEntry` of the client)", "The lobby never calls `leave()` at START (it sends no Leave and does not close its socket)",
-                       "a page that comes back from the browser's memory (Back) is loaded again, so it looks again by itself", "`web/lobby.html` loads it."):
+                       "a page that comes back from the browser's memory (Back) is loaded again, so it looks again by itself", "the front page loads it."):
             self.assertIn(needle, doc, needle)
         self.assertIn("a strip stands at the top of the front page, above its header", read("docs", "private", "PLAY_IN_BROWSER_HOME.md"))
         self.assertNotIn("No page loads it yet", doc)

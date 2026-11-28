@@ -1,6 +1,6 @@
 # Architecture and source tree
 
-Where everything is in the repository, and how the code fits together. The game is a set of C++17 libraries (assets, simulation, network, computer players, control interface, dedicated server, application); the tree says what each folder holds, and the diagram shows how a command travels through the layers.
+Where everything is in the repository, and how the code fits together. The game is a set of C++17 libraries (assets, simulation, network, computer players, control interface, dedicated server, application); the tree says what each folder holds, and the diagram shows how a command travels through the layers. The public repository has its own version of this page, `export/overlay/docs/ARCHITECTURE.md`, without the server and the site: a change to the tree or the layers is made in both.
 
 ## Directory Structure
 

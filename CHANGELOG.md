@@ -1,8 +1,8 @@
 # What’s new
 
-What changed in each release of the Ants remake, newest first, a few lines each: what a player sees and, only when it changed, the rules or the network protocol. The version is the one line of the file `VERSION` (how it moves: [`docs/WORKFLOW.md`](docs/WORKFLOW.md)); every build also has a build id, the short git commit, shown by `ants --version`, `ants_server --version` and the footer of the web page.
+What changed in each release of the Ants remake, newest first, a few lines each: what a player sees and, only when it changed, the rules or the network protocol. The version is the one line of the file `VERSION` (how it moves: [`docs/WORKFLOW.md`](docs/WORKFLOW.md)); every build also has a build id, the short git commit, shown by `ants --version` and the footer of the web page.
 
-An entry is 5 - 15 lines in a fixed template: the heading `## vX.Y.Z - YYYY-MM-DD - title`, then **For players:** (1 - 6 bullets), **Rules / network:** (only if the rules or the network protocol changed: what, and the protocol number), **Fixes:** (optional, one line each), **For operators:** (optional: what only the person who runs a server or the site sees) and **Details:** (a link to the commit range). The "What's new" window of the site shows the bullets under **For players:** and **Fixes:** and nothing else, so a line about the administration page, a server setting, an environment variable or the database goes under **For operators:**; a release that has only such lines has no **For players:** paragraph. No test counts and no mutation or review lists: those belong in commit messages and documents. A change that goes live writes its entry under **Next** (a section headed `## Next`, above the newest release) in its own pull request, and `tools/release.py` turns it into the entry when `VERSION` moves (each such change bumps the version, by default the patch number).
+An entry is 5 - 15 lines in a fixed template: the heading `## vX.Y.Z - YYYY-MM-DD - title`, then **For players:** (1 - 6 bullets), **Rules / network:** (only if the rules or the network protocol changed: what, and the protocol number) and **Fixes:** (optional, one line each). The "What's new" window of the site shows the bullets under **For players:** and **Fixes:** and nothing else. What only the person who runs a server or the site sees (the administration page, a setting, an environment variable, the database) is not written in this file. No test counts and no mutation or review lists: those belong in commit messages and documents. A change that goes live writes its entry under **Next** (a section headed `## Next`, above the newest release) in its own pull request, and `tools/release.py` turns it into the entry when `VERSION` moves (each such change bumps the version, by default the patch number).
 
 <!--
 Template of an entry (copy it, keep the labels and the order, leave out a paragraph that has nothing to say):
@@ -16,11 +16,6 @@ Template of an entry (copy it, keep the labels and the order, leave out a paragr
 
 **Fixes:**
 - one line each (optional)
-
-**For operators:** only for what a person who runs a server or the site sees (the administration page, a setting, an environment variable, the database); a release with only such lines has no "For players" paragraph
-- one bullet each
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/ed3f1214...b2150865)
 
 Work that is not released yet is written in the same template under a heading that says only "## Next" (no version, no date), above the newest release;
 `tools/release.py X.Y.Z "title"` turns that heading into "## vX.Y.Z - date - title" and refuses when there is no "## Next" or it is empty.
@@ -39,11 +34,6 @@ Work that is not released yet is written in the same template under a heading th
 - A recording or a live match that you watch has no chat to write in any more (the input box is covered and the Send to buttons are gone; the players' lines stay readable): what a watcher typed showed in its own log under the name of the first player, and went nowhere else. The ants' heads in the ranked rows of the results screen are no longer cut off at the top of their feelers on large screens.
 - The activity curve above the timeline now shows in the replay on a match page too, as on the replay's own page.
 
-**For operators:**
-- Analytics: the image's build got no country list (db-ip.com answers 403 to Python's own client name); it now names itself, tries this month and the one before, and logs which list it has ([how](docs/ANALYTICS.md#the-country-list)). Analytics: the browser's `ResizeObserver loop` notes are no longer counted as page errors ([list](docs/ANALYTICS.md#what-is-not-counted-as-an-error)). Analytics: a proxy that passes no `X-Forwarded-For` makes every visitor the proxy's own address; the hub now logs it and lets that address make more than a household's 50 new visitors a day ([how](docs/ANALYTICS.md#the-door)).
-
-**Details:** [commits](https://github.com/dchadd427/ants-server/compare/2104634d...26a6dddb)
-
 ## v0.22.3 - 2026-11-27 - Tags any time, nicknames once a day, web logs kept 14 days
 
 **For players:**
@@ -53,38 +43,21 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - In Home's "Your name" sheet, a box that you are typing in is never locked, so erasing the text of a box no longer closes the phone's keyboard: when the nickname changed lately, the line still says when it can change again and Save stays off, but you can keep typing or type your old nickname back.
 
-**For operators:**
-- The web server's logs (access and error, which name the visitor's address) are deleted after 14 days, as the Legal page says: nginx writes them in `/var/log/ants/` and the image cuts them (`docker logs ants-beta` shows no request; [how](docs/private/BUILD_AND_RUN_DOCKER.md#what-the-images-nginx-sends-checks-and-logs)).
-- The hub holds a name that was given up for 7 days, no longer 30: the first time it opens a database that the earlier hub made it cuts the holds it finds to 7 days from the day each name was given up (a note in `meta` says that it is done), and a `you` frame no longer has `tagfree`; the table `nicknames` keeps its column `tag_at`, which nothing writes or reads any more ([`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md#the-rules)).
-
-**Details:** [commits](https://github.com/dchadd427/ants-server/compare/f3ed14f2...1177b255)
-
 ## v0.22.2 - 2026-11-27 - Other players' ants drawn smoothly, site analytics
 
 **For players:**
 - Other players' ants no longer rubber-band in network matches: those of other people and of computer players are drawn from the confirmed game, a moment behind your own and never corrected. Your own ants still answer a click at once. `?others=predicted` on the game page's address brings the old picture back, to compare, until v0.22.3 at the latest.
-- The Legal page has a new part, "Counting visits": no cookie and no address kept, and a browser that asks not to be tracked is counted as one visit and its country ([`docs/ANALYTICS.md`](docs/ANALYTICS.md)).
-
-**For operators:**
-- The admin page has a new tab, **Analytics**; the hub has a door for it, `POST /hub/a`, and a file, `analytics.db`; `ANTS_HUB_ANALYTICS=off` switches it off. The hub's image fetches a DB-IP country list when built: pass `ANTS_GEO_MONTH` once a month. The counter keeps no time finer than the hour and names a referrer only by its registered name (and in the permanent totals only when 3 visitors came from it); a day keeps at most 30,000 events, one address range makes at most 50 new visitors a day, and `analytics.db` is limited to 64 MiB as `hub.db` is ([`docs/ANALYTICS.md`](docs/ANALYTICS.md)).
-
-**Details:** [commits](https://github.com/dchadd427/ants-server/compare/b599b261...0e6b3b26)
+- The Legal page has a new part, "Counting visits": no cookie and no address kept, and a browser that asks not to be tracked is counted as one visit and its country.
 
 ## v0.22.1 - 2026-11-27 - Smoother ants online, fewer freezes, Show ping
 
 **For players:**
 - **Show ping.** A new setting in the Video tab of the settings menu, off by default: switched on, the corner of a network game shows "ping NN ms" above the frame rate, and a click on it opens the list of connections as before. Off, the corner is the frame rate and the version only. The corner no longer shows "delay". On the desktop it is `show_ping=on` in the settings file or `--show-ping on` for one run.
-- **Tags keep your capitals.** A tag is now shown the way you type it ("[Ant] Zoe", "[aNt] Zoe"), no longer turned into capitals. The checks still read it in capitals (reserved, staff and rude words), tags that are already set stay as they are, and changing only the capitals counts as a tag change, so it waits a day like any other ([`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md)).
+- **Tags keep your capitals.** A tag is now shown the way you type it ("[Ant] Zoe", "[aNt] Zoe"), no longer turned into capitals. The checks still read it in capitals (reserved, staff and rude words), tags that are already set stay as they are, and changing only the capitals counts as a tag change, so it waits a day like any other.
 - Smoother ants in network matches: a corrected ant moves at a walk's pace at most.
 
 **Fixes:**
 - Fewer short freezes in online matches: the server no longer lists its whole folder of replays in one go after every match it keeps, and starts the matches of computer players in a quiet moment while people play.
-
-**For operators:**
-- The log tells a slow pass of the server's main loop (over 25 ms) in one line with where its time went, `slow pass: 36.0 ms (rooms 5.1, store 21.0)`, at most one line in ten seconds ([`docs/SERVER.md`](docs/SERVER.md#the-slow-pass-log)). The replay store's look at its folder runs in 2 ms slices, and its own saves and deletes no longer call for one ([`docs/SERVER_REPLAYS.md`](docs/SERVER_REPLAYS.md)).
-- For search engines the game page now names `/play` as its address (it still says `noindex`, so no `/play?...` address is listed), and a `.txt` file of the site, such as the licence text of the front page's font, sends `X-Robots-Tag: noindex` ([`docs/BUILD_AND_RUN.md`](docs/private/BUILD_AND_RUN_DOCKER.md#search-engines-and-share-cards)).
-
-**Details:** [commits](https://github.com/dchadd427/ants-server/compare/bb9239fc...f3e8fea2)
 
 ## v0.22.0 - 2026-11-26 - Nicknames, tags and guest names, a welcome for guests, a better Play of the game and Fill a box
 
@@ -94,15 +67,10 @@ Work that is not released yet is written in the same template under a heading th
 - **Nicknames, tags and guest names.** Log in and choose a nickname (3 to 16 letters and digits, yours alone) and, if you like, a tag ("[ANTS] Zoe") on one sheet, Your name, from the name in the chat menu. The chat, the Players list, the rooms, the results and the match history show it; finished matches keep the names they were played with. A guest can type a name too: it shows as "Wren (Guest)" and stays in this browser. Latin (with Vietnamese) and Cyrillic letters work. **A welcome for guests.** The first time you open Ants & Uncles without logging in, a card offers Sign in with Discord to chat, Set a display name if you do not want to chat, or Not now. It does not come back once you answer it, set a name or log in. **Long names fit.** The results show an alliance on two lines when its names are long, and a long name ends in dots in a room and on the countdown card.
 - **The Games list fills itself with Open lobby cards.** As many as the window has room for with nothing to scroll (more on a tall window, none when real games fill the list), and the dashed plus on a card hosts a game, the same as Host here.
 
-**Rules / network:** network protocol 29 (a name is UTF-8, and a name that is not a guest's carries the hub's signature, [`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md)): an older page or game cannot join a room of this version, so reload the page. The rules and the recordings are unchanged.
+**Rules / network:** network protocol 29 (a name is UTF-8, and a name that is not a guest's carries a signature of the chat service): an older page or game cannot join a room of this version, so reload the page. The rules and the recordings are unchanged.
 
 **Fixes:**
 - The live match cards of the Games list and their scoreboard name a computer player "Kit (bot)", never with its level. A connected AI's `put_ants` puts the ant type that it names, and `get_region` names the types right (they were mixed up: asking for a combat ant gave a bomber, and a swimmer gave a combat ant).
-
-**For operators:**
-- Moderators have `/rename NAME`, which takes a nickname and a tag away. The key `ANTS_ADMIN_GATE_SECRET` also signs the pass of a name: with it the game server keeps a nickname only when the hub signed it (without it names are checked as before). The hub adds its tables `nicknames`, `nick_hold` and `login_claim` and the column `lines.tag` by itself.
-
-**Details:** [commits](https://github.com/dchadd427/ants-server/compare/7e54f31a...8f1fafc9)
 
 ## v0.21.6 - 2026-11-26 - Live scores, open lobbies, Top Thief and bots that fight for the flower
 
@@ -117,8 +85,6 @@ Work that is not released yet is written in the same template under a heading th
 - On a phone, a live view's "Jump to live" no longer covers the clock beside the play button: the clock keeps its room, the button goes under it when the row is short, and Picture sits beside the camera button. The speed buttons and Picture are 44 px high.
 - The menu's "players online" counts the same people as the Players list, not only those in a room or a match.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/717a2ef9...af4a8282)
-
 ## v0.21.5 - 2026-11-24 - The Podium results, messages on phones and smarter bots
 
 **For players:**
@@ -130,8 +96,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - Private messages on a phone: the conversation is a sheet that follows what you can see, so with the keyboard open the field sits just above it, the head with the name and the X stays on the screen and the messages fill the room over the field. The X, the arrow, Escape, a pull down on the head and the phone's Back button each close the sheet and leave you on the page where you were, not on the bell's list.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/df4b4255...36deb771)
-
 ## v0.21.4 - 2026-11-24 - Special ants on the match page, What's new fits a phone
 
 **For players:**
@@ -139,8 +103,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Fixes:**
 - On a phone, the "What's new" window fits the screen, so its Close button is no longer below the bottom of the page.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/3430f45a...e6b312bf)
 
 ## v0.21.3 - 2026-11-24 - Follows, private messages, replay likes and the activity curve
 
@@ -153,13 +115,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - Watching a replay on a match page has the Settings button too, and a match you played shows on the Matches page right after it ends, not only when the server is idle.
 
-**For operators:**
-- The game server's database moves to schema version 12 (the table `history_action`, the counts that the activity curve is drawn from, and the plays and likes of replays; the history service's own file to its version 6): an older program refuses the newer file, and the update does not copy it, so stop the server and copy `ants.db` before the update; that copy is the way back ([`docs/HEATMAPS.md`](docs/HEATMAPS.md#the-activity-curve), [`docs/REPLAY_COUNTS.md`](docs/REPLAY_COUNTS.md)).
-- Plays and likes of replays: a new door of the game server (`--counts-port`, 4032 in the stack files; [`docs/REPLAY_COUNTS.md`](docs/REPLAY_COUNTS.md)) and a like gate of the hub that signs a short pass for the person's login (the admin page's key, `ANTS_ADMIN_GATE_SECRET`; without a good one likes are off and plays still count). Only numbers are kept for plays, and for a like the hub's opaque reference of the account. **Forget me** asks the door to take the person's likes back (`ANTS_HUB_COUNTS_URL`, `http://ants-server:4032` in the stack; empty it when `ANTS_COUNTS_PORT` is 0) and never depends on it: a door that does not answer is asked again by the hub for a day.
-- New `follows`, `dms` (private messages, 7 days) and `reports` tables, made by the first use and deleted by Forget me; reports are read with `python -m hub.admin reports` and closed with `report-close ID`, and each report, look and close is a row of the moderators' log ([private messages](docs/HUB_MESSAGES.md)). The Legal page has a section for them.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/5e23309d...266e2c4c)
-
 ## v0.21.2 - 2026-11-23 - Invites, mentions, the bell, map pages and Random map
 
 **For players:**
@@ -170,22 +125,11 @@ Work that is not released yet is written in the same template under a heading th
 - **Random map.** The map list of a room has a **Random map** row under the sorts: **Pick one** puts a random map from the maps shown into the room at once, **Pick another** picks again. The Maps page has a **Random map** button that opens the page of a random map of the whole library.
 - **A page for every map.** The six maps of the 1998 game and the players' maps each have a page at /map/NAME (picture, size, game length, food and power-ups, the map's own line, the maker when its line names one, and how often it was played here) with **Play it**, which opens a room on that map, and **Open in Map maker**; /map-library lists them with a search and filters. The Map Maker opens a library map from /mapmaker?mapfile=NAME.lvl.
 
-**For operators:**
-- The hub keeps an account's last 30 alerts of 7 days and its `/ignore` list (new `alerts` and `ignores` tables, made by the first one; Forget me deletes them), and limits invitations and mentions ([the hub's document](docs/HUB_PEOPLE.md)).
-- The map pages are made when the image is built (`tools/map_pages.py`, [`docs/MAP_PAGES.md`](docs/MAP_PAGES.md)) and listed in `sitemap-library.xml`; the maps that players send and you approve have no page yet.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/dc2bfafd...e0d5b1bf)
-
 ## v0.21.1 - 2026-11-23 - Connect an AI in the Map Maker
 
 **For players:**
 - **Connect an AI in the Map Maker.** A new Connect an AI sheet makes a key (look only, or look and edit; it ends after 7, 30 or 90 days) for your own AI assistant (Claude Code, Cursor, any program that speaks MCP or plain web calls). Turn on "Let an AI work in this tab" and it can look at the map you have open and, with an edit key, change it while you watch: a strip with Stop and Undo AI changes stays on top, and each change is one step of your own history.
 - **Six skills for your AI**, to download from /ai/skills/ (one zip with all of them): the map file's words, the terrain, the layout of a fair map, the Map Maker's tools, and how to check and fix a map.
-
-**For operators:**
-- The keys are off until the hub is started with `ANTS_HUB_AI_KEYS=on`; with it off every key door answers 503 and no tab can be armed ([`docs/MAP_AI.md`](docs/MAP_AI.md)).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/2bdfe98e...d65954fa)
 
 ## v0.21.0 - 2026-11-23 - A new room, Fog of War switch, the can't-go gap
 
@@ -198,14 +142,10 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** rules number 14 (game mode 187: 15): the path manager answers an event's request after the turn's commands, as in the original. Network protocol 28 (the Fog of War byte in the leader's plan): a v0.20 game cannot join a v0.21 room. Older recordings still play.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/5ed83928...d0e1305a)
-
 ## v0.20.6 - 2026-11-22 - 3D ant models test page
 
 **For players:**
 - A test page at /test_3d/ shows stylized 3D models of the six ant types, with their animations, next to the original 1998 sprites.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/857ce588...3519146b)
 
 ## v0.20.5 - 2026-11-22 - Real error pages, clean addresses, share cards
 
@@ -219,11 +159,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - The moderator menu on a chat image says "An image" instead of an empty box.
 
-**For operators:**
-- The web image builds with Emscripten 3.1.74 and the server image runs on Debian 13; /robots.txt and /sitemap.xml are real files.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/a56438f6...236540e7)
-
 ## v0.20.4 - 2026-11-21 - Encrypted desktop joins, fairer limits, the original icon
 
 **For players:**
@@ -233,23 +168,10 @@ Work that is not released yet is written in the same template under a heading th
 - A big match is no longer lost from Matches: a recording can be up to 16 MB.
 - A picture in the chat has a frame as wide as the picture on a phone.
 
-**For operators:**
-- Orders are limited per seat (a large allowance for armies, a small one for other commands); a failed recording names the seat that sent the most.
-- Limits per network address: 16 open rooms, 10 new rooms a minute, slower room-code guessing; `ANTS_TRUSTED_PROXIES` names the proxies whose address header is believed.
-- The stack files no longer publish the unencrypted TCP game port 4001.
-- Images are pinned by digest, Pillow 13.0.0 by hash, and Dependabot watches home-next.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/e615bc78...33515c3d)
-
 ## v0.20.3 - 2026-11-21 - Images in the chat can be posted
 
 **Fixes:**
 - Images in the chat can be posted: the chat service could not write its new images folder, so posting stayed off after v0.20.2.
-
-**For operators:**
-- The hub's image makes its /images folder its own, so a new or still-empty images volume is writable by the hub (no manual step on the host).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/bdc4b393...0f09b20b)
 
 ## v0.20.2 - 2026-11-21 - Images in the chat
 
@@ -260,11 +182,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - Every image is checked and saved again by the site before anyone sees it, which removes hidden data such as a photo's location.
 
-**For operators:**
-- A new container, ants-img, converts images on a private network; the hub reaches it through ANTS_HUB_IMAGE_CONVERTER_URL (on by default; set it empty to turn images off). Who may post: ANTS_HUB_ROLE_IMAGES plus administrators and moderators; administrators take the right away with /noimages and give it back with /images (docs/HUB_IMAGES.md).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/88d22002...ea0bfcf6)
-
 ## v0.20.1 - 2026-11-21 - Look around during the countdown
 
 **For players:**
@@ -273,11 +190,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Fixes:**
 - In a server's room the desktop game no longer shares its network address with the other players or opens a port for them.
-
-**For operators:**
-- The desktop game's listener for host migration in a LAN game takes at most 8 waiting connections, each for 5 s.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/ee60e4bf...1a591c31)
 
 ## v0.20.0 - 2026-11-20 - The room inside Home, Ready up
 
@@ -291,21 +203,10 @@ Work that is not released yet is written in the same template under a heading th
 - The "Leave the game?" box and the box that copies a recording's link no longer make the game's sound repeat loudly while they are open.
 - A match whose player lost their connection during the countdown no longer stays stuck before the first turn: after 60 s the missing seat is dropped and the match goes on.
 
-**For operators:**
-- The relay hands a credential only once a match with two or more people has begun, at most two per player, lasting as long as the match can plus 10 minutes; it listens and relays on ANTS_TURN_EXTERNAL_IP only (an address the machine must hold) and writes its pid file to a small memory folder.
-- New server option --countdown-hold-seconds (default 60; control key countdown_hold_seconds).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/5cd7452b...faa0179c)
-
 ## v0.19.3 - 2026-11-20 - Commands in the chat
 
 **For players:**
 - **Commands in the chat.** Type "/" to see the commands you can use, with a helper that fills them in. Everyone has /help, /ignore and /unignore. A mistyped command is answered only to you, and "//" at the start posts a line that begins with a slash.
-
-**For operators:**
-- Administrators can start computer-player matches from the chat with /bots (up to 10,000 in a queue, run 80 at a time with a load guard), see them with /bots status and end them with /bots stop. The hub reaches the game server through ANTS_HUB_GAME_ADMIN_URL (docs/HUB_COMMANDS.md).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/0f2ebe70...9454806f)
 
 ## v0.19.2 - 2026-11-20 - Invite only rooms, fewer stuck computer players
 
@@ -313,17 +214,10 @@ Work that is not released yet is written in the same template under a heading th
 - **"Invite only" instead of "Private".** A room you keep to yourself shows in Open games, locked, and people join only with your link; the switch and every message now say so.
 - **Computer players on POPcOrN get stuck less.** Fewer seats end a match without a point, and they take more power-ups.
 
-**For operators:**
-- A schedule on the admin page can space its matches out ("Start one every X minutes"), like Start now.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/a89fd745...cd31da55)
-
 ## v0.19.1 - 2026-11-20 - Numbers over the ants without a border
 
 **For players:**
 - **Health, damage and heal numbers have no black border.** The heal number now shows white digits with a green plus, so it reads on pale ground and over a green ant.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/ceabe493...cf1bbe63)
 
 ## v0.19.0 - 2026-11-20 - Smoother ants online, a direct-connection switch
 
@@ -334,18 +228,10 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** network protocol 26: a v0.18 page or game cannot join a v0.19 match, so reload the page. The rules and the recordings are unchanged.
 
-**For operators:**
-- The relay (coturn) runs in the stack with `COMPOSE_PROFILES=relay` and the `ANTS_TURN_*` settings, including `ANTS_TURN_PORT` when another TURN server holds 3478 (docs/SERVER.md).
-- The admin page's Bot matches can use any map by name, an editable rotation, and "Start one every X minutes" (database migration 10).
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/06f28456...fb4e3ef0)
-
 ## v0.18.2 - 2026-11-19 - Private rooms show in Open games, locked
 
 **For players:**
 - **Private rooms show in Open games, locked.** You see the map, the host and the seats with a padlock and a PRIVATE tag; you can join only with the room's link. Quick join skips them. Matches in private rooms stay watchable as before.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/cd4ac593...0b39b23a)
 
 ## v0.18.1 - 2026-11-19 - A note when a new version is out; computer players use the endgame
 
@@ -353,16 +239,12 @@ Work that is not released yet is written in the same template under a heading th
 - **A note when a new version is out.** A strip at the top of Ants & Uncles, a room and the other pages offers Reload or Later, and "What's new" lists what changed since your last visit. Nothing shows during a match; it waits for the results.
 - **Computer players waste less time once the food is gone.** An idle Bomber or Swimmer fetches a Fire power-up, a Swimmer becomes the Thief for the last steals, hurt ants walk home to heal, and late fights need a clear advantage.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/1b9ed00f...bdc50e13)
-
 ## v0.18.0 - 2026-11-19 - Dropped food can be taken only once
 
 **For players:**
 - **Food dropped by a dying ant can be taken only once.** When a thief carrying food died on a spot where a food pile had already been emptied, its lunch box could be eaten again and again for full points. Now the first ant to take it empties it, and it is gone. The 1998 game has the same flaw; this fix is a deliberate change from it.
 
 **Rules / network:** the original game's rules number moves from 9 to 13 (game mode 187 keeps 12); recordings of earlier numbers still play as they were recorded. Network protocol 25: a v0.17 page or game cannot join a v0.18 match, so reload the page.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/837d81c1...9e729c46)
 
 ## v0.17.13 - 2026-11-19 - Phone fixes: keyboard in Options, watch bar, countdown, full-screen exit
 
@@ -374,8 +256,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.12 page or game still joins.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/b842a06e...11d4a225)
-
 ## v0.17.12 - 2026-11-19 - New windows, a Fullscreen button, live matches at once, alerts
 
 **For players:**
@@ -386,8 +266,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.11 page or game still joins. Under the hood: the game, the game server and the web pages are rebuilt.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/30ddce44...9548c0a5)
-
 ## v0.17.11 - 2026-11-18 - Your orders act at once online, one window for watching
 
 **For players:**
@@ -397,20 +275,12 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.10 page or game still joins. Under the hood: the game and the web pages are rebuilt. To switch the new behavior off for one game, add `?prediction=off` to the game page's address.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/cb9b01b0...c59ad097)
-
 ## v0.17.10 - 2026-11-18 - Bot matches on the administration page, longer replay storage
 
 **For players:**
 - **Replays are kept longer.** The server now keeps up to 1 GB of matches for up to 90 days, and matches of computer players have their own smaller share, so they do not push out matches played by people.
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.9 page or game still joins. Under the hood: the game server and the web pages are rebuilt.
-
-**For operators:**
-- **Computer-player matches can be started and scheduled from the site's administration page.** Start one or several at once, stop them, and set repeating schedules in Pacific time. Setting `ANTS_BOT_MATCH_EVERY_MIN=0` switches schedules off on the server.
-- **The database moves to schema 9 on the first start.** An older server cannot open it afterward.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/109000f6...4a6b395e)
 
 ## v0.17.9 - 2026-11-18 - New pointers, Map Maker clumps and real map pictures
 
@@ -425,8 +295,6 @@ Work that is not released yet is written in the same template under a heading th
 **Fixes:**
 - On a phone, the Map Maker's map could stay stretched after choosing a tool, so a tap landed on the wrong cell.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/7c0381af...0469f31d)
-
 ## v0.17.8 - 2026-11-17 - Hard computer players keep hitting
 
 **For players:**
@@ -434,8 +302,6 @@ Work that is not released yet is written in the same template under a heading th
 - **Computer players on ISLANDS** no longer send an ant over a bridge that is about to go.
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.7 page or game still joins. Under the hood: the game server and the web pages are rebuilt.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/48c230ad...6c9f09fc)
 
 ## v0.17.7 - 2026-11-17 - Back to the room after a match, ISLANDS bridges, Map Maker edges
 
@@ -447,16 +313,9 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.6 page or game still joins. Under the hood: the game server and the web pages are rebuilt.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/b7ff8ec0...845c2214)
-
 ## v0.17.6 - 2026-11-17 - One admin secret, and a closed admin page says why
 
-**Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.5 page or game still joins. Under the hood: the chat hub, the game server and the web pages are rebuilt.
-
-**For operators:**
-- **For the site's admins:** the admin page needs one secret setting instead of two, and when it is closed it now says which part is off. Players see no change.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/d148d9ea...711aff60)
+**Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.5 page or game still joins. Under the hood: the services behind the pages are rebuilt.
 
 ## v0.17.5 - 2026-11-17 - A new look for the match screen, faster match history, 187 computer-player matches
 
@@ -469,8 +328,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.4 page or game still joins. Under the hood: the game server and the web pages are rebuilt; the web download is larger (the new art: about 12 MB on the wire).
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/1ec8e125...dd11f9f7)
-
 ## v0.17.4 - 2026-11-17 - The screen stays on, steadier Menu, bots that cross bomb fields, a Discord admin page
 
 **For players:**
@@ -479,11 +336,6 @@ Work that is not released yet is written in the same template under a heading th
 - **Computer players handle bomb fields better.** They walk several tiles per order through a bomb field instead of one, take a power-up they are standing on by clicking their own tile, hop over a fire wall and a lake to reach a power-up, never plant a bomb under an ant, and try a fresh plan when they get stuck (POPcOrN, the CrUnChY BiTe maps and the other bomb-field maps).
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.3 page or game still joins. Under the hood: the game server's database moves to version 8 (the old admin accounts are removed; an older server cannot open the new file), and the chat hub and the web pages are rebuilt.
-
-**For operators:**
-- **A new admin page.** Site admins sign in with Discord on the admin page to review the maps players send, handle chat bans and mutes, read the moderators' log and see how the site is doing; the old admin passwords are gone. Players see no change.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/433de635...4fb44bf6)
 
 ## v0.17.3 - 2026-11-16 - A Shift button for touch screens, moderation from the Players list, cleaner scores
 
@@ -495,8 +347,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.2 page or game still joins. Under the hood: the game server, the chat hub and the web pages are rebuilt.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/6fb219d9...81ef4f92)
-
 ## v0.17.2 - 2026-11-16 - Fairer computer players in 187, chat moderation from a phone
 
 **For players:**
@@ -504,8 +354,6 @@ Work that is not released yet is written in the same template under a heading th
 - **Chat moderators can act from a phone.** A moderator or admin right-clicks a line in the front page chat, or presses and holds it on a phone (or picks it with the arrow keys and Enter), to delete it, mute, kick or ban its writer, or see that person's recent messages in the chat. Players see no change.
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.1 page or game still joins. Under the hood: the game server and the web pages are rebuilt.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/da6092fb...443b5fbb)
 
 ## v0.17.1 - 2026-11-16 - Longer chat lines, bold numbers on every results column, computer players defend better against Thieves
 
@@ -515,8 +363,6 @@ Work that is not released yet is written in the same template under a heading th
 - **Computer players defend better against Thieves.** A Thief on its way to a raid looks again: when walls, bombs or a closed way meet it, it turns to another hill; a Fire Ant is no longer sent to a bank it cannot walk home from.
 
 **Rules / network:** none: network protocol 24 and the rules numbers are unchanged, so a v0.17.0 page or game still joins. Under the hood: the chat server (it reconnects by itself within seconds), the game server and the web pages are rebuilt.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/d63874e8...4a74eadd)
 
 ## v0.17.0 - 2026-11-15 - 187 drops nothing, leave your room from Home, a better emoji picker, bots walk round bombs
 
@@ -528,8 +374,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** network protocol 24: a v0.16.11 page or game cannot join (an old page says that a newer version is out: reload it). The replay rules number of 187 is 12; 187 recordings made before keep their old rule and play as they were recorded. The original's game, its rules number and its recordings are unchanged. Under the hood: the game server and the web pages are rebuilt; matches running at the update end.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/06727fbd...2f426f13)
-
 ## v0.16.11 - 2026-11-15 - Away on the Players list, press outside a dialog to cancel, computer players that walk where they go
 
 **For players:**
@@ -540,8 +384,6 @@ Work that is not released yet is written in the same template under a heading th
 
 **Rules / network:** none: network protocol 23 and the rules numbers are unchanged, so a v0.16.10 page or game still joins. Under the hood: the chat server, the game server and the web pages are rebuilt.
 
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/25a64658...6b375eeb)
-
 ## v0.16.10 - 2026-11-15 - Chat box on one row, computer players take back power-ups and contest the ISLANDS ring
 
 **For players:**
@@ -550,8 +392,6 @@ Work that is not released yet is written in the same template under a heading th
 - **Hard computer players on ISLANDS contest the ring.** One of their Bombers flies to the island of a ring pile and lays mines on the way to it, so a rival's Swimmers are thrown back. A Swimmer that was hit is sent back to work, each ring pile gets three Swimmers, and the crew digs the one tile that links the ring to the flower strip beside it so that Swimmer power-ups can be fetched. Easy, Medium and the other maps are unchanged.
 
 **Rules / network:** none: network protocol 23 and the rules numbers are unchanged, so a v0.16.9 page or game still joins. Under the hood: the game server and the web pages are rebuilt; the chat server is unchanged.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/491ca15c...c52809d1)
 
 ## v0.16.9 - 2026-11-14 - Numbers in the game's font, chat links and times, Discord server nicknames, a resizable front page
 
@@ -562,8 +402,6 @@ Work that is not released yet is written in the same template under a heading th
 - **A front page you can resize.** On a wide window (701 pixels and up), drag the join between Open games and Players, or the top of Global chat, to give one more room. Arrow keys move a handle, Enter or a double click puts it back, and the sizes are kept in this browser. A phone has no handles.
 
 **Rules / network:** none: network protocol 23 and the rules numbers are unchanged, so a v0.16.8 page or game still joins. Under the hood: the chat server changed, so it restarts and chat reconnects by itself within seconds; it also holds code for a future admin page that no page uses yet.
-
-**Details:** [commits](https://github.com/dchadd427/ants-cross-platform/compare/a364d921...f2d101bf)
 
 ## Older versions (v0.16.8 and before)
 

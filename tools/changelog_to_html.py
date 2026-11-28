@@ -402,7 +402,7 @@ def convert(md, repo_blob, version="", build_id="", build_date="", source="CHANG
 # What the "What's new" window shows is public text, so the file is made from the two labels that were written for players and from nothing else: the bullets under **For players:** and **Fixes:**
 # of each release. Every other label (**Rules / network:**, **For operators:**, **Details:**, and any label that is not known) is never read, a release that has no bullet under the two labels is not in
 # the file (its title with it: a title can name the operator's side), and the file has no title, link, code or commit at all. A shipped line that names the operator's side anyway is refused
-# when the file is made, so the build stops and the line is moved under **For operators:** (the template at the top of CHANGELOG.md).
+# when the file is made, so the build stops and the line is moved to the notes for operators (CHANGELOG_SERVER.md: this file does not have them).
 WHATS_NEW_KEPT = ("For players", "Fixes")
 WHATS_NEW_RELEASES = 8                      # the newest releases that have lines (the window shows the newest five of them since the visitor's version: web/update_notice.js)
 LABEL = re.compile(r"^\*\*([^*:]+):\*\*")
@@ -484,7 +484,7 @@ def whats_new(md, version):
         if len(releases) == WHATS_NEW_RELEASES:
             break
     if refused:
-        raise OperatorLine('a line under "For players" or "Fixes" names the operator\'s side: move it under "**For operators:**" (the template at the top of CHANGELOG.md)\n  ' + "\n  ".join(refused))
+        raise OperatorLine('a line under "For players" or "Fixes" names the operator\'s side: move it to the "For operators" notes (CHANGELOG_SERVER.md: they are not written in CHANGELOG.md)\n  ' + "\n  ".join(refused))
     return {"version": version.lstrip("v"), "releases": releases}
 
 

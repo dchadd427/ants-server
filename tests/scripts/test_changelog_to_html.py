@@ -383,20 +383,19 @@ class RealFile(unittest.TestCase):
         for entry in entries:
             head = entry.splitlines()[0]
             lines = [l for l in entry.splitlines() if l.strip()]
-            self.assertGreaterEqual(len(lines), 4, head)
+            self.assertGreaterEqual(len(lines), 2, head)
             self.assertLessEqual(len(entry.rstrip("\n").splitlines()), 17, "%s: an entry is 5 - 15 lines (blank ones count)" % head)
-            if "**For operators:**" not in entry or "**For players:**" in entry:                       # (a release that has only lines for operators has no For players paragraph)
-                self.assertIn("**For players:**\n", entry, head)
+            if "**For players:**" in entry:
                 players = re.search(r"\*\*For players:\*\*\n((?:- .*\n)+)", entry)
                 self.assertIsNotNone(players, head)
                 self.assertTrue(1 <= len(players.group(1).splitlines()) <= 6, "%s: 1 - 6 bullets under For players" % head)
-            else:
-                self.assertRegex(entry, r"\*\*For operators:\*\*\n- ", head)
-            self.assertIn("**Details:** [commits](https://github.com/", entry, head)
             # fixed order of the labels
-            positions = [entry.find(label) for label in ("**For players:**", "**Rules / network:**", "**Fixes:**", "**For operators:**", "**Details:**") if label in entry]
-            self.assertEqual(positions, sorted(positions), "%s: the labels are in the order For players, Rules / network, Fixes, For operators, Details" % head)
-            self.assertEqual(sorted(set(re.findall(r"^\*\*([^*:]+):\*\*", entry, re.M)) - {"For players", "Rules / network", "Fixes", "For operators", "Details"}), [], "%s: a label that the template does not have" % head)
+            labels = ("**For players:**", "**Rules / network:**", "**Fixes:**")
+            positions = [entry.find(label) for label in labels if label in entry]
+            self.assertTrue(positions, "%s: one of the labels of the template" % head)
+            self.assertEqual(positions, sorted(positions), "%s: the labels are in the order For players, Rules / network, Fixes" % head)
+            # the changelog is the public one: what only an operator sees, and the commit range of the working repository, are kept in another file
+            self.assertEqual(sorted(set(re.findall(r"^\*\*([^*:]+):\*\*", entry, re.M)) - {"For players", "Rules / network", "Fixes"}), [], "%s: a label that the template does not have" % head)
             self.assertNotRegex(entry, r"\b[0-9,]+ (assertions|test cases)\b", head)             # no test counts in the changelog
 
 

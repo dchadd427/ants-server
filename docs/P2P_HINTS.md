@@ -5,19 +5,19 @@ The server stays what it is: the sealer of the turns, the referee and the record
 - **A player's browser** sends each order it gives to the other players' browsers over a WebRTC data channel, at once, before the server has sealed it.
 - **The server** sends a computer player's order to every player the moment the bot gives it, over the connection that every player already has, before the turn that will carry it is sealed.
 
-Both are a **hint**. A hint is a guess and the sealed turn is the truth: the confirmed engine, the turns, the state hashes, the replay and everything that the server records never see a hint, and a hint that the sealed turn does not confirm is dropped. A channel that is lost, slow or wrong costs nothing, because the server's stream is the only stream that the match is made of. Where the prediction of one's own orders is described, see [`NETWORK_PORT.md`](NETWORK_PORT.md#prediction-of-ones-own-orders-predictionhpp-cue_routerhpp-netgame-applicationview_sim); the server is described in [`SERVER.md`](SERVER.md), which also has the relay and what the operator must set up ([The relay for the players' channels](SERVER.md#the-relay-for-the-players-channels)).
+Both are a **hint**. A hint is a guess and the sealed turn is the truth: the confirmed engine, the turns, the state hashes, the replay and everything that the server records never see a hint, and a hint that the sealed turn does not confirm is dropped. A channel that is lost, slow or wrong costs nothing, because the server's stream is the only stream that the match is made of. Where the prediction of one's own orders is described, see [`NETWORK_PORT.md`](NETWORK_PORT.md#prediction-of-ones-own-orders-predictionhpp-cue_routerhpp-netgame-applicationview_sim); the server is described in the game server's documentation, which also has the relay and what the operator must set up (The relay for the players' channels).
 
 ## Who may see whose address
 
 A direct connection between two browsers shows each its peer's public IP address. So:
 
 - **Every player is on the relay by default.** The browser's ICE transport policy is `relay`: it gathers, sends and accepts only relay candidates, so that no player's address ever reaches another player. The relay is the operator's own coturn.
-- **A direct connection is a choice of each player**: a switch in the room (the Room of the front page, [`PLAY_IN_BROWSER.md`](private/PLAY_IN_BROWSER_HOME.md#your-room)), off by default, remembered by the browser, with a plain explanation the first time it is turned on ("Players you connect to directly can see your IP address"). A pair of players is connected directly only when **both** turned it on; every other pair stays on the relay.
+- **A direct connection is a choice of each player**: a switch in the room (the Room of the front page, the documentation of the front page), off by default, remembered by the browser, with a plain explanation the first time it is turned on ("Players you connect to directly can see your IP address"). A pair of players is connected directly only when **both** turned it on; every other pair stays on the relay.
 - **The rule is kept in three places.** The sending page never emits a candidate, or an SDP that holds an address, to a peer that did not allow direct; the receiving page never accepts one from it, and closes a channel whose chosen path is not the relay's for such a pair (`web/p2p.js`); and the server does not pass one on between two players who did not both allow it, and counts the sender's violation (`signal_allowed`, `include/ants_net/p2p.hpp`). A page that breaks the rule is thrown out by the server's violation count; it never reaches a player who did not opt in.
 - **If the relay cannot be reached the game falls back silently to the server's stream**, which always runs. It never falls back to a direct connection for a player who did not opt in.
 - Nothing about addresses is shown on any screen. The room's rows carry one small word for each other player once a channel to that player is up: `relay` or `direct` (see below).
 
-The relay's own log holds addresses and the random labels of credentials; it is kept short by the stack (three files of 10 MB). The Legal page says what is shared and with whom ([`PLAY_IN_BROWSER.md`](private/PLAY_IN_BROWSER_HOME.md#the-legal-page)).
+The relay's own log holds addresses and the random labels of credentials; it is kept short by the stack (three files of 10 MB). The Legal page says what is shared and with whom (the documentation of the front page).
 
 ## The messages
 
@@ -58,7 +58,7 @@ The server relays a `Signal` only between two players who are both ready; a `P2p
 
 ## Command line and page
 
-`--direct on|off` (default off: this player allows direct connections) and `--no-p2p` (no channel at all), see [`COMMAND_LINE.md`](COMMAND_LINE.md). The page passes `--direct on` when the Room's switch was on (localStorage `ants.direct`) and `--no-p2p` for `?p2p=off`. The server: `--turn-host HOST[:PORT]` (or `ANTS_TURN_HOST`), `ANTS_TURN_PORT` (3478 unless set) and `ANTS_TURN_SECRET`, see [`SERVER.md`](SERVER.md). Without both, protocol 26 changes nothing about a match except the computer players' hints.
+`--direct on|off` (default off: this player allows direct connections) and `--no-p2p` (no channel at all), see [`COMMAND_LINE.md`](COMMAND_LINE.md). The page passes `--direct on` when the Room's switch was on (localStorage `ants.direct`) and `--no-p2p` for `?p2p=off`. The server: `--turn-host HOST[:PORT]` (or `ANTS_TURN_HOST`), `ANTS_TURN_PORT` (3478 unless set) and `ANTS_TURN_SECRET`, see the game server's documentation. Without both, protocol 26 changes nothing about a match except the computer players' hints.
 
 ## Measured effect (a rig on virtual time, not real networks)
 
@@ -89,7 +89,7 @@ Every hint was confirmed by its turn in these runs (no loss, no late hint). Read
 
 Every hint of the server (about 1,090 in six matches, each line) was confirmed on the tick it named. The hint is ahead of its turn by one turn (50 ms: the bot decides right after the server runs a turn, and the order is sealed in the next one), so it removes the corrections where a player's picture is no more than a turn or two behind the server (a round trip up to about 80 ms) and helps little beyond that (9 to 14 % fewer at 150 and 250 ms). Holding the bot's order back so that the hint comes a whole lead ahead is a different thing and was not built: it changes who wins a duel.
 
-**Two real browsers** (headless Chrome, the wasm game, a real `ants_server` and a real coturn in a container): the relay (switch off on both), both on (direct), one on and one off (relay), the relay not there with both off (no channel, the match runs on the server's stream, no host or server-reflexive candidate is ever gathered or sent) and the relay not there with both on (direct). In the relay and direct runs each player gave five orders with the mouse: each was sent as a hint (five sent, fifteen copies received), the prediction took five, and the sealed turns confirmed them; the page was served with the exact content security policy and isolation headers of the site.
+**Two real browsers** (headless Chrome, the wasm game, a real the game server and a real coturn in a container): the relay (switch off on both), both on (direct), one on and one off (relay), the relay not there with both off (no channel, the match runs on the server's stream, no host or server-reflexive candidate is ever gathered or sent) and the relay not there with both on (direct). In the relay and direct runs each player gave five orders with the mouse: each was sent as a hint (five sent, fifteen copies received), the prediction took five, and the sealed turns confirmed them; the page was served with the exact content security policy and isolation headers of the site.
 
 
 ## Tests

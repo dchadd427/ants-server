@@ -1188,12 +1188,12 @@ class TheCiJob(unittest.TestCase):
 
     def test_the_docs_say_what_the_job_is_for_and_that_a_new_copy_line_is_a_note(self):
         """The words of the notes are the tool's own (they are in the output of tools/image_manifest.py); the page of the topic quotes them, the others point to it."""
-        with open(os.path.join(REPO, "docs", "TESTING.md"), encoding="utf-8") as f:
+        with open(os.path.join(REPO, "docs", "private", "WORKFLOW_DEPLOY.md"), encoding="utf-8") as f:
             testing = f.read()
         with open(os.path.join(REPO, "docs", "private", "BUILD_AND_RUN_DOCKER.md"), encoding="utf-8") as f:
             home = f.read()
-        self.assertIn('A sixth job, "Image files unchanged by a Dockerfile change", is not required', testing)
-        self.assertIn("BUILD_AND_RUN.md", testing[testing.index("A sixth job"):][:2200])
+        self.assertIn('"Image files unchanged by a Dockerfile change", is not one of the checks that `main` requires', testing)
+        self.assertIn("BUILD_AND_RUN_DOCKER.md", testing[testing.index("The sixth job"):][:2200])
         self.assertIn("added by a COPY line of the change", home)
         self.assertIn("build-inputs", home)
         self.assertIn("could not finish", home)

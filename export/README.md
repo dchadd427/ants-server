@@ -7,9 +7,9 @@ Which files go to the public repository, and the checks that keep every file on 
 | `allowlist.txt` | the paths that the export copies to the public repository (the game, its protocol, bots, replays, assets, the game page and the Map Maker page, and the tests of those) |
 | `private.txt` | the paths that stay here and are never exported (the game server and its libraries, the history service, the hub, the site pages, the Docker stack and deploy files, the tests that need those, and this folder) |
 | `classify.py` | the check: every tracked file is on exactly one of the two lists. It also prints the two path lists (`--list public`, `--list private`) and the allow-list as `git filter-repo` path regexes (`--filter-repo-paths`) |
-| `check_export.py` | the scan of words: which public text files still name something private. **Report only** for now |
+| `check_export.py` | the scan of words: which public text files still name something private (**report only** for now), and with `--links` the check of the links of the tree that the export makes (not report only: see below) |
 | `split_mutants.py` | the split of a list of mutants into a public half and a private half (below); with no argument it checks every list and changes nothing |
-| `overlay/` | public versions of files that must read differently in the public repository (`AGENTS.md`, `README.md`, `SECURITY.md`, the CI workflow): `overlay/<path>` is exported as `<path>`. It is empty today; `overlay/.gitkeep` only keeps the folder and is never exported |
+| `overlay/` | public versions of files that must read differently in the public repository: `overlay/<path>` is exported as `<path>`. Today `README.md`, `AGENTS.md`, `SECURITY.md`, `.gitignore`, `.gitattributes`, `.github/CODEOWNERS`, `.github/dependabot.yml` and `docs/ARCHITECTURE.md` (the CI workflow comes with its own change); `overlay/.gitkeep` only keeps the folder and is never exported |
 
 `export/` itself is private (`private.txt`): the public repository does not describe this one. The lists are the one place that says what is public; no other file repeats them.
 
@@ -19,10 +19,11 @@ Which files go to the public repository, and the checks that keep every file on 
 python3 export/classify.py             # exit 1 and a line per file when a file is on neither list or on both
 python3 export/classify.py --dead      # also the patterns that match no file
 python3 export/check_export.py         # the scan of words (exit 0 always); --list names the files, --tsv FILE writes them
+python3 export/check_export.py --links # also the links of the exported tree (exit 1 on a problem)
 ```
 
-`./run_tests.sh --fast` runs both as suite 5.3, and CI runs them in the Linux job. The check reads `git ls-files`, so a new file is checked once it is added to the index.
-`tests/scripts/test_export_lists.py` runs the check on made-up trees (the pattern rules, the overlay, both failures) and on this repository.
+`./run_tests.sh --fast` runs both (with `--links`) as suite 5.3, and CI runs them in the Linux job. The check reads `git ls-files`, so a new file is checked once it is added to the index.
+`tests/scripts/test_export_lists.py` runs the check on made-up trees (the pattern rules, the overlay, both failures, the links) and on this repository; `tests/scripts/test_export_docs.py` holds the root files and documents of the overlay to what they must say.
 
 ## Which list a file goes on
 
@@ -61,6 +62,21 @@ The exported tree has no server, so the build and the test runners of the public
 
 `check_export.py` counts, in every public text file, the mentions of private headers and targets, private paths and documents, private web files and tools, the program `ants_server`, the web server and the stack, and private test targets (the list `KINDS` in the script; add a name when a new private name appears). It prints the number of files and hits, by kind and by area. It does not fail until the mentions have been cut from the public files; then `--strict` makes it the gate of the export.
 
+## The files that read differently
+
+A file that must read differently in the public repository is two files: the working copy (on `private.txt`) and the public version under `overlay/`, which the export puts at the working copy's name. When one changes, ask whether the other must change with it:
+
+| File | What the public version leaves out or says otherwise |
+|---|---|
+| `README.md` | the documents of the server and the site; the badge and the links of the public repository. Its "Current version" line moves with the working copy's (`tools/release.py` writes both) |
+| `AGENTS.md` | the working repository's own workflow (branches, deploy, the maintainer's reports): it says that this repository is a copy; the rules keep their numbers, which the code cites |
+| `SECURITY.md` | the scope: the game and the web client |
+| `.gitignore`, `.gitattributes` | the lines of the server's and the site's folders (`test_export_docs.py` holds each to the working copy: the public one has only lines of it, and fewer) |
+| `.github/CODEOWNERS`, `.github/dependabot.yml` | the maintainer on every line, no container file; GitHub Actions only |
+| `docs/ARCHITECTURE.md` | the folders, layers and programs of the server and the site (the one block of its tree mixes them); the same sections |
+
+A file that is the same in both is written so that it names nothing private: `CHANGELOG.md` has no paragraph for operators and no commit range (`CHANGELOG_SERVER.md`, private, has both for every release), `THIRD_PARTY_NOTICES.md` has no server code (`THIRD_PARTY_NOTICES_SERVER.md`), and a public document links no private one: where a private page holds the detail, the sentence says what it is in general terms ("the game server's documentation"), never a link or a file name.
+
 ## What is not here yet
 
-The scripts that make the export itself (the first export with history, the export of a release, the full check of the exported tree) and the public overlay files are added by later changes.
+The scripts that make the export itself (the first export with history, the export of a release, the full check of the exported tree) and the overlay file of the CI workflow are added by later changes.

@@ -1,0 +1,111 @@
+# Build directories and binaries (build/ and every build_*/ folder: build_asan, build_e2e, build_web, a compiler's own, ...; tools/check_hygiene.py fails when a file below one is tracked)
+build/
+build_*/
+dist/
+bin/
+lib/
+out/
+cmake-build-*/
+
+# Object files & debug symbols
+*.o
+*.a
+*.dylib
+*.so
+*.dSYM/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.swp
+*~
+
+# Temporary logs & crash reports
+*.log
+*.tmp
+*.bmp
+*.png
+!web/favicon.png
+!asset_catalog/sprites/
+!asset_catalog/sprites/**
+!web/front/
+!web/front/**
+!web/app/
+!web/app/**
+!assets/hud_art/
+!assets/hud_art/**
+!tests/data/hud_art/
+!tests/data/hud_art/**
+!tools/hud_art/hands/
+!tools/hud_art/hands/**
+
+# Test artifacts and temporary captures
+tests/temp/
+tests/artifacts/
+
+# Agent scratch directory
+.agents/
+
+# Per-user tool folders (never committed)
+.claude/
+
+# Agents' memory and private notes (they live outside this repository, AGENTS.md rule 3)
+MEMORY.md
+memory/
+CLAUDE.local.md
+
+# Process-id files of a local server or tool run
+*.pid
+
+# Python cache
+__pycache__/
+*.pyc
+
+# A local copy of the original game's font (commercial: never commit or ship it; the renderer uses it when it finds it)
+Original-Ants/framd.ttf
+Original-Ants/Franklin Gothic Medium.ttf
+
+# The original program and local tools: keep your own copy here, never commit it. From the original game the repository
+# holds only the data archive (Original-Ants/ants.chd), the maps (Original-Ants/Maps/*.LVL), the music (*.mp3, *.MID), the
+# sprites and sounds decoded from the archive (asset_catalog/, and the animation table docs/chd_table4_animations.json), the front-page pictures cut out of the artwork (web/front/) and the movement tables the simulation needs (src/ants_sim/movement_tables_data.inc, generated);
+# see LICENSE and "License" in the README. Ants.exe and its decompilation are local references for the reverse
+# engineering (the tests and tools work without them), cnc-ddraw (ddraw.dll, ddraw.ini, the config program) and the
+# libretro shaders only run the original on Windows, chat.txt is a transcript the original wrote.
+Original-Ants/Ants.exe
+Original-Ants/ddraw.dll
+Original-Ants/ddraw.ini
+Original-Ants/cnc-ddraw config.exe
+Original-Ants/Shaders/
+Original-Ants/chat.txt
+docs/legacy/Ants.exe.c
+# Local outputs of tools/analyze_binary.py (a function map and string dump of the original program: keep them local)
+docs/ORIGINAL_BINARY_MAP.md
+docs/binary_analysis.json
+
+# Local scratch folders and the files that editors and IDEs create inside the tree
+scratch/
+.cache/
+compile_commands.json
+.vs/
+CMakeUserPresets.json
+
+# A local run's results folder, and any environment or key/certificate files (secrets: never commit them)
+results/
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.jks
+*.keystore
+
+# Output of tools/mutate.py (a run report of the mutation checks)
+tests/data/*_mutants.report.json

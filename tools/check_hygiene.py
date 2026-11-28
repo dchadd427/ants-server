@@ -288,7 +288,7 @@ def check_anchors(root, files):
         return anchors[rel]
     out = []
     for rel in files:
-        if not rel.endswith(".md"):
+        if not rel.endswith(".md") or "/overlay/" in "/" + rel:       # (a file under a folder named overlay stands at another place in another tree: its links are read there, not from here)
             continue
         here = os.path.dirname(rel)
         for n, line in prose_lines(read_bytes(root, rel).decode("utf-8", "replace")):

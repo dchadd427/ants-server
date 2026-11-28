@@ -15,8 +15,8 @@ artwork, sounds, music and maps are not covered by it: they belong to their copy
   keeps out of every commit; the tests do not need them (see `docs/ORIGINAL_PROGRAM.md`).
 - Why the data is here: so that the remake can run and so that its tests can compare it with the original. Replacing the original artwork with open
   material is planned as a separate, later project.
-- Pictures made from it: the sprites in `asset_catalog/sprites/` and the pictures of the front page in `web/front/` (cut out of that artwork and of screenshots of the game by
-  `tools/front_page_art/make_art.py`) are the original's artwork too, not this project's.
+- Pictures made from it: the sprites in `asset_catalog/sprites/` and the pictures in `web/front/` (cut out of that artwork and of screenshots of the game) are the original's artwork too,
+  not this project's.
   The map maker's sprite atlas (`mapmaker_atlas/`: two sheets and an index that `tools/map_atlas.py` makes from those sprites and their animation table when the web image is built; no
   copy is committed) is the original's artwork too.
 - Rights holders: if you hold rights to something here and want it removed, open an issue at the project's repository and it will be taken out.
@@ -30,23 +30,17 @@ artwork, sounds, music and maps are not covered by it: they belong to their copy
 - Licence: dr_mp3 is available under a choice of the public domain (Unlicense) or MIT No Attribution (MIT-0). The full text of both is at the end
   of `include/ants_app/dr_mp3.h`. The note about minimp3 (dedicated to the public domain, CC0 1.0) is the last comment of the same file.
 
-### SQLite (database library)
-
-- Where: `third_party/sqlite/` (`sqlite3.c` and `sqlite3.h`, the official amalgamation, unchanged; `README.md` there names the version, the source and the hashes). Built as the static library `ants_sqlite` and linked by the dedicated server (not by the game or the web build).
-- What: SQLite 3.53.4, <https://www.sqlite.org/>, by D. Richard Hipp and the SQLite developers.
-- Licence: public domain. The author disclaims copyright to the source code (the blessing at the top of `sqlite3.h`); <https://www.sqlite.org/copyright.html>.
-
 ### Mbed TLS (TLS and X.509 library)
 
-- Where: `third_party/mbedtls/` (a subset of the release, unchanged: `README.md` there names the version, the source, the hash and the files). Built as the static library `ants_mbedtls` and linked by the game, the network library and the tests (not by the web build, which has the browser's TLS; the game server's program links the library through the network library but does not use it, since it leaves TLS to its proxy).
+- Where: `third_party/mbedtls/` (a subset of the release, unchanged: `README.md` there names the version, the source, the hash and the files). Built as the static library `ants_mbedtls` and linked by the game, the network library and the tests (not by the web build, which has the browser's TLS).
 - What: Mbed TLS 4.1.2 with TF-PSA-Crypto, <https://github.com/Mbed-TLS/mbedtls>, by the Mbed TLS Contributors (Trusted Firmware project).
 - Licence: Apache License 2.0 (this project uses the Apache-2.0 option of the dual licence "Apache-2.0 OR GPL-2.0-or-later"). The full text is in `third_party/mbedtls/LICENSE`.
 
 ### Libre Franklin (font)
 
 - Where: `Original-Ants/LibreFranklin-Medium.ttf` (the labels) and `Original-Ants/LibreFranklin-Black.ttf` (the numbers over the world and the scores), with their licence in
-  `Original-Ants/LibreFranklin-OFL.txt`. The web build preloads these files with the rest of the folder `Original-Ants`. The front page serves a copy of the font, with the same licence text beside it, from
-  `web/front/` (`LibreFranklin-Medium.ttf`, `LibreFranklin-OFL.txt`); `tools/front_page_art/make_art.py` makes the copy.
+  `Original-Ants/LibreFranklin-OFL.txt`. The web build preloads these files with the rest of the folder `Original-Ants`. The pages serve a copy of the font, with the same licence text beside it, from
+  `web/front/` (`LibreFranklin-Medium.ttf`, `LibreFranklin-OFL.txt`).
 - What: Libre Franklin, Copyright 2020 The Libre Franklin Project Authors, <https://github.com/googlefonts/Libre-Franklin>.
 - Licence: SIL Open Font License, Version 1.1. The full text is in `Original-Ants/LibreFranklin-OFL.txt`; it covers every weight of the family, and it stays together with the fonts.
 
@@ -66,14 +60,9 @@ artwork, sounds, music and maps are not covered by it: they belong to their copy
 
 ## Not in the repository (linked or downloaded by the build)
 
-### DB-IP Lite, IP to Country Lite (the country list of the visit counter)
-
-- Used by: the chat hub's image (`Dockerfile.hub`, `hub/geodata.py`), which fetches the monthly list from <https://download.db-ip.com/free/> when it is built and turns it into a small file; never at run time, never by the game or the web page. Without the file every country is unknown.
-- Licence: Creative Commons Attribution 4.0 International (CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/>). The credit that it asks for, "IP Geolocation by DB-IP" with a link to <https://db-ip.com>, is on the site's Legal page. The data is not in the repository, and no address is kept by the counter (`docs/ANALYTICS.md`).
-
 ### SDL2 and SDL2_ttf
 
-- Used by: the game program (`src/ants_app`) and its tests; not by the simulation, network or server libraries, and not by the dedicated server.
+- Used by: the game program (`src/ants_app`) and its tests; not by the simulation, network, bot or replay libraries.
 - Where they come from: the system or Homebrew packages on macOS and Linux; the official Windows development archives
   (`SDL2-devel-2.30.12-VC.zip` and `SDL2_ttf-devel-2.22.0-VC.zip` from <https://github.com/libsdl-org>) that `CMakeLists.txt` downloads on Windows;
   the Emscripten ports (`-sUSE_SDL=2 -sUSE_SDL_TTF=2`) of the web build.

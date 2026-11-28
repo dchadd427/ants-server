@@ -176,7 +176,7 @@ class TheRealLists(unittest.TestCase):
         for prefix in ("hub/", "imgconv/", "ai_skills/", "src/ants_server/", "include/ants_server/", "src/ants_db/", "include/ants_db/", "src/ants_ctl/", "include/ants_ctl/",
                        "src/ants_history/", "include/ants_history/", "src/ants_thumb/", "third_party/sqlite/", "tests/test_server/", "tests/test_app_server/", "tests/test_db/", "tests/test_ctl/", "web/home/", "export/",
                        "Dockerfile", "docker-compose", ".github/workflows/"):
-            self.assertEqual([f for f in public if f.startswith(prefix)], [], prefix)
+            self.assertEqual([f for f in public if f.startswith(prefix) and not f.startswith("export/overlay/")], [], prefix)      # (the overlay is exported, without its folder)
         for name in ("docker/nginx.conf", "web/lobby.html", "web/matches.html", "web/admin.html", "web/legal.html", "web/site_nav.js", "AGENTS.md", "README.md", "SECURITY.md"):
             if name in self.files:
                 self.assertNotIn(name, public, name)
@@ -253,6 +253,54 @@ class TheScanOfWords(unittest.TestCase):
         code, out = run(CHECK, "--repo", REPO)
         self.assertEqual(code, 0, out)
         self.assertIn("public text files", out)
+
+
+class TheLinksOfTheExportedTree(unittest.TestCase):
+    """`check_export.py --links`: the tree that the export makes (the overlay files at their public names) has no relative link to a file or a heading that it does not have."""
+    README = "# Docs\n\n[a](docs/a.md)\n"
+
+    def links(self, files):
+        base = {"README.md": "private readme\n", "export/overlay/README.md": self.README}
+        base.update(files)
+        with Tree(base, ["docs/**", "export/overlay/**"], ["priv/**", "export/**", "!export/overlay/**", "README.md"]) as t:
+            return run(CHECK, *t.args("--links"))
+
+    def test_a_tree_whose_links_all_land_passes(self):
+        code, out = self.links({"docs/a.md": "# A\n\nSee [b](b.md#the-part) and [home](../README.md) and [the folder](../docs).\n", "docs/b.md": "# B\n\n## The part\n\n[a](a.md)\n"})
+        self.assertEqual(code, 0, out)
+        self.assertIn("0 problem(s)", out)
+
+    def test_a_link_to_a_file_that_the_tree_does_not_have_is_a_problem_and_a_private_file_is_one(self):
+        code, out = self.links({"docs/a.md": "# A\n\n[x](SERVER.md) [y](../priv/secret.md)\n", "priv/secret.md": "private\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("docs/a.md:3: the link to docs/SERVER.md names a file that the exported tree does not have", out)
+        self.assertIn("the link to priv/secret.md names a file", out)
+
+    def test_a_link_to_a_heading_that_is_not_there_is_a_problem(self):
+        code, out = self.links({"docs/a.md": "# A\n\n[x](b.md#no-such-part)\n", "docs/b.md": "# B\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("the link to docs/b.md#no-such-part names no heading", out)
+
+    def test_a_document_that_the_readme_does_not_reach_is_a_problem(self):
+        code, out = self.links({"docs/a.md": "# A\n", "docs/lost.md": "# Lost\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("docs/lost.md: not reachable from README.md", out)
+
+    def test_the_overlay_readme_is_the_start_and_a_missing_one_is_a_problem(self):
+        with Tree({"README.md": "private\n", "docs/a.md": "# A\n"}, ["docs/**", "export/overlay/**"], ["README.md", "export/**", "!export/overlay/**"]) as t:
+            code, out = run(CHECK, *t.args("--links"))
+        self.assertEqual(code, 1)
+        self.assertIn("the exported tree has no README.md", out)
+
+    def test_code_and_comments_and_a_word_in_brackets_are_not_links(self):
+        text = "# A\n\n`[x](nothing.md)` and [esp+0x14](arg)\n\n```\n[y](nope.md)\n```\n\n<!-- [z](gone.md) -->\n"
+        code, out = self.links({"docs/a.md": text})
+        self.assertEqual(code, 0, out)
+
+    def test_the_real_repository_has_no_problem(self):
+        code, out = run(CHECK, "--repo", REPO, "--links")
+        self.assertEqual(code, 0, "\n".join(line for line in out.splitlines() if not line.startswith(("words", "  by"))))
+        self.assertIn("links of the exported tree: 0 problem(s)", out)
 
 
 if __name__ == "__main__":

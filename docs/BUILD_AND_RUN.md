@@ -8,7 +8,7 @@ The game needs a C++17 compiler, CMake 3.16 or newer, and SDL2 and SDL2_ttf. Onl
 
 The desktop game's encrypted link to a game server (TLS, [`NETWORK_PORT.md`](NETWORK_PORT.md#protocol-6-the-websocket-transport-and-the-pieces-of-the-dedicated-server-v0081) "The desktop game's encrypted link") needs nothing to install: Mbed TLS is in the repository (`third_party/mbedtls/`, built as the static library `ants_mbedtls` by every native build, about 10 seconds the first time; its `README.md` names the version, the source and the hash). It checks the server's certificate against the system's trusted roots, which it reads from the system: the Security framework on macOS (opened when the roots are read, not linked), the Windows certificate stores (the game links `crypt32`), and the bundle file of the distribution on Linux (`/etc/ssl/certs/ca-certificates.crt` and the other usual places; a minimal Linux image needs its `ca-certificates` package).
 
-The project is developed on macOS and on Windows 11 (Visual Studio 2022 Build Tools). CI builds every pull request on Linux (GCC), macOS (Apple clang) and Windows (MSVC 2022 and 2026) with `-DANTS_WERROR=ON` (every warning is an error) and runs the tests there, except that a pull request of documents, web pages and their tests only skips macOS and Windows ([`WORKFLOW.md`](private/WORKFLOW_DEPLOY.md#light-checks-for-web-and-document-pull-requests)); every push to `main` runs all of it. It also builds the web image and the server image. The compilers and the SDL2 versions of each job are in the table of [`TESTING.md`](TESTING.md#continuous-integration); what to install on your own machine is in the sections below.
+The project is developed on macOS and on Windows 11 (Visual Studio 2022 Build Tools). CI builds every pull request on Linux (GCC), macOS (Apple clang) and Windows (MSVC 2022 and 2026) with `-DANTS_WERROR=ON` (every warning is an error) and runs the tests there, except that a pull request of documents, web pages and their tests only skips macOS and Windows; every push to `main` runs all of it. It also builds the web image and the server image. The compilers and the SDL2 versions of each job are in the table of [`TESTING.md`](TESTING.md#continuous-integration); what to install on your own machine is in the sections below.
 
 ### macOS
 
@@ -130,14 +130,14 @@ build\src\ants_app\Release\ants.exe
 
 What the build makes:
 
-- The default build makes the game (`ants`), the dedicated server (`ants_server`, at `build/src/ants_server/ants_server`; [`SERVER.md`](SERVER.md)) and every test program. The developer tools `map_sweep`, `bot_arena`, `lvl_tool` and `gen_food_footprints` are built only by name (`--target map_sweep`).
-- `cmake --build build --target ants` builds the game alone, as `start_game.sh` does, and `--target ants_server` the server alone.
+- The default build makes the game (`ants`), the dedicated game server (see its own documentation) and every test program. The developer tools `map_sweep`, `bot_arena`, `lvl_tool` and `gen_food_footprints` are built only by name (`--target map_sweep`).
+- `cmake --build build --target ants` builds the game alone, as `start_game.sh` does, and the server's own target builds the server alone.
 
 The options of the build (`-D` when CMake configures; CMake does not read them from the environment, but `build_web.sh` takes `ANTS_BUILD_ID` from it, see [Versioning and the Build Id](#versioning-and-the-build-id)):
 
 | Option | Default | What it does |
 |---|---|---|
-| `-DANTS_BUILD_APP=OFF` | `ON` | leaves out the game, `ants_thumb` and the application's test programs, so the build needs no SDL2 (a build of the server alone; the server's Docker image builds `ants_thumb` too and so has SDL2) |
+| `-DANTS_BUILD_APP=OFF` | `ON` | leaves out the game and the application's test programs, so the build needs no SDL2 (a build of the server alone) |
 | `-DBUILD_TESTS=OFF` | `ON` (`OFF` for the web build) | leaves out the test programs |
 | `-DANTS_WERROR=ON` | `OFF` | turns every warning into an error (`-Werror`; `/WX` with MSVC), as CI does |
 | `-DANTS_USE_CCACHE=OFF` | `ON` | switches `ccache` off. With it on, CMake uses `ccache` as the compiler launcher when it finds it (on the `PATH`, or in `~/.local/bin`), so another checkout or a clean build folder compiles from the cache. It is never used with MSVC, with a launcher you set yourself, or for the web build ([`WORKFLOW.md`](WORKFLOW.md#speed-compiler-caches)) |
@@ -196,7 +196,7 @@ Every build also has a **build id**, which says which build it is. Where the ver
 
 | Where | What it shows |
 |---|---|
-| `ants --version`, `ants_server --version` | one line: the program's name, the version, the build id and the network protocol, for example `ants vX.Y.Z build abc1234 (network protocol N)`. No window and no assets; native builds only |
+| `ants --version`, and the game server's own `--version` | one line: the program's name, the version, the build id and the network protocol, for example `ants vX.Y.Z build abc1234 (network protocol N)`. No window and no assets; native builds only |
 | the server's start-up log line | the same words, followed by the maps folder |
 | the corner of the game window, next to the FPS meter (when Show FPS is on) | the version only |
 | the footer of the web pages, and the last line of the Menu | "Version vX.Y.Z - build abc1234" in the footer of the front page; the same line ends the Menu of the bar at the top of the other pages, the game page and the changelog page included |
@@ -207,17 +207,17 @@ Where the id comes from:
 - **The Docker images and `build_web.sh`**: the build argument `ANTS_BUILD_ID` (for `build_web.sh`, the environment variable), else the commit that the clone's `.git` files name (`HEAD`, `packed-refs` and `refs`), else the UTC time of the build, `YYYYMMDD-HHMM` (`docker/resolve_build_id.sh`; the log of a Docker build says which of the three it used).
 - An id is 1 to 40 characters from letters, digits, `.`, `_` and `-`. CMake turns any other id into `unknown`; the Docker script ignores it and takes the next source.
 
-Self-hosting with Docker (the site's image, its nginx and the stack) is described in [its own page](private/BUILD_AND_RUN_DOCKER.md).
+Self-hosting with Docker (the site's image and the stack) is described apart from this page.
 
 ## Building the Web Port Locally
 
 ```bash
 ./build_web.sh
 python3 -m http.server 8080 -d dist
-# Open http://localhost:8080 (the game page; the front page is http://localhost:8080/lobby.html; python's server knows the `.html` files only, so the clean page addresses `/play`, `/matches` and so on are for the image's nginx, or for `tools/web_without_docker.py`)
+# Open http://localhost:8080 (the game page; python's server knows the `.html` files only, so the clean page addresses of the site (`/play` and so on) are for the image's web server)
 ```
 
-- `build_web.sh` needs Emscripten (`emcmake` and `emcc` on the `PATH`; it looks for `emsdk_env.sh` in `$EMSDK` and in `~/emsdk`, and says how to install Emscripten when it finds none). The Docker image uses the emsdk that the first line of `Dockerfile` pins.
-- It builds without the tests and writes `dist/`: the game page as `index.html` and `play.html`, the front page as `lobby.html`, `index.js`, `index.wasm`, `index.data`, the favicon and `front/`.
+- `build_web.sh` needs Emscripten (`emcmake` and `emcc` on the `PATH`; it looks for `emsdk_env.sh` in `$EMSDK` and in `~/emsdk`, and says how to install Emscripten when it finds none). The Docker image uses the emsdk that the first line of the image's build file pins.
+- It builds without the tests and writes `dist/`: the game page as `index.html` and `play.html`, the front page as the front page, `index.js`, `index.wasm`, `index.data`, the favicon and `front/`.
 - `index.data` packs the whole folder `Original-Ants/` as it lies on your disk (and the folder `assets/hud_art/`, the HUD's new pictures), so any other local file you keep there, such as a copy of the original program ([`ORIGINAL_PROGRAM.md`](ORIGINAL_PROGRAM.md#the-original-program-is-a-local-reference-not-part-of-the-repository)), goes into it too: do not publish or share that `dist/`. The Docker image build leaves such files out (`.dockerignore`).
-- Python's server only serves files. Online play goes through `/ws`, which the image's nginx passes to the game server. What the page does: [`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md).
+- Python's server only serves files. Online play goes through `/ws`, which the image's web server passes to the game server. What the page does: [`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md).

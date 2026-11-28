@@ -222,7 +222,7 @@ class TheFiles(unittest.TestCase):
 class TheDocument(unittest.TestCase):
     def test_the_replays_page_describes_the_map_the_field_and_the_pass(self):
         text = read("docs", "HEATMAPS.md")
-        for needle in ("The map of deaths", "web/death_map.js", "ants_server/history_deaths", "kDeathsMaxBytes", "history_deaths", "/history/deaths", "No map of deaths for this match.", "tile_x"):
+        for needle in ("The map of deaths", "kDeathsMaxBytes", "history_deaths", "/history/deaths", "No map of deaths for this match.", "tile_x"):
             self.assertIn(needle, text, needle)
         server = read("docs", "SERVER.md")
         for needle in ("history_deaths", "/history/deaths", "schema version 7"):
