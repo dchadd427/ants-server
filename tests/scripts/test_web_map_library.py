@@ -116,7 +116,7 @@ class TheFiles(unittest.TestCase):
         for needed in ("web/map_pages.css", "web/map_library.js", "web/map_plays.js", "tools/map_pages.py", "tools/map_page_slugs.json", "tools/library_guard.py", "tools/seo_files.py", "Community-Maps/maps.json", "/src/sitemap-library.xml"):
             self.assertIn(needed, copies, needed)
         self.assertEqual(len([s for s in steps if s.op == "COPY" and s.words[-1] == "/etc/nginx/ants-map-pages/"]), 1)
-        build = read("build_web.sh")
+        build = read("build_site.sh")
         self.assertLess(build.index("tools/map_pages.py"), build.index("tools/seo_files.py"))
         self.assertIn("--pages", build)
         for name in ("map_pages.css", "map_library.js", "map_plays.js"):

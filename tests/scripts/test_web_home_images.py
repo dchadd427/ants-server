@@ -159,7 +159,7 @@ class TheWayIntoTheImage(unittest.TestCase):
 
     def test_the_dockerfile_copies_the_folder_and_the_local_build_packs_it(self):
         self.assertIn("COPY web/home/ /usr/share/nginx/html/home/\n", read("Dockerfile"))
-        self.assertIn('cp -f "${SCRIPT_DIR}/web/home"/* "${DIST_DIR}/home/"', read("build_web.sh"))
+        self.assertIn('cp -f "${SCRIPT_DIR}/web/home"/* "${DIST_DIR}/home/"', read("build_site.sh"))
 
 
 class TheDocument(unittest.TestCase):

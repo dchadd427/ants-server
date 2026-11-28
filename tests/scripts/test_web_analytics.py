@@ -71,7 +71,7 @@ class ThePages(unittest.TestCase):
         self.assertIn("gameStarted: function (ms) { if (win.AntsAnalytics) win.AntsAnalytics.game(ms); },", hooks)
 
     def test_the_image_and_the_local_build_ship_the_files(self):
-        dockerfile, build = read("Dockerfile"), read("build_web.sh")
+        dockerfile, build = read("Dockerfile"), read("build_site.sh")
         for name in ("analytics.js", "admin_analytics.js", "admin_analytics.css"):
             self.assertIn("COPY web/%s /usr/share/nginx/html/%s" % (name, name), dockerfile)
             self.assertIn("web/%s" % name, build)

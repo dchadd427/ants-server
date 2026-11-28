@@ -65,7 +65,7 @@ class ThePagesAndTheImage(unittest.TestCase):
 
     def test_the_local_web_build_copies_it_and_the_ci_check_of_the_image_lists_it(self):
         copied = []
-        for line in read("build_web.sh").splitlines():
+        for line in read("build_site.sh").splitlines():
             words = words_of(line)
             if words[:2] == ["cp", "-f"] and len(words) > 3:
                 copied += [(word, words[-1]) for word in words[2:-1]]

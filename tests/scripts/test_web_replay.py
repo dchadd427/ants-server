@@ -518,7 +518,8 @@ class TheFiles(unittest.TestCase):
         self.assertIn(r"ants-[A-Za-z0-9_]{1,24}-[0-9]{8}-[0-9]{6}Z(-[0-9]{1,4})?\.antsrep", nginx)
 
     def test_the_image_the_ci_and_the_local_web_build_carry_the_files_of_the_replay_pages(self):
-        dockerfile, ci, build = read("Dockerfile"), read(".github", "workflows", "ci.yml"), read("build_web.sh")
+        dockerfile, ci = read("Dockerfile"), read(".github", "workflows", "ci.yml")
+        build = "".join(read(name) for name in sorted(os.listdir(REPO)) if re.fullmatch(r"build_[a-z]+\.sh", name))          # (the web build, and the script of a site's build beside it when the tree has one)
         for name in ("replay_page.js", "history_page.js", "match_stats.js", "death_map.js", "matches.css", "match_stats.css", "death_map.css", "replay_stats.css"):
             self.assertIn("COPY web/%s " % name, dockerfile, name)
             self.assertIn(name, build, name)

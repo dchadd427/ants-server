@@ -213,11 +213,11 @@ Self-hosting with Docker (the site's image, its nginx and the stack) is describe
 
 ```bash
 ./build_web.sh
-python3 -m http.server 8080 -d dist
-# Open http://localhost:8080 (the game page; the front page is http://localhost:8080/lobby.html; python's server knows the `.html` files only, so the clean page addresses `/play`, `/matches` and so on are for the image's nginx, or for `tools/web_without_docker.py`)
+tools/serve_web.py --dist dist
+# Open http://localhost:8080 (the game page), http://localhost:8080/mapmaker (the Map Maker) and http://localhost:8080/asset_catalog/ (the sprites and sounds)
 ```
 
 - `build_web.sh` needs Emscripten (`emcmake` and `emcc` on the `PATH`; it looks for `emsdk_env.sh` in `$EMSDK` and in `~/emsdk`, and says how to install Emscripten when it finds none). The Docker image uses the emsdk that the first line of `Dockerfile` pins.
-- It builds without the tests and writes `dist/`: the game page as `index.html` and `play.html`, the front page as `lobby.html`, `index.js`, `index.wasm`, `index.data`, the favicon and `front/`.
+- It builds without the tests and writes `dist/`: the game page as `index.html` and `play.html`, `index.js`, `index.wasm`, `index.data`, the Map Maker (`mapmaker.html`, the map core and its sprite atlas), the sprite and sound catalog (`asset_catalog/`), the favicon and `front/`. The pages load `site_hooks.js`, a stub that does nothing ([`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md#the-seam-to-a-site)): the build is the game and its tools, and nothing of a site.
 - `index.data` packs the whole folder `Original-Ants/` as it lies on your disk (and the folder `assets/hud_art/`, the HUD's new pictures), so any other local file you keep there, such as a copy of the original program ([`ORIGINAL_PROGRAM.md`](ORIGINAL_PROGRAM.md#the-original-program-is-a-local-reference-not-part-of-the-repository)), goes into it too: do not publish or share that `dist/`. The Docker image build leaves such files out (`.dockerignore`).
-- Python's server only serves files. Online play goes through `/ws`, which the image's nginx passes to the game server. What the page does: [`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md).
+- `tools/serve_web.py` (Python's standard library only) serves the folder on `127.0.0.1` as the pages expect to be served: the game, the pages and their scripts and styles are revalidated at every use (`Cache-Control: no-cache, must-revalidate`), every answer has the isolation headers, `/play` and `/mapmaker` are the pages `play.html` and `mapmaker.html`, and the list of maps and the six originals are answered for the Map Maker. `--port 0 -- COMMAND` runs a command (a browser check) against it with `ANTS_WEB_URL` set. It starts no game server: online play goes through `/ws`, which a site passes to one. What the page does: [`PLAY_IN_BROWSER.md`](PLAY_IN_BROWSER.md).

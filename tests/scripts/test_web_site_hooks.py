@@ -59,7 +59,7 @@ class ThePagesAndTheLists(unittest.TestCase):
         self.assertLess(mapmaker.index("mapmaker_site.js"), mapmaker.index("lvl_core.js"))
 
     def test_every_file_of_the_lists_is_a_file_of_web_or_of_the_site_folder_and_copied_into_the_image(self):
-        dockerfile, build, ci = read("Dockerfile"), read("build_web.sh"), read(".github", "workflows", "ci.yml")
+        dockerfile, build, ci = read("Dockerfile"), read("build_web.sh") + read("build_site.sh"), read(".github", "workflows", "ci.yml")
         for page, lists in site_pages.pages().items():
             for url in lists["styles"] + lists["scripts"]:
                 name = url.lstrip("/")
@@ -69,7 +69,7 @@ class ThePagesAndTheLists(unittest.TestCase):
                 self.assertRegex(ci, r"ls -l [^\n]*\b%s\b" % re.escape(name), "%s: %s is not in the CI's check of the image" % (page, name))
 
     def test_the_image_serves_the_site_folder_at_the_root_and_never_the_stub_and_the_local_build_copies_both(self):
-        dockerfile, build, ci = read("Dockerfile"), read("build_web.sh"), read(".github", "workflows", "ci.yml")
+        dockerfile, build, ci = read("Dockerfile"), read("build_web.sh") + read("build_site.sh"), read(".github", "workflows", "ci.yml")        # (the stub is copied by the first, the site's folder by the second)
         for name in ("site_hooks.js", "mapmaker_site.js"):
             self.assertEqual(dockerfile.count("COPY web/site/%s /usr/share/nginx/html/%s\n" % (name, name)), 1, name)
         self.assertEqual(re.findall(r"(?m)^COPY web/site/? [^\n]*", dockerfile), [], "the folder is not copied as a whole: its two files are listed, so that a file added there is not served by accident")

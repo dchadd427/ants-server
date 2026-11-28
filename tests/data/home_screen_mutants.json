@@ -556,7 +556,7 @@
   },
   {
    "id": "build_without_home",
-   "file": "build_web.sh",
+   "file": "build_site.sh",
    "old": "cp -f \"${SCRIPT_DIR}/web/home\"/* \"${DIST_DIR}/home/\"",
    "new": "",
    "test": "node tests/scripts/web_home_screen_check.js web/lobby.html && python3 tests/scripts/test_web_home_screen.py ThePage TheFolder TheStyle TheWayIntoTheImage"
