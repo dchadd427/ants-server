@@ -521,7 +521,7 @@
   {
    "id": "codec_last_type_is_remove",
    "file": "include/ants_net/protocol.hpp",
-   "old": "    Last = Ready\n",
+   "old": "    Last = OrderAck\n",
    "new": "    Last = Remove\n",
    "build": [
     "test_lockstep",
@@ -554,8 +554,8 @@
   {
    "id": "codec_protocol_one_behind",
    "file": "include/ants_net/protocol.hpp",
-   "old": "inline constexpr uint16_t kProtocolVersion = 29;",
-   "new": "inline constexpr uint16_t kProtocolVersion = 28;",
+   "old": "inline constexpr uint16_t kProtocolVersion = 30;",
+   "new": "inline constexpr uint16_t kProtocolVersion = 29;",
    "build": [
     "test_lockstep",
     "test_lobby"

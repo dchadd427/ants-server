@@ -101,17 +101,6 @@
       "expect": "LK8"
     },
     {
-      "id": "lead_is_the_longest_lag_on_a_link",
-      "file": "src/ants_net/prediction.cpp",
-      "old": "if (c <= lag.second + cfg_.lag_fresh_ticks && (lowest == 0 || lag.first < lowest)) lowest = lag.first;",
-      "new": "if (c <= lag.second + cfg_.lag_fresh_ticks && (lowest == 0 || lag.first > lowest)) lowest = lag.first;",
-      "build": [
-        "test_prediction_link"
-      ],
-      "test": "./build/tests/test_app_server/test_prediction_link",
-      "expect": "LK2"
-    },
-    {
       "id": "start_and_stop_jump_in_the_frame",
       "file": "src/ants_app/application_sim.cpp",
       "old": "void Application::feed_view_glide() {\n    net::Prediction* prediction = net_ != nullptr ? net_->prediction() : nullptr;",

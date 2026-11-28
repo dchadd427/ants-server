@@ -188,6 +188,7 @@ tests/data/nearest_first_mutants.json
 tests/data/no_drops_187_mutants.json
 tests/data/online_limit_mutants.json
 tests/data/order_budget_mutants.json
+tests/data/order_tick_mutants.json
 tests/data/original_maps_mutants.json
 tests/data/others_confirmed_mutants.json
 tests/data/own_hop_mutants.json
