@@ -300,15 +300,15 @@ Details, flows and limits: [`NETWORK_PORT.md`](NETWORK_PORT.md#reconnect-protoco
 **A running match survives a restart of the server.** A room that holds seats keeps a record of its running match in the folder `restart` of the results folder (`--restart-dir` chooses another one, `--no-restart-records` keeps none; a server with neither `--results-dir` nor `--restart-dir` keeps none and says so in its log). Only rooms that hold seats keep a record, so a server started with `--no-reconnect` keeps records only for the rooms that ask for `"reconnect": true`.
 
 - There is one file per room, made when the room's start is accepted and deleted when the room is over. It holds the start message, the keys of the seats and every sealed turn, so **it is for its owner only** (mode 600, in a folder of mode 700 when the server makes it; no key is in any log line, status or result file).
-- How and when the restart record is written, and why, is described in [`NETWORK_PORT.md`](NETWORK_PORT.md#writing-what-is-written-when-and-why).
+- How and when the restart record is written, and why, is described in [`NETWORK_PORT.md`](private/NETWORK_PORT_SERVER.md#writing-what-is-written-when-and-why).
 - A server that starts again checks the records, newest first, and replays them in slices of 5 ms while it serves: the engine is rebuilt from the start message, every sealed turn is replayed, the state hashes that the old server stored are checked, and the bots sit down again. A Hello for a room that is not back yet waits for it.
-- What a restart does to a running room, and how long the others wait, is described in [`NETWORK_PORT.md`](NETWORK_PORT.md#restoring).
+- What a restart does to a running room, and how long the others wait, is described in [`NETWORK_PORT.md`](private/NETWORK_PORT_SERVER.md#restoring).
 - A record of **another network protocol is not restored** (a rules change would play the match out differently; the game version does not decide), and neither is one whose last write is more than an hour old. Its room is a `failed` room with the reason in the status and the log, and the record is kept for a day in `restart/refused/`, for the operator who moves it back. A deploy that wants to keep the running matches must not change the network protocol (the changelog says when a release does).
 - A record is at most 48 MiB, and the records of the running rooms together 256 MiB (`--restart-budget-mb`). A disk that refuses a write ends that room's record: the match goes on without one, and its status says why (`record`).
-- The lock that lets only one server use a records folder is described in [`NETWORK_PORT.md`](NETWORK_PORT.md#options-and-the-stack).
+- The lock that lets only one server use a records folder is described in [`NETWORK_PORT.md`](private/NETWORK_PORT_SERVER.md#options-and-the-stack).
 - **Keep the volume** (`ants-server-results` in the stack): a stack that is removed with its volumes loses the records. A volume made by an older image, whose `/results` belongs to root, needs its owner changed once by the operator, run in the volume: `chown ants: /results`.
 
-The format and the limits: [`NETWORK_PORT.md`](NETWORK_PORT.md#restart-records-a-running-match-survives-a-restart-of-the-server), "Restart records".
+The format and the limits: [`NETWORK_PORT.md`](private/NETWORK_PORT_SERVER.md#restart-records-a-running-match-survives-a-restart-of-the-server), "Restart records".
 
 Moved to [`SERVER_REPLAYS.md`](SERVER_REPLAYS.md): the replays that the server keeps, and its own matches of computer players.
 
