@@ -1797,7 +1797,13 @@ random walks; the models and the remake agree on every path tile and on every po
   hill stops (StopSync, no path). Then: idle, **snap to the centre of the tile under the ant**, cancel ANTPAUSE,
   clear path and order, classify (`FUN_01020655`), resolve the goal (`FUN_010202e7`), queue the path request.
   The snap is the authentic "mud humping" exploit: re-ordering just after an ant crossed into a new tile jumps it
-  up to 16 px forward.
+  up to 16 px forward. Read again in the decompilation for the report of a hop at every re-order (`FUN_0101fc50`:
+  `FUN_0100ccc0` gives the tile `position / 0x20`, `FUN_0100cd00` makes `tile * 0x20 + 0x10` of it, and the position setter
+  of the vtable (+0x18) is called with that, right after `FUN_0101ace3(0)`): the original puts the ant on the middle of its
+  tile at once, up to 12 px back or 16 px forward on open ground (its walk goes in 4 px steps from the middle of a tile), and
+  shows it as a jump (no sprite moves but by a clip frame). The remake's engine does the same and keeps it. **Only the
+  picture differs**: it draws the hop as a short slide (`ViewGlide::follow`, NETWORK_PORT.md, "The hop of a re-order is slid
+  too"), the one place where the picture is smoother than the 1998 program, at the owner's request.
 
 - Classification: hill -> home (2) / raid (0xB); ant on the tile -> move (1), or attack (3) for a player click on
   an enemy; food -> harvest (5); power-up (player only) -> 4; bomb -> 0xA; else 1.
@@ -3050,7 +3056,7 @@ Addresses are virtual addresses in `Original-Ants/Ants.exe`. Code: `MapSelectScr
 
 ### 5.51 The Options Screen and the Profile (Capstone-Verified; Supersedes Earlier Option-Dialog Notes; Ported in v0.0.65)
 
-Addresses are virtual addresses in `Original-Ants/Ants.exe`. Code: `OptionsScreen` / `OptionsState` (`src/ants_app/options_screen.cpp`), the control models `ScreenToggle`, `ScreenSlider`, `ScreenEdit` (`include/ants_app/screen_controls.hpp`), `ScreenButton` (docs 5.45), `ConfigStore` (`src/ants_app/config_store.cpp`), the HUD's delegation (`HUD::apply_option`) and the application's load at start. Checked by `tests/test_app/test_options.cpp`, integration tests 9.4, 9.10, 9.12, 9.13, 12.58, 12.59, `test_hud_layout` (`test_buttons`: the pictures and the edit text).
+Addresses are virtual addresses in `Original-Ants/Ants.exe`. Code: `OptionsState` (`src/ants_app/options_state.cpp`: the values and the profile's rules; the window itself is gone, its settings are rows of the settings menu, [`GAME_MENU.md`](GAME_MENU.md)), the control models `ScreenToggle`, `ScreenSlider`, `ScreenEdit` (`include/ants_app/screen_controls.hpp`: the setup screens use them), `ScreenButton` (docs 5.45), `ConfigStore` (`src/ants_app/config_store.cpp`), the HUD's delegation (`HUD::apply_option`) and the application's load at start. Checked by `tests/test_app/test_options.cpp`, `test_game_menu` and integration tests 9.4, 9.10, 9.12, 9.13, 12.58, 12.59.
 
 * **The window** (`FUN_0101487c`, vtable 0x10028b0, rectangle (0, 0, 640, 480)): the `op_screen` composite, then the controls in the order of the window's list: Return to Game (the button class with the callback `FUN_01016de9`, which closes the window), the three sliders, the two latching pairs, the four edit fields. A modal window of the window stack (`W + 0x4a94`): **every key and mouse event goes to it** (`FUN_01012c06`, `FUN_01012c3b`, `FUN_01012c74`). The mouse dispatch (`FUN_010128db`) tests the window's rectangle, which is the whole screen, and offers the event to every child, each of which does its own hit test: **a click outside the card does nothing** (the remake closed the screen on it). **Every button event is preceded by the move** (`FUN_0102737e` calls `FUN_0102653f` first, which dispatches the pointer's position to the top window; the 50 ms INPUT task does the same): the release of a slider drag is preceded by a move to the release position.
 
@@ -3068,7 +3074,7 @@ Addresses are virtual addresses in `Original-Ants/Ants.exe`. Code: `OptionsScree
 
 * **Start-up order** (`FUN_0102221b` after the network start): `FUN_01010743` (a notice when `W + 0x4b10` is set), else `FUN_010106a9` (the quick help window `FUN_010145d2(1)` when the option or the session flag `+0x80 & 2` says so), else `FUN_010107ad` (the setup screen, host `FUN_01013b36` or guest `FUN_01014228`); closing the quick help leads to the setup screen.
 
-* **Remake**: `OptionsState` holds the values (integers 0 .. 100, the two switches, the four texts) and `load`s them with the rules above; `OptionsScreen` is the window (controls built on every `open`, events as above, `render`); the HUD routes every event to it while it is open, writes each changed setting through `ConfigStore` (a text file `settings.ini` of `name=value` lines in the per-user application folder, the browser's local storage on the web, memory only in a headless run or when no location exists; `--settings FILE` names a file) and applies it (`HUD::apply_option`: volumes to the mixer and the MIDI player, the test voice, nothing for the rest); the INPUT poll (`HUD::update`, every 50 ms) and every event run the controls' move handlers. The mapping of a configured value to the thumb's position and back is the original's, including its loss (26 -> 25).
+* **Remake**: `OptionsState` holds the values (integers 0 .. 100, the two switches, the four texts) and `load`s them with the rules above; the window was replaced by the settings menu (the same values, the same rules, the same stored names; the menu takes the slider's release, the switches' release and the texts' edit as the window did); the HUD writes each changed setting through `ConfigStore` (a text file `settings.ini` of `name=value` lines in the per-user application folder, the browser's local storage on the web, memory only in a headless run or when no location exists; `--settings FILE` names a file) and applies it (`HUD::apply_option`: volumes to the mixer and the MIDI player, the test voice, nothing for the rest). The mapping of a configured value to the thumb's position and back is the original's, including its loss (26 -> 25).
 
 ### 5.52 The Quick Help Window and the Chat Input Box (Capstone-Verified; Ported in v0.0.66)
 

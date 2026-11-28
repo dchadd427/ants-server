@@ -6,7 +6,7 @@ A faithful, deterministic C++17 engine remake and port of the 1998 real-time str
 
 The engine loads the original game's data files (`ants.chd` and `Maps/*.LVL`) directly, without pre-conversion. The game's mechanics are re-derived from the disassembly of the original program, system by system ([the original program](docs/ORIGINAL_PROGRAM.md)); the network play, the computer players, the 16:9 picture, the zoom, the touch controls and the browser build are this project's own. It runs a deterministic 20 Hz simulation, with 32-channel spatial audio, MP3 music (the original's four pieces), TrueType text and an SDL2 2D renderer (hardware-accelerated, with a software fallback).
 
-**Current version: v0.22.3** (shown on screen next to the FPS meter; in the room and the match of a network game the same corner also shows **ping** when the setting **Show ping** is on, off by default, see [Network play](docs/MULTIPLAYER.md)). The releases since v0.16.8 are in the short **[What’s new](CHANGELOG.md)** (also published at **[beta.playants.org/changelog](https://beta.playants.org/changelog)**); the releases before v0.16.8 are only in git history. How work flows from a commit to a release: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+**Current version: v0.23.0** (shown on screen in the corner, next to the FPS meter when the setting **Show FPS** is on; in the room and the match of a network game the same corner also shows **ping** when the setting **Show ping** is on, off by default, see [Network play](docs/MULTIPLAYER.md)). The releases since v0.16.9 are in the short **[What’s new](CHANGELOG.md)** (also published at **[beta.playants.org/changelog](https://beta.playants.org/changelog)**); the releases before v0.16.9 are only in git history. How work flows from a commit to a release: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
 
 ## Play
 
@@ -64,6 +64,7 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [What the test suites cover](docs/TESTING_SUITES.md): the table of the C++ suites by number and what each one checks
 - [The python tests](docs/TESTING_PYTHON.md): suite 5.2: what the scripts of `tests/scripts` cover
 - [Workflow](docs/WORKFLOW.md): branches, pull requests, releases and the deploy; the rules for contributors are in [`AGENTS.md`](AGENTS.md)
+- [The export lists](export/README.md): which files go to the public repository and which stay private, the check that every file is on exactly one list (suite 5.3), and which list a new file goes on
 
 **How it works**
 

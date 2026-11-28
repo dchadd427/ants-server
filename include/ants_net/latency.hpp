@@ -9,7 +9,7 @@
 //   delay  the real time from the moment one of the player's own commands is sent (a guest: written to the link; the host: handed to the sequencer) to the moment the
 //          tick that applies it is executed on this machine, the median of the last five commands. It is the sum of everything between the click and its effect:
 //          the way to the host, the wait for the next 50 ms turn to be sealed, the way back and the jitter buffer of the lock-step runner (lockstep.hpp). It is not shown to the
-//          player: the prediction sizes its lead with it (NetGame::expected_command_delay_ms) and the browser measurement reads it. It is empty when the last command was applied
+//          player: the browser measurement reads it (the prediction does not: since protocol 30 an order is sealed at the tick that it is stamped with, so this delay is the stamp's and the lead's, not the link's). It is empty when the last command was applied
 //          more than ten seconds ago: orders are given now and then, so its limit is longer than the ping's.
 //
 // Pure logic like the sequencer: no clock, no sockets, no simulation. Every call is given the time it needs, the game's millisecond clock (clock.hpp: the differences
@@ -31,7 +31,7 @@
 namespace ants::net {
 
 /// How good a round trip is, for the colors of the countdown card and the list of connections in a match: one scale for every number that is shown (docs/MULTIPLAYER.md, "Ping and delay").
-/// None: there is no number (-1). The web copy is pingQuality() in web/front/lobby_rules.js; tests/data/ping_quality_table.json is run through both.
+/// None: there is no number (-1). The web copy is pingQuality() in the site's lobby script; tests/data/ping_quality_table.json is run through both.
 enum class PingQuality : uint8_t { None, Good, Fair, Poor };
 constexpr int32_t kPingFairMs = 80;       // from here on a round trip is fair (a turn is 50 ms; the reasons are in docs/P2P_HINTS.md and docs/MULTIPLAYER.md)
 constexpr int32_t kPingPoorMs = 150;      // from here on it is poor

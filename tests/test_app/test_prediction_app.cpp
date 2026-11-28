@@ -12,6 +12,7 @@
 // Real sockets on the loopback interface; one Application per test (SDL is initialised once per process).
 #include <SDL.h>
 
+#include "slide_cause.hpp"
 #include "ants_app/application.hpp"
 #include "ants_app/health_changes.hpp"
 #include "ants_app/hud.hpp"
@@ -410,6 +411,7 @@ int main(int argc, char* argv[]) {
         int32_t click_y = psy;
         if (std::abs(dx) >= std::abs(dy)) click_x = psx + (dx > 0 ? 19 : -20);
         else click_y = psy + (dy > 0 ? 15 : -32);
+        app.set_on_game_menu([]() {});                                       // (an Esc with nothing selected asks for the settings menu: this test only wants the deselect)
         const auto deselect = [&]() { app.hud().handle_key_down(SDLK_ESCAPE, app.sim(), app.renderer().camera()); };
         const auto point_at = [&](int32_t x, int32_t y) {
             SDL_MouseMotionEvent motion{};
@@ -687,6 +689,7 @@ int main(int argc, char* argv[]) {
             }
             return true;
         };
+        app.set_on_game_menu([]() {});                                       // (an Esc with nothing selected asks for the settings menu: this test only wants the deselect)
         const auto deselect = [&]() { app.hud().handle_key_down(SDLK_ESCAPE, app.sim(), app.renderer().camera()); };
         bool tried = false;
         const std::pair<int32_t, int32_t> slides[] = {{48, 0}, {-48, 0}, {0, 56}, {0, -56}, {48, 56}, {-48, -56}, {48, -56}, {-48, 56}};
@@ -925,6 +928,7 @@ int main(int argc, char* argv[]) {
         app.render_frame();
         ASSERT_TRUE(app.hud().current_cursor() == CursorType::Attack);
         app.set_others_confirmed(true);
+        app.set_on_game_menu([]() {});                                       // (an Esc with nothing selected asks for the settings menu: this test only wants the deselect)
         app.hud().handle_key_down(SDLK_ESCAPE, app.sim(), app.renderer().camera());        // (deselected, and the pointer back where it rested: the same interface as in the frames before)
         app.handle_mouse_motion(motion);
         app.render_frame();
@@ -972,6 +976,7 @@ int main(int argc, char* argv[]) {
         motion.x = view.x + 30;
         motion.y = view.y + view.h - 30;
         app.handle_mouse_motion(motion);
+        app.set_on_game_menu([]() {});                                       // (an Esc with nothing selected asks for the settings menu: this test only wants the deselect)
         app.hud().handle_key_down(SDLK_ESCAPE, app.sim(), app.renderer().camera());        // (nothing selected: the interface is the same in every frame)
         app.set_others_confirmed(false);
         app.render_frame();
@@ -1064,6 +1069,7 @@ int main(int argc, char* argv[]) {
             ASSERT_TRUE(start != nullptr);
             ASSERT_TRUE(place_camera(app, start->px, start->py, 0, 0));
             size_t slid_bobs = 0;
+            shaped::SlideCause cause;                                                      // (the one slide that an ant of Bob's can have is the hop of his own ant's snap: the engine moves it in the same frame)
             uint64_t elapsed = 0;
             std::mt19937 rng(5);
             while (elapsed < 12000) {
@@ -1082,10 +1088,18 @@ int main(int argc, char* argv[]) {
                 app.render_frame();                                                        // (the frame is where the shifts of a rebuild are taken up)
                 for (const uint32_t id : bobs) {
                     int32_t dx = 0, dy = 0;
-                    if (app.renderer().view_glide().offset_of(id, dx, dy)) ++slid_bobs;
-                }
-                if (others) {
-                    ASSERT_EQ(slid_bobs, 0u);                                              // not one frame of one ant of Bob's slides
+                    const bool slid = app.renderer().view_glide().offset_of(id, dx, dy);
+                    if (slid) ++slid_bobs;
+                    const sim::AntSnapshot* drawn = nullptr;
+                    for (const sim::AntSnapshot& a : app.shown_world().ants) {
+                        if (a.id == id) drawn = &a;
+                    }
+                    ASSERT_TRUE(drawn != nullptr);
+                    bool began = false;
+                    const bool unexplained = cause.unexplained(*drawn, dx, dy, slid, began);
+                    if (others) {
+                        ASSERT_FALSE(unexplained);                                         // not one frame of one ant of Bob's slides, but by the hop of its own snap: no correction is ever drawn
+                    }
                 }
             }
             if (!others) slid_plain = slid_bobs;

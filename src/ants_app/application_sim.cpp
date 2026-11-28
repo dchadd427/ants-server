@@ -7,7 +7,7 @@
 #if defined(__EMSCRIPTEN__)
   #include <emscripten.h>
 
-// Tells the page that embeds this game (web/lobby.html) the tick and the state hash (high word first, 16 hex digits). A game in a frame posts to its parent; a game in
+// Tells the page that embeds this game (the site's lobby page) the tick and the state hash (high word first, 16 hex digits). A game in a frame posts to its parent; a game in
 // a window of its own posts on the broadcast channel "ants-sync" of its origin, with its room code, for the page that opened it or any page of the site that listens.
 // EM_JS and not EM_ASM: the `$0` of EM_ASM is a warning under -Wpedantic.
 extern "C" {
@@ -36,20 +36,18 @@ void Application::note_orders() {
 }
 
 // The ants that the prediction has moved in the picture since the last frame are drawn gliding to where the shown engine has them (view_glide.hpp): what a rebuild moved, and every ant when the
-// prediction begins or stops (the screen changes engine: a pause, a hidden page, a link that was away, a cool-down). A game that has no prediction slides nothing.
+// prediction begins or stops (the screen changes engine: a pause, a hidden page, a link that was away, a cool-down). A game that has no prediction has no such shifts (the hop of a snap, which the
+// engine makes in every game, is slid by the frame that draws it: ViewGlide::follow).
 void Application::feed_view_glide() {
     net::Prediction* prediction = net_ != nullptr ? net_->prediction() : nullptr;
     if (feed_own_view_glide()) return;                    // (the picture of others = confirmed slides the player's own ants only: others_view.hpp)
-    if (prediction == nullptr) {
-        renderer_->view_glide().clear();
-        return;
-    }
+    if (prediction == nullptr) return;                    // (a game that has no prediction has no shifts to slide: the slide of a hop is the frame's own, view_glide.hpp)
     for (const net::Prediction::Shift& shift : prediction->take_shifts()) renderer_->view_glide().add(shift.ant, shift.dx, shift.dy);
 }
 
 // With others_confirmed the ants of every other player are drawn from the confirmed engine, where they always were never corrected: only the player's own ants are the predicted engine's, and only they
 // slide when it moves them (a rebuild, the prediction beginning or stopping). The shifts of the others would put them where the predicted engine has them, which is not where they are drawn.
-// A game that has no prediction slides nothing, as before. False: the mode is not asked for, the ordinary rule feeds the glide.
+// A game that has no prediction has no such shifts, as before. False: the mode is not asked for, the ordinary rule feeds the glide.
 bool Application::feed_own_view_glide() {
     net::Prediction* prediction = net_ != nullptr ? net_->prediction() : nullptr;
     if (!config_.others_confirmed || prediction == nullptr) return false;           // (a prediction that is cooling down or suspended still has the shifts of its stop to give)
@@ -236,7 +234,7 @@ void Application::post_tick() {
     }
 
 #if defined(__EMSCRIPTEN__)
-    // A page that embeds several games (web/lobby.html) shows that the machines stay in step: every 100 ticks the game tells its parent page the tick and the
+    // A page that embeds several games (the site's lobby page) shows that the machines stay in step: every 100 ticks the game tells its parent page the tick and the
     // state hash (the page compares the hashes of the same tick)
     if (network_active() && sim_.current_tick() % 100 == 0) {
         const sim::StateHash h = sim_.state_hash();
