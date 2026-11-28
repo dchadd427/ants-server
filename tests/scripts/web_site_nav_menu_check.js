@@ -1,7 +1,7 @@
 // Runs the real web/site_nav.js on the real markup of pages in node, with a small fake of the DOM (a parser for the page's tags, a few selectors, the Menu's button), and prints what the opened Menu holds as
 // JSON. Used by tests/scripts/test_web_site_nav.py (the Menu's last line, the links, the pages' footers). Usage: node web_site_nav_menu_check.js MANIFEST.json, where the manifest is
 // [{"name": ..., "path": ..., "live": ...}, ...] (the page files, stamped or not, as the test made them; "live" is what a fake /live does: {"count": N}, "fail" (the request is rejected), "status" (a 500),
-// "never" (it does not answer), "notlist" (an answer that is not a list) or absent (an empty list)); the answer is {name: {footers, versionIds, items: [{tag, cls, text, href}], hrefs, fetched, hidden, mark}},
+// "never" (it does not answer), "notlist" (an answer that is not a list) or absent (an empty list); "zone": the visitor's time zone, UTC when absent); the answer is {name: {footers, versionIds, items: [{tag, cls, text, href}], hrefs, fetched, hidden, mark}},
 // where mark is the bar's live mark after the answer: {there, hidden, text, label, title, href}. Two more keys of a manifest entry: "click": false (the Menu is not opened), and "later": what the fake /live does
 // from the moment the tab comes back to the front (a "visibilitychange" with the state "visible"; "hidden" first: "back": ["hidden", "visible"] lists the states that are fired, in order); the answer then has
 // "after" (the mark once those events are handled) and "fetched" holds every address asked, in order.
@@ -10,6 +10,9 @@ const fs = require('fs');
 const path = require('path');
 
 const SOURCE = fs.readFileSync(path.join(__dirname, '..', '..', 'web', 'site_nav.js'), 'utf8');
+const TIME = require('./quiet_time.js').real;
+globalThis.AntsTime = Object.assign({}, TIME, { stampText: (stamp) => TIME.stampText(stamp, Date.UTC(2026, 5, 1)) });       // (the page's one formatter of dates and times, web/local_time.js, loaded before the bar's script; a clock that stands in June 2026, so that a stamp of 2026 has no year)
+process.env.TZ = 'UTC';
 const VOID = new Set(['img', 'br', 'hr', 'input', 'meta', 'link', 'source', 'path']);
 
 class El {
@@ -79,6 +82,7 @@ function parse(html) {
 }
 
 async function run(file, live, extra) {
+    process.env.TZ = extra && extra.zone ? extra.zone : 'UTC';       // (the zone of the visitor: the build's time is said by the visitor's clock)
     const root = parse(fs.readFileSync(file, 'utf8')), body = root.querySelector('body') || root, fetched = [];
     const listeners = {};
     const document = {

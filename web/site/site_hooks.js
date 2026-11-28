@@ -16,7 +16,7 @@
             'styles': ['site_nav.css', 'replay_stats.css', 'death_map.css', 'replay_activity.css'],
             'scripts': ['site_nav.js', 'analytics.js', 'hub_here.js', 'history_page.js', 'death_map.js', 'replay_activity.js']
         },
-        'mapmaker': { 'styles': ['/site_nav.css'], 'scripts': ['site_nav.js', 'analytics.js', 'mapmaker_site.js'] },
+        'mapmaker': { 'styles': ['/site_nav.css'], 'scripts': ['local_time.js', 'site_nav.js', 'analytics.js', 'mapmaker_site.js'] },
         'catalog': { 'styles': ['/site_nav.css'], 'scripts': ['/site_nav.js'] }
     };
 

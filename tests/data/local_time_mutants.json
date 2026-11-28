@@ -1,0 +1,376 @@
+{
+  "note": "Mutants of the one formatter of dates and times (web/local_time.js, docs/PLAY_IN_BROWSER.md 'Dates and times') for tools/mutate.py (docs/TESTING.md, 'Mutation checks'), against tests/scripts/web_local_time_check.js (every zone of its table, one after the other): a clock that is 24 hours, that is in UTC or in Pacific time or follows the device's language or hour setting, a day counted in 24 hours or in UTC, the day words and the year, a build stamp through the two changes of the clocks, and the times of the day that a schedule keeps. Run from the checkout: tools/mutate.py tests/data/local_time_mutants.json --keep-going --jobs 1; every mutant must be caught. tests/scripts/test_web_local_time.py runs them on a copy of the script.",
+  "mutants": [
+    {
+      "id": "clock_is_24_hours",
+      "file": "web/local_time.js",
+      "old": "(h % 12 === 0 ? 12 : h % 12) + ':'",
+      "new": "h + ':'",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "midnight_is_hour_0",
+      "file": "web/local_time.js",
+      "old": "(h % 12 === 0 ? 12 : h % 12) + ':'",
+      "new": "(h % 12) + ':'",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "noon_is_am",
+      "file": "web/local_time.js",
+      "old": "(h < 12 ? ' AM' : ' PM')",
+      "new": "(h <= 12 ? ' AM' : ' PM')",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "morning_is_pm",
+      "file": "web/local_time.js",
+      "old": "(h < 12 ? ' AM' : ' PM')",
+      "new": "(h < 11 ? ' AM' : ' PM')",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "no_am_pm",
+      "file": "web/local_time.js",
+      "old": "(h < 12 ? ' AM' : ' PM');",
+      "new": "'';",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "minutes_not_padded",
+      "file": "web/local_time.js",
+      "old": "(m < 10 ? '0' : '') + m + (h < 12",
+      "new": "m + (h < 12",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "clock_in_utc",
+      "file": "web/local_time.js",
+      "old": "var h = d.getHours(), m = d.getMinutes();",
+      "new": "var h = d.getUTCHours(), m = d.getUTCMinutes();",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "clock_in_pacific_time",
+      "file": "web/local_time.js",
+      "old": "var h = d.getHours(), m = d.getMinutes();",
+      "new": "var p = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; }); var h = +p.hour % 24, m = +p.minute;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "clock_follows_the_devices_language",
+      "file": "web/local_time.js",
+      "old": "return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM');",
+      "new": "return new Intl.DateTimeFormat('de-DE', { hour: 'numeric', minute: '2-digit' }).format(d);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "clock_follows_the_devices_hour_setting",
+      "file": "web/local_time.js",
+      "old": "return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM');",
+      "new": "return new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).format(d);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_number_in_utc",
+      "file": "web/local_time.js",
+      "old": "return Math.round(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS);",
+      "new": "return Math.floor(date.getTime() / DAY_MS);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_by_24_hours",
+      "file": "web/local_time.js",
+      "old": "var days = dayNumber(at) - dayNumber(ref),",
+      "new": "var days = Math.round((at.getTime() - ref.getTime()) / DAY_MS),",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_by_the_zone_of_the_pacific",
+      "file": "web/local_time.js",
+      "old": "var days = dayNumber(at) - dayNumber(ref),",
+      "new": "var days = Math.floor((at.getTime() - 8 * HOUR_MS) / DAY_MS) - Math.floor((ref.getTime() - 8 * HOUR_MS) / DAY_MS),",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "yesterday_is_a_date",
+      "file": "web/local_time.js",
+      "old": "days === -1 ? 'Yesterday' : days === 1 ? 'Tomorrow' : ''",
+      "new": "days === -1 ? '' : days === 1 ? 'Tomorrow' : ''",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "tomorrow_is_a_date",
+      "file": "web/local_time.js",
+      "old": "days === -1 ? 'Yesterday' : days === 1 ? 'Tomorrow' : ''",
+      "new": "days === -1 ? 'Yesterday' : ''",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "two_days_back_is_yesterday",
+      "file": "web/local_time.js",
+      "old": "days === -1 ? 'Yesterday'",
+      "new": "days <= -1 ? 'Yesterday'",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_year_is_never_shown",
+      "file": "web/local_time.js",
+      "old": "(ref && at.getFullYear() !== ref.getFullYear() ?",
+      "new": "(false ?",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_year_is_always_shown",
+      "file": "web/local_time.js",
+      "old": "(ref && at.getFullYear() !== ref.getFullYear() ?",
+      "new": "(true ?",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "month_off_by_one",
+      "file": "web/local_time.js",
+      "old": "return MONTHS[at.getMonth()] + ' ' + at.getDate() + (ref",
+      "new": "return MONTHS[(at.getMonth() + 1) % 12] + ' ' + at.getDate() + (ref",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_of_the_month_in_utc",
+      "file": "web/local_time.js",
+      "old": "return MONTHS[at.getMonth()] + ' ' + at.getDate() + (ref",
+      "new": "return MONTHS[at.getMonth()] + ' ' + at.getUTCDate() + (ref",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_words_ignore_the_sentence",
+      "file": "web/local_time.js",
+      "old": "return word ? (inSentence ? word.toLowerCase() : word) : dateText(seconds, now);",
+      "new": "return word ? word : dateText(seconds, now);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_words_are_always_small",
+      "file": "web/local_time.js",
+      "old": "return word ? (inSentence ? word.toLowerCase() : word) : dateText(seconds, now);",
+      "new": "return word ? word.toLowerCase() : dateText(seconds, now);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_time_is_left_off",
+      "file": "web/local_time.js",
+      "old": "return at && day ? day + ', ' + clockText(at) : '';",
+      "new": "return at && day ? day : '';",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "the_full_text_has_no_year",
+      "file": "web/local_time.js",
+      "old": "return at ? MONTHS[at.getMonth()] + ' ' + at.getDate() + ', ' + at.getFullYear() + ', ' + clockText(at) : '';",
+      "new": "return at ? MONTHS[at.getMonth()] + ' ' + at.getDate() + ', ' + clockText(at) : '';",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "a_string_is_a_time",
+      "file": "web/local_time.js",
+      "old": "return typeof seconds === 'number' && isFinite(seconds) ? dateOf(seconds * 1000) : null;",
+      "new": "return isFinite(seconds) ? dateOf(seconds * 1000) : null;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "a_moment_that_is_no_moment_is_a_clock",
+      "file": "web/local_time.js",
+      "old": "return d && isFinite(d.getTime()) ? d : null;",
+      "new": "return d;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "a_number_is_not_a_moment",
+      "file": "web/local_time.js",
+      "old": "typeof value === 'number' ? new Date(value) : null;",
+      "new": "null;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "a_day_key_for_no_time",
+      "file": "web/local_time.js",
+      "old": "return at ? dayNumber(at) : null;",
+      "new": "return at ? dayNumber(at) : 0;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_never_in_daylight_time",
+      "file": "web/local_time.js",
+      "old": "wall >= from && wall < to ? 7 : 8",
+      "new": "false ? 7 : 8",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_always_in_daylight_time",
+      "file": "web/local_time.js",
+      "old": "wall >= from && wall < to ? 7 : 8",
+      "new": "true ? 7 : 8",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_daylight_ends_late",
+      "file": "web/local_time.js",
+      "old": "wall >= from && wall < to ? 7 : 8",
+      "new": "wall >= from && wall <= to + 3600000 ? 7 : 8",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_daylight_starts_on_the_first_sunday_of_march",
+      "file": "web/local_time.js",
+      "old": "from = Date.UTC(y, 2, sunday(y, 2, 2), 2)",
+      "new": "from = Date.UTC(y, 2, sunday(y, 2, 1), 2)",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_daylight_ends_on_the_second_sunday_of_november",
+      "file": "web/local_time.js",
+      "old": "to = Date.UTC(y, 10, sunday(y, 10, 1), 2)",
+      "new": "to = Date.UTC(y, 10, sunday(y, 10, 2), 2)",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "sunday_counted_from_the_second_day",
+      "file": "web/local_time.js",
+      "old": "return 1 + (7 - new Date(Date.UTC(year, month, 1)).getUTCDay()) % 7 + 7 * (nth - 1);",
+      "new": "return 2 + (7 - new Date(Date.UTC(year, month, 1)).getUTCDay()) % 7 + 7 * (nth - 1);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "sunday_of_the_wrong_week",
+      "file": "web/local_time.js",
+      "old": "% 7 + 7 * (nth - 1);",
+      "new": "% 7 + 7 * nth;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_hour_24_is_a_time",
+      "file": "web/local_time.js",
+      "old": "|| h > 23 ||",
+      "new": "||",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_month_13_is_a_time",
+      "file": "web/local_time.js",
+      "old": "if (month < 0 || month > 11 ||",
+      "new": "if (month < 0 ||",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_in_utc",
+      "file": "web/local_time.js",
+      "old": "+ (wall >= from && wall < to ? 7 : 8) * HOUR_MS)",
+      "new": "+ 0 * HOUR_MS)",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_is_left_as_it_is",
+      "file": "web/local_time.js",
+      "old": "return dateText(seconds, now === undefined ? new Date() : now) + ', ' + clockText(atOf(seconds));",
+      "new": "return stamp;",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_has_no_date",
+      "file": "web/local_time.js",
+      "old": "return dateText(seconds, now === undefined ? new Date() : now) + ', ' + clockText(atOf(seconds));",
+      "new": "return clockText(atOf(seconds));",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "no_stamp_is_lost",
+      "file": "web/local_time.js",
+      "old": "if (seconds === null) return typeof stamp === 'string' ? stamp : '';",
+      "new": "if (seconds === null) return '';",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_node_is_left_alone",
+      "file": "web/local_time.js",
+      "old": "if (m) node.textContent = '(' + stampText(m[1], now) + ')';",
+      "new": "",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_node_loses_its_brackets",
+      "file": "web/local_time.js",
+      "old": "if (m) node.textContent = '(' + stampText(m[1], now) + ')';",
+      "new": "if (m) node.textContent = stampText(m[1], now);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "stamp_node_takes_any_text_for_a_stamp",
+      "file": "web/local_time.js",
+      "old": "/^\\((.*)\\)$/.exec(node.textContent)",
+      "new": "/^(.*)$/.exec(node.textContent)",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_clock_is_24_hours",
+      "file": "web/local_time.js",
+      "old": "(+m[1] % 12 === 0 ? 12 : +m[1] % 12) + ':'",
+      "new": "+m[1] + ':'",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_clock_noon_is_am",
+      "file": "web/local_time.js",
+      "old": "(+m[1] < 12 ? ' AM' : ' PM')",
+      "new": "(+m[1] <= 12 ? ' AM' : ' PM')",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_clock_midnight_is_0",
+      "file": "web/local_time.js",
+      "old": "(+m[1] % 12 === 0 ? 12 : +m[1] % 12) + ':'",
+      "new": "(+m[1] % 12) + ':'",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "typed_twelve_am_is_noon",
+      "file": "web/local_time.js",
+      "old": "var h = +m[1] % 12 + (m[3].toLowerCase() === 'p' ? 12 : 0);",
+      "new": "var h = +m[1] + (m[3].toLowerCase() === 'p' ? 12 : 0);",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "typed_pm_is_am",
+      "file": "web/local_time.js",
+      "old": "(m[3].toLowerCase() === 'p' ? 12 : 0)",
+      "new": "0",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "typed_time_needs_no_am_pm",
+      "file": "web/local_time.js",
+      "old": "([1-9]|1[0-2])(?::([0-5]\\d))? ?([ap])\\.?m\\.?$/i",
+      "new": "([1-9]|1[0-2])(?::([0-5]\\d))? ?([ap])?\\.?m?\\.?$/i",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "typed_time_may_be_24_hours",
+      "file": "web/local_time.js",
+      "old": "([1-9]|1[0-2])(?::([0-5]\\d))? ?([ap])",
+      "new": "([1-9]|1\\d|2[0-3])(?::([0-5]\\d))? ?([ap])",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "typed_time_loses_its_minutes",
+      "file": "web/local_time.js",
+      "old": "return (h < 10 ? '0' : '') + h + ':' + (m[2] || '00');",
+      "new": "return (h < 10 ? '0' : '') + h + ':00';",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    },
+    {
+      "id": "day_clock_text_takes_24_00",
+      "file": "web/local_time.js",
+      "old": "/^([01]\\d|2[0-3]):([0-5]\\d)$/",
+      "new": "/^([01]\\d|2[0-4]):([0-5]\\d)$/",
+      "test": "node tests/scripts/web_local_time_check.js web/local_time.js"
+    }
+  ]
+}

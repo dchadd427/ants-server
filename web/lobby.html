@@ -251,6 +251,7 @@
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="local_time.js"></script>
 <script src="alert_core.js"></script>
 <script src="rejoin_key.js"></script>
 <script src="update_notice.js"></script>
@@ -1386,6 +1387,7 @@
         // The footer names the version and the build (the Docker image fills them in). A page that was not built (the repository's own file) says nothing of them, as the game page does.
         if ($('game-version').textContent.indexOf('@') !== -1) $('game-version-line').style.display = 'none';
         else if ($('game-build-id').textContent.indexOf('@') !== -1) $('game-build').style.display = 'none'; else if ($('game-build-date').textContent.indexOf('@') !== -1) $('game-build-date').style.display = 'none';
+        else AntsTime.stampNode($('game-build-date'));       // (the build's time as the visitor's clock says it: web/local_time.js)
 
         // THE TWO SCREENS (web/home/home.js, docs/HOME_SCREEN.md): Home or the Room is a class of <body>; the client, the model and the session storage above are not touched by it
         var Home = window.AntsHome.mount({ doc: document, win: window, host: $('home'), room: $('lobby'), page: {

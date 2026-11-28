@@ -28,6 +28,7 @@ const HUB_TOOLS = argv.includes('--tools') ? argv[argv.indexOf('--tools') + 1].s
     return fs.existsSync(file) ? Array.from(fs.readFileSync(file, 'utf8').matchAll(/^\s*Tool\("([a-z_]+)"/gm), (m) => m[1]).sort() : null;
 })();
 const load = (name) => require(path.join(FRONT, name));
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times)
 const File = load('mapmaker_file.js'), Edit = load('mapmaker_edit.js'), Blocks = load('mapmaker_blocks.js'), Palette = load('mapmaker_palette.js'), Dialog = load('mapmaker_dialog.js');
 const Tools = load('mapmaker_ai_tools.js'), Part = load('mapmaker_ai.js'), Fill = load('mapmaker_fill.js'), Ext = require('./web_mapmaker_extended.js');
 
@@ -346,6 +347,12 @@ console.log('RUNNING: C changing');
 
 // ---- D ----
 console.log('RUNNING: D the sheet, the strip and the socket');
+{   // the dates of a key are the visitor's own: 23:30 UTC on Nov 5 is that evening in New York and the next morning in Tokyo
+    const was = process.env.TZ, now = Date.UTC(2026, 10, 7, 12, 0) / 1000, key = { made: Date.UTC(2026, 10, 5, 23, 30) / 1000, ends: Date.UTC(2026, 11, 5, 23, 30) / 1000, calls: 0, used: 0 };
+    const meta = (zone) => { process.env.TZ = zone; return Part.metaOf(key, now); };
+    equal([meta('America/New_York'), meta('Asia/Tokyo')], ['Made Nov 5 \u00b7 stops working Dec 5 \u00b7 not used yet', 'Made Nov 6 \u00b7 stops working Dec 6 \u00b7 not used yet'], 'the dates of a key');
+    if (was === undefined) delete process.env.TZ; else process.env.TZ = was;
+}
 {
     const doc = makeDocument(), body = doc.body;
     const top = doc.createElement('header'), host = doc.createElement('div'); host.id = 'dialogs';

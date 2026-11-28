@@ -21,6 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 globalThis.AntsShapes = require(path.resolve(__dirname, '..', '..', 'web', 'shapes.js'));
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times: the chat dock writes the times that the sheet quotes)
 
 const lobbyPath = process.argv[2];
 if (!lobbyPath) { console.log('usage: web_home_mod_check.js lobby.html'); process.exit(2); }

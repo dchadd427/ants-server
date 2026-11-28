@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 globalThis.AntsShapes = require(path.resolve(__dirname, '..', '..', 'web', 'shapes.js'));
+globalThis.AntsTime = require('./quiet_time.js').quiet;       // (the clock of a line says nothing: a line's text is its name and its words)
 
 const lobbyPath = process.argv[2];
 if (!lobbyPath) { console.log('usage: web_home_images_dock_check.js lobby.html'); process.exit(2); }
@@ -74,8 +75,7 @@ function rig(o) {
         if (name === 'home/post') win.AntsHomePost = { mount(e) { const api = Post.mount(e); posters.push(api); return api; } };
         clock.setTimeout(cb, 0);                                // (a script arrives after the page's own code has finished: never inside the paint that asked for it)
     };
-    const Intl = { DateTimeFormat: function () { return { format: () => '' }; } };
-    const dock = Chat.mount({ doc, win, host, fetch: undefined, now: clock.now = () => clock.t, random: () => 0, Intl, WebSocket: HubSocket, error: (e) => errors.push(e), load: o.noLoad ? undefined : load });
+    const dock = Chat.mount({ doc, win, host, fetch: undefined, now: clock.now = () => clock.t, random: () => 0, WebSocket: HubSocket, error: (e) => errors.push(e), load: o.noLoad ? undefined : load });
     dock.shown(true);
     const r = { env, clock, doc, win, sockets, dock, errors, loads, posters, requests, root: dock.root };
     ALL.push(r);

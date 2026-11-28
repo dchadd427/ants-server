@@ -19,6 +19,7 @@ const path = require('path');
 const lobbyPath = process.argv[2];
 if (!lobbyPath) { console.log('usage: web_home_names_check.js lobby.html'); process.exit(2); }
 const lobbyDir = path.dirname(path.resolve(lobbyPath));
+globalThis.AntsTime = require('./quiet_time.js').real;       // (the page's one formatter of dates and times)
 const Names = require(path.join(lobbyDir, 'home', 'names.js'));
 const Letters = require(path.join(lobbyDir, 'front', 'name_letters.js'));
 const H = require('./web_page_harness.js')(lobbyPath);
@@ -125,9 +126,7 @@ const OK = { ok: true };
 // 1. The pure parts
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 {
-    const at = (s) => { const d = new Date(s * 1000); return d.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()]; };
     const t = T0 / 1000;
-    same('dayOf: the day and the short month of a time in seconds', [Names.dayOf(t, null), Names.dayOf(t + 40 * DAY, null)], [at(t), at(t + 40 * DAY)]);
     same('inWords: minutes under an hour (at least one), hours above, one in the singular', [Names.inWords(t + 30, t), Names.inWords(t + 40 * 60, t), Names.inWords(t + 3600, t), Names.inWords(t + 5 * 3600 + 1, t), Names.inWords(t - 100, t)],
         ['in 1 minute', 'in 40 minutes', 'in 1 hour', 'in 6 hours', 'in 1 minute']);
     const time = { date: (s) => 'D' + s, words: (s) => 'W' + s };
@@ -352,13 +351,13 @@ const OK = { ok: true };
     r.tell('names');
     check('sheet: opened for a person who has a nickname, it has the nickname and the tag in its fields', r.nick().value === 'Zo\u00eb' && r.tag().value === '\u00c4NT');
     check('sheet: its preview is "[TAG] Nickname", and it says since when it has been the nickname and how long until it can change again',
-        r.preview() === '[\u00c4NT] Zo\u00eb' && /^Your nickname since \d+ \w+\. You can change it again in 22 hours\.$/.test(one(r.sheet(), 'nm-ps').textContent), r.preview() + ' | ' + one(r.sheet(), 'nm-ps').textContent);
+        r.preview() === '[\u00c4NT] Zo\u00eb' && /^Your nickname since [A-Z][a-z]{2} \d+\. You can change it again in 22 hours\.$/.test(one(r.sheet(), 'nm-ps').textContent), r.preview() + ' | ' + one(r.sheet(), 'nm-ps').textContent);
     const rules = byClass(r.sheet(), 'nm-rules')[0].children.map((li) => li.textContent).join(' | ');
     check('sheet: the rules say that a nickname changes once a day and the old one stays yours for 7 days, and that a tag changes at any time', /once a day\. The old one stays yours for 7 days\./.test(rules) && /A tag can change at any time\./.test(rules) && !/30 days|capitals count/.test(rules), rules);
     r.advance(10);
     r.tell('name', { t: 'name', r: r.last().r, ok: true, nick: OK, tag: OK, shown: '[\u00c4NT] Zo\u00eb', saved: false });
     same('sheet: the person\'s own name is "your name now" and cannot be saved again', [r.msgs()[0], r.save().disabled], ['That is your name now.', true]);
-    check('... and the note under the preview is still the one of the nickname that the person has (since when, when it can change), not the first-time one', /^Your nickname since \d+ \w+\. You can change it again in 22 hours\.$/.test(one(r.sheet(), 'nm-ps').textContent), one(r.sheet(), 'nm-ps').textContent);
+    check('... and the note under the preview is still the one of the nickname that the person has (since when, when it can change), not the first-time one', /^Your nickname since [A-Z][a-z]{2} \d+\. You can change it again in 22 hours\.$/.test(one(r.sheet(), 'nm-ps').textContent), one(r.sheet(), 'nm-ps').textContent);
     // a tag changes at any time: erasing it (or typing another) is asked at once, the hub says it is fine, and the box that the person types in stays theirs (focus, no read only: a phone keeps its keyboard)
     r.userType(r.tag(), '');
     r.advance(400);
@@ -371,6 +370,9 @@ const OK = { ok: true };
         const later = rig({ you: ME({ nick: 'Zoe', nickat: T0 / 1000 - 3 * DAY, nickfree: T0 / 1000 - 2 * DAY }) });
         later.tell('names');
         check('sheet: a wait that is over is not said again: the note says that the nickname can change now', /You can change it now; after that you wait a day\./.test(one(later.sheet(), 'nm-ps').textContent), one(later.sheet(), 'nm-ps').textContent);
+        // the date is the visitor's own: 23:30 UTC on June 1 is that evening in New York and the next morning in Tokyo
+        const dated = (zone) => { process.env.TZ = zone; const q = rig({ you: ME({ nick: 'Zoe', nickat: Date.UTC(2026, 5, 1, 23, 30) / 1000, nickfree: T0 / 1000 - DAY }) }); q.tell('names'); const text = one(q.sheet(), 'nm-ps').textContent; process.env.TZ = 'UTC'; return text; };
+        same('sheet: the date that the nickname has been the nickname since is in the visitor\'s own time zone', [dated('America/New_York'), dated('Asia/Tokyo')], ['Your nickname since Jun 1. You can change it now; after that you wait a day.', 'Your nickname since Jun 2. You can change it now; after that you wait a day.']);
     }
     r.userType(r.nick(), 'Fern');
     r.advance(400);

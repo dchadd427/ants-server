@@ -178,6 +178,7 @@ tests/scripts/test_web_likes.py
 tests/scripts/test_web_live.sh
 tests/scripts/test_web_lobby.py
 tests/scripts/test_web_lobby_*
+tests/scripts/test_web_local_time_pages.py
 tests/scripts/test_web_log.py
 tests/scripts/test_web_map_fetch.sh
 tests/scripts/test_web_map_library.py

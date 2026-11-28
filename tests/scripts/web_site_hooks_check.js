@@ -49,7 +49,7 @@ const link = (u) => '<link rel="stylesheet" href="' + u + '">';
 const script = (u) => '<script src="' + u + '"></script>';
 const WANT = {
     play: { head: ['site_nav.css', 'replay_stats.css', 'death_map.css', 'replay_activity.css'].map(link).join(''), end: ['site_nav.js', 'analytics.js', 'hub_here.js', 'history_page.js', 'death_map.js', 'replay_activity.js'].map(script).join('') },
-    mapmaker: { head: link('/site_nav.css'), end: ['site_nav.js', 'analytics.js', 'mapmaker_site.js'].map(script).join('') },
+    mapmaker: { head: link('/site_nav.css'), end: ['local_time.js', 'site_nav.js', 'analytics.js', 'mapmaker_site.js'].map(script).join('') },
     catalog: { head: link('/site_nav.css'), end: script('/site_nav.js') }
 };
 for (const name of Object.keys(WANT)) {

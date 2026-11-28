@@ -41,7 +41,7 @@ class ThePagesAndTheLists(unittest.TestCase):
         self.assertEqual(pages["play"]["styles"], ["site_nav.css", "replay_stats.css", "death_map.css", "replay_activity.css"])
         self.assertEqual(pages["play"]["scripts"], ["site_nav.js", "analytics.js", "hub_here.js", "history_page.js", "death_map.js", "replay_activity.js"])
         self.assertEqual(pages["mapmaker"]["styles"], ["/site_nav.css"])
-        self.assertEqual(pages["mapmaker"]["scripts"], ["site_nav.js", "analytics.js", "mapmaker_site.js"])
+        self.assertEqual(pages["mapmaker"]["scripts"], ["local_time.js", "site_nav.js", "analytics.js", "mapmaker_site.js"])
         self.assertEqual(pages["catalog"], {"styles": ["/site_nav.css"], "scripts": ["/site_nav.js"]})
         self.assertEqual(sorted(pages), ["catalog", "mapmaker", "play"])
 

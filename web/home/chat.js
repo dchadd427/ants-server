@@ -41,7 +41,7 @@
         login: 'Log in', loginWith: 'Log in with Discord', chatting: 'Chatting as ', logout: 'Log out', forget: 'Forget me', sure: 'Are you sure? Press again', forgetNote: 'Deletes your lines in the chat and logs you out everywhere. A ban or a mute stays.',
         picShow: 'Show my Discord picture', picNote: 'Everyone on the front page sees it next to your name.', picNone: 'Your picture is loaded when you log in.', picAgain: 'Log in again', picBlocked: 'Your picture is hidden on this site.',
         shows: 'Chat shows your ', names: ['display name', 'username'], use: 'Show my ',
-        administrator: 'administrator', moderator: 'moderator', only: 'Only you', youAre: { mod: 'You are a moderator', admin: 'You are an administrator' }, today: 'Today', yesterday: 'Yesterday', linkMax: 5, linkCut: 48,
+        administrator: 'administrator', moderator: 'moderator', only: 'Only you', youAre: { mod: 'You are a moderator', admin: 'You are an administrator' }, linkMax: 5, linkCut: 48,
         cmdBad: 'That command is not right. Type /help to see the commands.', cmdRate: 'You are going too fast, try again in a moment', bansHead: 'People who are banned', bansNone: 'Nobody is banned.', noName: '(no name)',
         kicked: 'A moderator removed you from the chat. You can log in again.', banned: 'You are banned from the chat. You can still read it.', banField: 'You are banned from the chat'
     };
@@ -148,7 +148,7 @@
         var out = { id: m.id, who: nameOf(m.who) || '?', tag: sys ? '' : tagOf(m.tag), text: text, mod: !sys && m.mod === true, role: sys ? 'none' : roleOf(m.role, m.mod), sys: sys, k: nameOf(m.k), u: nameOf(m.u) };
         out.img = img;
         out.marks = sys ? [] : marksOf(m.m, text);
-        if (dayOf(m.at) !== '') out.at = m.at;                           // (the hub's own time of the line, seconds since 1970; a line without one shows no time: the page never makes one up)
+        if (validAt(m.at)) out.at = m.at;                           // (the hub's own time of the line, seconds since 1970; a line without one shows no time: the page never makes one up)
         return out;
     }
     // The names that the hub marked in a line: [{ s (start), n (length), k (the named person's key) }], at most ten, in order, apart from each other, each one starting at an `@` of the text as this page holds it (a mark that does not is left out: the page never draws what its words do not say)
@@ -203,14 +203,11 @@
         var m = /^(\/[a-z]+)(?: |$)/i.exec(text);
         return m ? m[1].toLowerCase() : '';
     }
-    function dayOf(at) {                                                 // the day of a time in seconds since 1970 (UTC, as 2026-11-12), or ''
-        if (typeof at !== 'number' || at !== Math.floor(at) || at < 0 || at > 4e9) return '';
-        return new Date(at * 1000).toISOString().slice(0, 10);
-    }
-    function bansOf(m) {                                                // the hub's private list of bans { rows: [{ u, at }] }, as the lines to show: [the heading, a line for each person], or null when it is not that
+    function validAt(at) { return typeof at === 'number' && at === Math.floor(at) && at >= 0 && at <= 4e9; }       // a time in seconds since 1970 that the page believes (the hub's own: a whole number up to the year 2096)
+    function bansOf(m, now) {                                               // the hub's private list of bans { rows: [{ u, at }] }, as the lines to show: [the heading, a line for each person], or null when it is not that
         if (!m || !Array.isArray(m.rows) || m.rows.length > MAXBANS) return null;
         var out = [m.rows.length ? TEXT.bansHead : TEXT.bansNone];
-        m.rows.forEach(function (r) { if (r && typeof r === 'object') out.push([nameOf(r.u) || TEXT.noName, dayOf(r.at)]); });
+        m.rows.forEach(function (r) { if (r && typeof r === 'object') out.push([nameOf(r.u) || TEXT.noName, validAt(r.at) ? AntsTime.dateText(r.at, now) : '']); });
         return out;
     }
     function mutesOf(m) {                                               // the hub's private list of mutes { rows: [{ u, until, i }] } as the sheet needs it: [{ until (seconds since 1970), i (the person's row of the players list, or -1 where they have none now) }], never a name; null when it is not that
@@ -265,19 +262,10 @@
             if (text !== undefined) e.textContent = text;
             return e;
         }
-        var I = env.Intl || win.Intl, fmt = {};                                  // the clock's words follow the device (Intl: its time zone and its 12 or 24 hours); one maker each, made once
-        function maker(name, opts) { if (fmt[name] === undefined) { try { fmt[name] = new I.DateTimeFormat(undefined, opts); } catch (e) { fmt[name] = null; } } return fmt[name]; }
-        function say2(d, name, opts, plain) { var f = maker(name, opts); try { return f ? f.format(d) : plain(d); } catch (e) { return plain(d); } }
-        function two(n) { return (n < 10 ? '0' : '') + n; }
-        function timeOf(at) { return say2(new Date(at * 1000), 'time', { hour: 'numeric', minute: '2-digit' }, function (d) { return two(d.getHours()) + ':' + two(d.getMinutes()); }); }
-        function fullOf(at) { return say2(new Date(at * 1000), 'full', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }, function (d) { return d.toDateString() + ' ' + timeOf(at); }); }
-        function localDay(d) { return d.getFullYear() * 10000 + d.getMonth() * 100 + d.getDate(); }
-        function dayWord(at) {                                                   // the divider's word: Today, Yesterday or a short date (the year only when it is not this one)
-            var d = new Date(at * 1000), t = new Date(now()), y = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1);
-            if (localDay(d) === localDay(t)) return TEXT.today;
-            if (localDay(d) === localDay(y)) return TEXT.yesterday;
-            return say2(d, d.getFullYear() === t.getFullYear() ? 'date' : 'dateYear', d.getFullYear() === t.getFullYear() ? { month: 'short', day: 'numeric' } : { year: 'numeric', month: 'short', day: 'numeric' }, function (x) { return x.toDateString(); });
-        }
+        // The words of a time are web/local_time.js's: the visitor's time zone, a 12-hour clock with AM or PM
+        function timeOf(at) { return AntsTime.clockText(new Date(at * 1000)); }
+        function fullOf(at) { return AntsTime.fullText(at); }
+        function dayWord(at) { return AntsTime.dayText(at, now()); }                // the divider's word: Today, Yesterday or a short date (the year only when it is not this one)
         function put(parent, kids) { kids.forEach(function (k) { parent.appendChild(k); }); return parent; }
         function guard(fn) { return function () { try { return fn.apply(this, arguments); } catch (e) { if (env.error) env.error(e); return undefined; } }; }       // (nothing that goes wrong in here reaches the page)
         function stop(name) { if (timers[name]) { clearTimeout(timers[name]); timers[name] = 0; } }
@@ -386,7 +374,7 @@
             var last = 0;
             feed.forEach(function (e) {
                 if (e.priv || e.at === undefined || !e.el || !e.el.parentNode) return;
-                var d = localDay(new Date(e.at * 1000)), want = d !== last;
+                var d = AntsTime.dayKey(e.at), want = d !== last;
                 last = d;
                 if (want && !e.div) { e.div = el('div', 'gc-day', dayWord(e.at)); e.div.setAttribute('role', 'separator'); log.insertBefore(e.div, e.el); }
                 else if (!want && e.div) { e.div.parentNode.removeChild(e.div); e.div = null; }
@@ -652,7 +640,7 @@
             render();
         }
         function onBans(m) {
-            var lines = bansOf(m), at;
+            var lines = bansOf(m, now()), at;
             if (!lines) return;
             for (var i = 0; i < unanswered.length && at === undefined; i++) if (unanswered[i].cmd && wordOfCommand(unanswered[i].text) === '/bans') at = i;
             if (at !== undefined) unanswered.splice(at, 1);
@@ -824,7 +812,7 @@
             }
             return out;
         }
-        function clockOf(at) { return typeof at === 'number' && dayOf(at) !== '' ? { time: timeOf(at), full: fullOf(at), day: dayWord(at), key: localDay(new Date(at * 1000)) } : null; }       // the log's own words for a time of a line: the clock, the full date, the divider's word and a number per local day
+        function clockOf(at) { return validAt(at) ? { time: timeOf(at), full: fullOf(at), day: dayWord(at), key: AntsTime.dayKey(at) } : null; }       // the log's own words for a time of a line: the clock, the full date, the divider's word and a number per local day
         function setOpen(on) { open = !!on; if (seen()) stale = true; render(); }
         function setMenu(on) { menuOn = !!on; render(); }
         function startLogin() {                                                 // a full navigation: Discord, then the hub's callback, then this page again, on the screen that the visitor was on

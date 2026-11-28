@@ -6,6 +6,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+process.env.TZ = 'UTC';       // (the day of a time that the hub names)
+globalThis.AntsTime = require('./quiet_time.js').quiet;       // (the clock of a line says nothing: a line's text is its name and its words)
 const H = require('./web_page_harness.js')(process.argv[2] || path.join(__dirname, '..', '..', 'web', 'lobby.html'));
 const { startHub, line } = require('./fake_hub.js');
 const MiniWebSocket = require('./mini_websocket.js');
@@ -30,15 +32,14 @@ function dockFor(hub, o) {                               // the real script, rea
     const env = { elements: {}, innerHTMLWrites: [] };
     const doc = { hidden: false, listeners: {}, createElement: (t) => new El(env, t), createTextNode: (t) => ({ isText: true, textContent: String(t), parent: null }), addEventListener(t, fn) { (doc.listeners[t] = doc.listeners[t] || []).push(fn); } };
     env.doc = doc;
-    const QUIET = { DateTimeFormat: function () { return { format: () => '' }; } };
-    const win = { innerWidth: o.width || 1280, innerHeight: 800, Intl: QUIET, location: { protocol: 'http:', host: hub.http.replace('http://', '') }, listeners: {}, addEventListener(t, fn) { (win.listeners[t] = win.listeners[t] || []).push(fn); } };
+    const win = { innerWidth: o.width || 1280, innerHeight: 800, location: { protocol: 'http:', host: hub.http.replace('http://', '') }, listeners: {}, addEventListener(t, fn) { (win.listeners[t] = win.listeners[t] || []).push(fn); } };
     const errors = [];
     const sockets = [];
     class Counted extends MiniWebSocket { constructor(url) { super(url); sockets.push(this); } }
     const host = new El(env, 'div', 'home');
     const loads = [];
     const load = (base, done) => { loads.push(base); win.AntsHomeCmds = require(path.join(H.lobbyDir, 'home', 'cmds.js')); setTimeout(done, 0); };       // (home.js loads the helper's two files; here the real script is handed over)
-    const dock = root.AntsHomeChat.mount({ doc, win, host, Intl: QUIET, WebSocket: Counted, error: (e) => errors.push(e), load: o.noLoad ? undefined : load });
+    const dock = root.AntsHomeChat.mount({ doc, win, host, WebSocket: Counted, error: (e) => errors.push(e), load: o.noLoad ? undefined : load });
     dock.shown(true);
     const view = { dock, env, errors, sockets, loads, win, log: one(dock.root, 'gc-log') };
     view.lines = () => view.log.children.filter((r) => String(r.className).indexOf('gc-day') === -1);       // (the day dividers are not lines)
@@ -161,7 +162,7 @@ async function main() {
         hub.you(Object.assign({ mod: true, role: 'admin' }, ME));
         check('the hub makes the visitor an admin (a `you` frame): the data-role follows, no reload, the socket stays', await until(() => v.dock.root.getAttribute('data-role') === 'admin') && hub.upgrades === 1);
         await sleep(2600); say('/bans');
-        check('/bans, an admin\'s: the private list', await until(() => answers().length === 6) && answers()[5] === 'People who are banned\ncarol 2023-11-14');
+        check('/bans, an admin\'s: the private list', await until(() => answers().length === 6) && answers()[5] === 'People who are banned\ncarol Nov 14, 2023');
         hub.set({ roleDown: true }); await sleep(2600); say('/mute bob 5');
         check('a role that Discord could not confirm: the hub says role, the page says so', await until(() => answers().length === 7) && answers()[6] === 'Could not confirm your role, try again in a moment');
         hub.you(Object.assign({ mod: false, role: 'none' }, ME));

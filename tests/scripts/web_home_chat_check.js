@@ -13,6 +13,8 @@
 const fs = require('fs');
 const path = require('path');
 globalThis.AntsShapes = require(path.resolve(__dirname, '..', '..', 'web', 'shapes.js'));
+const TIME = require('./quiet_time.js');
+globalThis.AntsTime = TIME.quiet;       // (the rig's clock says nothing, so that a line's text is its name and its words; the section on the time uses the real one)
 
 const lobbyPath = process.argv[2];
 if (!lobbyPath) { console.log('usage: web_home_chat_check.js lobby.html'); process.exit(2); }
@@ -68,7 +70,6 @@ function loadChat(clock) {
 const cls = (e) => String(e.className).split(/\s+/);
 const byClass = (root, c) => root.findAll((e) => cls(e).indexOf(c) !== -1);
 const one = (root, c) => byClass(root, c)[0] || null;
-const QUIET = { DateTimeFormat: function () { return { format: () => '' }; } };       // (the rig's clock words are empty, so that a line's text is its name and its words; the clock has its own section)
 const numberOf = (x) => { const t = one(x, 'gc-t'), m = /^#(\d+)/.exec(t ? String(t.getAttribute('title') || '') : ''); return m ? m[1] : null; };       // (the number of a line, only where the time's title says it: a moderator's)
 const L = (id, who, text, mod) => ({ t: 'line', id, at: 1700000000 + id, who, text, mod: !!mod });
 const W = (o) => Object.assign({ t: 'welcome', v: 1, you: null, login: false, online: 7, history: [] }, o);
@@ -104,7 +105,7 @@ function rig(o) {
     win.assign = (url) => went.push(url);
     win.location.assign = (url) => went.push(url);
     const fetcher = o.noFetch ? undefined : (path, init) => { fetches.push({ path, init }); if (o.fetchThrows) throw new Error('no network'); return { then(ok, bad) { pending = { ok, bad }; } }; };
-    const dock = Chat.mount({ doc, win, host, chip, screen: o.screen, fetch: fetcher, now: o.now || clock.now, random: o.random || (() => 0), Intl: o.Intl || QUIET, WebSocket: o.noWebSocket ? undefined : HubSocket, error: (e) => errors.push(e) });
+    const dock = Chat.mount({ doc, win, host, chip, screen: o.screen, fetch: fetcher, now: o.now || clock.now, random: o.random || (() => 0), WebSocket: o.noWebSocket ? undefined : HubSocket, error: (e) => errors.push(e) });
     if (o.home !== false) dock.shown(true);                // (the page tells the dock which screen shows, right after it is mounted)
     const r = { env, clock, Chat, doc, win, host, sockets, dock, errors, hidden, HubSocket, root: dock.root, chip, went, fetches };
     r.answer = (response) => { const p = pending; pending = null; p.ok(response); };
@@ -1507,9 +1508,12 @@ const tagOf = (row) => one(row, 'gc-tag') ? one(row, 'gc-tag').textContent : nul
          P.lineOf({ id: 1, who: 'system', text: 'a was kicked.', sys: true, mod: true, role: 'admin' }).mod, P.lineOf({ id: 1, who: 'system', text: 'a was kicked.', sys: true, mod: true, role: 'admin' }).role], [true, false, false, false, false, false, 'none']);
     same('lineOf: the role of a line is the hub\'s `role` where `mod` is true; an admin that is not a moderator is none', [P.lineOf({ id: 1, who: 'x', text: 'y', mod: true, role: 'admin' }).role, P.lineOf({ id: 1, who: 'x', text: 'y', mod: true }).role, P.lineOf({ id: 1, who: 'x', text: 'y', mod: false, role: 'admin' }).role, P.lineOf({ id: 1, who: 'x', text: 'y', mod: true, role: 'ADMIN' }).role], ['admin', 'mod', 'none', 'mod']);
     same('wordOfCommand: the slash word in lower case, only where a space or the end follows (a path, a shrug with no word and a line that has a slash inside are no command word)', [P.wordOfCommand('/MUTE bob 5'), P.wordOfCommand('/bans'), P.wordOfCommand('/help me'), P.wordOfCommand('/mute'), P.wordOfCommand('hello /mute'), P.wordOfCommand('/mute\u00e9 x'), P.wordOfCommand('/a/b'), P.wordOfCommand('/'), P.wordOfCommand('')], ['/mute', '/bans', '/help', '/mute', '', '', '', '', '']);
-    same('bansOf: a heading and a line for each person (the name and the day, UTC), "(no name)" for a row with none; nobody banned; not a list, a list of more than the hub sends, a row that is no object, a time that is no time',
-        [P.bansOf({ rows: [{ u: 'bob', at: 1700000000 }, { u: '', at: 1700086400 }, { u: '<b>x</b>', at: -1 }, 5, null] }), P.bansOf({ rows: [] }), P.bansOf({ rows: 'x' }), P.bansOf({ rows: new Array(51).fill({ u: 'a', at: 1 }) }), P.bansOf(null), P.bansOf({ rows: [{ u: 'a', at: 'x' }, { u: 'a', at: 1e12 }, { u: 'a', at: 1.5 }] })],
-        [['People who are banned', ['bob', '2023-11-14'], ['(no name)', '2023-11-15'], ['<b>x</b>', '']], ['Nobody is banned.'], null, null, null, ['People who are banned', ['a', ''], ['a', ''], ['a', '']]]);
+    const NOW_MS = Date.UTC(2026, 10, 14, 15, 0, 0), ROWS = { rows: [{ u: 'bob', at: 1700000000 }, { u: '', at: 1700086400 }, { u: '<b>x</b>', at: -1 }, 5, null] };
+    same('bansOf: a heading and a line for each person (the name and the date in the visitor\'s own zone, with the year of another year), "(no name)" for a row with none; nobody banned; not a list, a list of more than the hub sends, a row that is no object, a time that is no time',
+        [P.bansOf(ROWS, NOW_MS), P.bansOf({ rows: [] }, NOW_MS), P.bansOf({ rows: 'x' }, NOW_MS), P.bansOf({ rows: new Array(51).fill({ u: 'a', at: 1 }) }, NOW_MS), P.bansOf(null, NOW_MS), P.bansOf({ rows: [{ u: 'a', at: 'x' }, { u: 'a', at: 1e12 }, { u: 'a', at: 1.5 }] }, NOW_MS)],
+        [['People who are banned', ['bob', 'Nov 14, 2023'], ['(no name)', 'Nov 15, 2023'], ['<b>x</b>', '']], ['Nobody is banned.'], null, null, null, ['People who are banned', ['a', ''], ['a', ''], ['a', '']]]);
+    process.env.TZ = 'Asia/Tokyo'; const tokyoBans = P.bansOf(ROWS, NOW_MS); process.env.TZ = 'UTC';
+    same('... and the day is the zone\'s: 22:13 UTC is the next morning in Tokyo', [tokyoBans[1], tokyoBans[2]], [['bob', 'Nov 15, 2023'], ['(no name)', 'Nov 16, 2023']]);
 }
 {   // the role of the visitor, from the welcome
     const of = (you) => { const r = rig({ chip: true }); r.live(W({ login: true, you })); return r.root.getAttribute('data-role') + '/' + r.chip.getAttribute('aria-label'); };
@@ -1631,11 +1635,11 @@ const tagOf = (row) => one(row, 'gc-tag') ? one(row, 'gc-tag').textContent : nul
     const bans = (frame, command) => { const r = rig({}); r.live(W({ login: true, you: asRole('admin') })); if (command) r.dock.say(command); r.s().recv(frame); return r; };
     const list = bans({ t: 'bans', rows: [{ u: 'bob', at: 1700000000 }, { u: 'carol.x', at: 1700086400 }] }, '/bans');
     same('bans: the heading and a line for each person, a name and a day; private; the command that waited for it is answered', [list.answers(), one(list.rows()[0], 'gc-cmd') ? one(list.rows()[0], 'gc-cmd').tagName : null, (list.clock.advance(2600), list.dock.say('hello'), list.s().recv({ t: 'err', code: 'rate' }), list.field().value)],
-        [['People who are banned\nbob 2023-11-14\ncarol.x 2023-11-15'], 'bdi', 'hello']);
+        [['People who are banned\nbob Nov 14, 2023\ncarol.x Nov 15, 2023'], 'bdi', 'hello']);
     const stray = bans({ t: 'bans', rows: [] }, '/bans'); stray.s().recv({ t: 'err', code: 'bad' });
     same('bans answers the /bans that waited: a `bad` after it is nobody\'s (no second answer)', stray.answers(), ['Nobody is banned.']);
     same('bans: nobody; a frame that is not a list says nothing; a name that is markup is only text', [bans({ t: 'bans', rows: [] }).answers(), bans({ t: 'bans', rows: 7 }).answers(), bans({ t: 'bans' }).answers(), (() => { const r = bans({ t: 'bans', rows: [{ u: '<img src=x onerror=alert(1)>', at: 1 }] }); return [r.answers(), r.env.innerHTMLWrites.length, r.log().all().every((e) => ['div', 'p', 'span', 'bdi'].indexOf(e.tagName) !== -1)]; })()],
-        [['Nobody is banned.'], [], [], [['People who are banned\n<img src=x onerror=alert(1)> 1970-01-01'], 0, true]]);
+        [['Nobody is banned.'], [], [], [['People who are banned\n<img src=x onerror=alert(1)> Jan 1'], 0, true]]);
     const kept = rig({}); kept.live(W({ login: true, you: MODE })); kept.dock.say('/kick bob'); kept.s().recv({ t: 'err', code: 'who' });
     kept.s().fail(); kept.clock.advance(2600); kept.s().open().recv(W({ login: true, you: MODE }));
     check('a private answer is a line of this screen only: a new link\'s welcome makes the screen again from the hub\'s history, and it is gone', kept.answers().length === 0);
@@ -2180,67 +2184,72 @@ process.env.TZ = 'UTC';       // (the local day and hour of these checks; one of
     check('the source of chat.js holds no innerHTML, no outerHTML and no insertAdjacentHTML anywhere (comments and code)', !/innerHTML|outerHTML|insertAdjacentHTML/.test(chatSource.replace(/\/\/.*/g, '')));
     check('the link style has an underline and a visible focus ring, in forced colors too', (() => { const css = fs.readFileSync(path.join(lobbyDir, 'home', 'chat.css'), 'utf8'); return /^\.gc-a \{[^}]*text-decoration: underline/m.test(css) && /^\.gc-a:focus-visible \{[^}]*outline: 2px solid/m.test(css) && /forced-colors: active\) \{[^@]*\.gc-a \{[^}]*underline/.test(css) && /forced-colors[^@]*\.gc-a:focus-visible/.test(css); })());
 }
-{   // the time on the left
-    const calls = [];
-    const intl = (twelve) => ({ DateTimeFormat: function (loc, o) { calls.push([loc, o]); return { format: (d) => { const p = (n) => String(n).padStart(2, '0'), h = d.getHours(), t = twelve ? ((h + 11) % 12 + 1) + ':' + p(d.getMinutes()) + (h < 12 ? ' AM' : ' PM') : p(h) + ':' + p(d.getMinutes());
-        return o.month && o.hour ? 'F ' + (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear() + ' ' + t : o.month ? 'D ' + (d.getMonth() + 1) + '/' + d.getDate() + (o.year ? '/' + d.getFullYear() : '') : t; } }; } });
+{   // the time on the left: the hub's own time, in the visitor's own time zone, on a 12-hour clock whatever the device's language or hours (web/local_time.js; tests/scripts/web_local_time_check.js has the formatter)
+    globalThis.AntsTime = TIME.real;
     const NOW = Date.UTC(2026, 10, 14, 15, 0, 0);
     const AT = Date.UTC(2026, 10, 14, 15, 5, 0) / 1000;
     const line = (id, at, who, text) => Object.assign(L(id, who || 'pebble', text || 'hello'), { at });
-    const make = (twelve, role) => { const r = rig({ Intl: intl(twelve), now: () => NOW }); r.live(W({ login: true, you: role ? asRole(role) : YOU })); r.s().recv(line(7, AT)); return r; };
-    const h12 = make(true, 'none'), h24 = make(false, 'none'), staff = make(false, 'mod');
+    const zoned = (zone, fn) => { process.env.TZ = zone; try { return fn(); } finally { process.env.TZ = 'UTC'; } };       // (the rows are made when a line comes: a rig is made and filled in the zone)
+    const make = (role, zone) => zoned(zone || 'America/New_York', () => { const r = rig({ now: () => NOW }); r.live(W({ login: true, you: role ? asRole(role) : YOU })); r.s().recv(line(7, AT)); return r; });
+    const ny = make('none'), berlin = make('none', 'Europe/Berlin'), tokyo = make('none', 'Asia/Tokyo'), staff = make('mod');
     const stamp = (r) => one(r.rows()[0], 'gc-t');
-    same('the time is the hub\'s own, in the device\'s 12 or 24 hour setting (an injected Intl), and the formatter is asked for the device\'s language and hour and minute only', [stamp(h12).textContent, stamp(h24).textContent, calls[0][0], calls[0][1]],
-        ['3:05 PM', '15:05', undefined, { hour: 'numeric', minute: '2-digit' }]);
-    check('the time is the first thing in the line (read before the name), and the line text is the time and then the name and the words', h24.rows()[0].children[0] === stamp(h24) && h24.rows()[0].textContent === '15:05pebble: hello');
-    check('the title has the date and the time, and for a person with no role no number', stamp(h24).getAttribute('title') === 'F 11/14/2026 15:05' && h24.rows()[0].textContent.indexOf('#') === -1);
-    check('a moderator has the number in the title of the time and in no other place; the date follows it', stamp(staff).getAttribute('title') === '#7 F 11/14/2026 15:05' && staff.rows()[0].textContent === '15:05pebble: hello' && staff.rows()[0].findAll((e) => e !== stamp(staff) && String(e.getAttribute('title') || '').indexOf('#') !== -1).length === 0);
-    check('the number stays in the line as data for everybody (staff and not), for the menu of a moderator and /del', [h12, h24, staff].every((q) => q.rows()[0].getAttribute('data-n') === '7'));
-    check('nothing in a line shows a number: no "#", for a person with no role, a moderator and an administrator, on a live line and in the history', (() => { const out = []; ['none', 'mod', 'admin'].forEach((role) => { const q = rig({ Intl: intl(false), now: () => NOW }); q.live(W({ login: true, you: asRole(role), history: [{ id: 3, at: AT, who: 'a', text: 'old', mod: false }] })); q.s().recv(line(4, AT)); out.push(...q.rows().map((x) => x.textContent)); }); return out.length === 6 && out.every((t) => t.indexOf('#') === -1); })());
-    const tz = rig({ Intl: intl(false), now: () => NOW }); process.env.TZ = 'Asia/Tokyo'; tz.live(W({ you: YOU })); tz.s().recv(line(8, AT));
-    same('the time is in the device\'s time zone (Tokyo: nine hours on)', one(tz.rows()[0], 'gc-t').textContent, '00:05');
-    process.env.TZ = 'UTC';
-    const noTime = rig({ Intl: intl(false), now: () => NOW }); noTime.live(W({ you: YOU })); ['x', '5', -1, 1.5, NaN, null, 4e9 + 1].forEach((bad, i) => noTime.s().recv({ t: 'line', id: 20 + i, at: bad, who: 'a', text: 'no time ' + i, mod: false }));
+    same('the time is the hub\'s own in the visitor\'s own zone on a 12-hour clock: New York, Berlin (a 24-hour country) and Tokyo (nine hours on, the next day) for the same moment', [stamp(ny).textContent, stamp(berlin).textContent, stamp(tokyo).textContent], ['10:05 AM', '4:05 PM', '12:05 AM']);
+    check('the time is the first thing in the line (read before the name), and the line text is the time and then the name and the words', ny.rows()[0].children[0] === stamp(ny) && ny.rows()[0].textContent === '10:05 AMpebble: hello');
+    check('the title has the date and the time, and for a person with no role no number', stamp(ny).getAttribute('title') === 'Nov 14, 2026, 10:05 AM' && stamp(berlin).getAttribute('title') === 'Nov 14, 2026, 4:05 PM' && ny.rows()[0].textContent.indexOf('#') === -1);
+    check('a moderator has the number in the title of the time and in no other place; the date follows it', stamp(staff).getAttribute('title') === '#7 Nov 14, 2026, 10:05 AM' && staff.rows()[0].textContent === '10:05 AMpebble: hello' && staff.rows()[0].findAll((e) => e !== stamp(staff) && String(e.getAttribute('title') || '').indexOf('#') !== -1).length === 0);
+    check('the number stays in the line as data for everybody (staff and not), for the menu of a moderator and /del', [ny, berlin, staff].every((q) => q.rows()[0].getAttribute('data-n') === '7'));
+    check('nothing in a line shows a number: no "#", for a person with no role, a moderator and an administrator, on a live line and in the history', (() => { const out = []; ['none', 'mod', 'admin'].forEach((role) => { const q = rig({ now: () => NOW }); q.live(W({ login: true, you: asRole(role), history: [{ id: 3, at: AT, who: 'a', text: 'old', mod: false }] })); q.s().recv(line(4, AT)); out.push(...q.rows().map((x) => x.textContent)); }); return out.length === 6 && out.every((t) => t.indexOf('#') === -1); })());
+    const everyHour = [];
+    zoned('Europe/Berlin', () => { for (let m = 0; m < 1440; m += 7) { const q = rig({ now: () => NOW }); q.live(W({ you: YOU })); q.s().recv(line(2, Date.UTC(2026, 5, 14, 22, 0) / 1000 + m * 60)); everyHour.push(one(q.rows()[0], 'gc-t').textContent); } });
+    check('a device in a 24-hour country shows AM or PM in every hour of the day, and no hour above 12', everyHour.length > 150 && everyHour.every((t) => /^(1[0-2]|[1-9]):[0-5][0-9] (AM|PM)$/.test(t)) && everyHour.some((t) => /^12:/.test(t)) && everyHour.some((t) => /AM$/.test(t)) && everyHour.some((t) => /PM$/.test(t)));
+    const noTime = rig({ now: () => NOW }); noTime.live(W({ you: YOU })); ['x', '5', -1, 1.5, NaN, null, 4e9 + 1].forEach((bad, i) => noTime.s().recv({ t: 'line', id: 20 + i, at: bad, who: 'a', text: 'no time ' + i, mod: false }));
     noTime.s().recv({ t: 'line', id: 40, who: 'a', text: 'no field', mod: false });
     check('a line with no usable time from the hub has no time (none is made up by the page) and no divider', noTime.rows().length === 8 && noTime.rows().every((x) => one(x, 'gc-t').textContent === '' && one(x, 'gc-t').getAttribute('title') === null) && noTime.days().length === 0);
     same('lineOf keeps the hub\'s time only when it is a whole number of seconds in range', [Pure.lineOf({ id: 1, at: AT, who: 'a', text: 'x' }).at, Pure.lineOf({ id: 1, at: -1, who: 'a', text: 'x' }).at, Pure.lineOf({ id: 1, at: '5', who: 'a', text: 'x' }).at, Pure.lineOf({ id: 1, who: 'a', text: 'x' }).at], [AT, undefined, undefined, undefined]);
-    const broken = rig({ Intl: { DateTimeFormat: function () { throw new Error('no Intl'); } }, now: () => NOW }); broken.live(W({ you: YOU })); broken.s().recv(line(9, AT));
-    check('a device without Intl still shows a time (24 hour), and nothing throws', one(broken.rows()[0], 'gc-t').textContent === '15:05' && broken.errors.length === 0);
-    const priv = make(false, 'mod'); priv.dock.note('Done: a private answer');
+    const priv = make('mod'); priv.dock.note('Done: a private answer');
     check('a private answer has no time and no divider of its own', priv.answers().length === 1 && one(priv.rows()[1], 'gc-t') === null && priv.days().length === 1);
+    globalThis.AntsTime = TIME.quiet;
 }
-{   // the day dividers
-    const NOW = Date.UTC(2026, 10, 14, 15, 0, 0);
-    const at = (m, d, h, mi, y) => Date.UTC(y || 2026, m - 1, d, h, mi, 0) / 1000;
-    const intl = { DateTimeFormat: function (loc, o) { return { format: (d) => (o.hour && o.month ? 'F' : o.month ? (d.getMonth() + 1) + '/' + d.getDate() + (o.year ? '/' + d.getFullYear() : '') : d.getHours() + ':' + d.getMinutes()) }; } };
+{   // the day dividers: the visitor's own days, whatever zone that is
+    globalThis.AntsTime = TIME.real;
+    const at = (m, d, h, mi, y) => new Date(y || 2026, m - 1, d, h, mi, 0).getTime() / 1000;       // (a moment by the clock of the zone that the check is in)
     const hist = (rows) => rows.map((a, i) => ({ id: i + 1, at: a, who: 'a', text: 'line ' + (i + 1), mod: false }));
-    const make = (rows) => { const r = rig({ Intl: intl, now: () => NOW }); r.live(W({ you: YOU, history: hist(rows) })); return r; };
-    const order = (r) => r.log().children.slice(1).map((x) => (cls(x).indexOf('gc-day') !== -1 ? '[' + x.textContent + ']' : x.textContent.replace(/^[\d:]+/, ''))).join(' ');
-    const r = make([at(10, 3, 9, 0), at(11, 13, 23, 50), at(11, 13, 23, 55), at(11, 14, 0, 10), at(11, 14, 9, 0), at(12, 31, 8, 0, 2025)].sort());
-    same('a divider before the first line and wherever two neighbours are on different days: a short date (the year only when it is not this one), Yesterday, Today', order(r),
-        '[12/31/2025] a: line 1 [10/3] a: line 2 [Yesterday] a: line 3 a: line 4 [Today] a: line 5 a: line 6');
-    same('the dividers are separators with their words and are not lines', [r.days(), r.log().children.slice(1).filter((x) => cls(x).indexOf('gc-day') !== -1).every((x) => x.getAttribute('role') === 'separator'), r.rows().length], [['12/31/2025', '10/3', 'Yesterday', 'Today'], true, 6]);
-    const old = make([at(12, 31, 8, 0, 2025), at(1, 2, 8, 0)]);
-    same('a date of another year has the year', old.days(), ['12/31/2025', '1/2']);
-    const live = make([at(11, 14, 9, 0)]);
-    live.s().recv(Object.assign(L(5, 'a', 'later'), { at: at(11, 14, 9, 30) })); live.s().recv(Object.assign(L(6, 'a', 'tomorrow'), { at: at(11, 15, 0, 5) }));
-    same('a live line on the same day adds none, one on the next day adds one before it', [live.days(), order(live)], [['Today', '11/15'], '[Today] a: line 1 a: later [11/15] a: tomorrow']);
-    const gone = make([at(11, 13, 9, 0), at(11, 14, 9, 0), at(11, 14, 10, 0)]);
-    gone.s().recv({ t: 'del', id: 2 });
-    same('a line that is taken off and held the divider leaves the divider with the next line of its day', order(gone), '[Yesterday] a: line 1 [Today] a: line 3');
-    const first = make([at(11, 14, 9, 0), at(11, 14, 10, 0)]); first.s().recv({ t: 'del', id: 1 });
-    same('the first line goes and the next one is first: it has the divider', order(first), '[Today] a: line 2');
-    const cap = rig({ Intl: intl, now: () => NOW }); cap.live(W({ you: YOU, history: hist([at(11, 14, 9, 0)]) }));
-    for (let i = 0; i < 150; i++) cap.s().recv(Object.assign(L(100 + i, 'a', 'c' + i), { at: at(11, 14, 9, 1) }));
-    check('at the cap of 100 lines the oldest go, the first line always has its divider, and there is one divider only', cap.rows().length === 100 && cap.days().length === 1 && cap.log().children[1] !== undefined && cls(cap.log().children[1]).indexOf('gc-day') !== -1);
-    process.env.TZ = 'Asia/Tokyo';
-    const tokyo = make([at(11, 14, 14, 0), at(11, 14, 16, 0)]);
-    process.env.TZ = 'UTC';
+    const order = (r) => r.log().children.slice(1).map((x) => (cls(x).indexOf('gc-day') !== -1 ? '[' + x.textContent + ']' : x.textContent.replace(/^\d+:\d\d (AM|PM)/, ''))).join(' ');
+    for (const zone of ['America/New_York', 'Europe/Berlin']) {
+        process.env.TZ = zone;
+        const NOW = new Date(2026, 10, 14, 15, 0, 0).getTime();
+        const make = (rows) => { const r = rig({ now: () => NOW }); r.live(W({ you: YOU, history: hist(rows) })); return r; };
+        const r = make([at(10, 3, 9, 0), at(11, 13, 23, 50), at(11, 13, 23, 55), at(11, 14, 0, 10), at(11, 14, 9, 0), at(12, 31, 8, 0, 2025)].sort());
+        same(zone + ': a divider before the first line and wherever two neighbours are on different days: a short date (the year only when it is not this one), Yesterday, Today', order(r),
+            '[Dec 31, 2025] a: line 1 [Oct 3] a: line 2 [Yesterday] a: line 3 a: line 4 [Today] a: line 5 a: line 6');
+        same('the dividers are separators with their words and are not lines', [r.days(), r.log().children.slice(1).filter((x) => cls(x).indexOf('gc-day') !== -1).every((x) => x.getAttribute('role') === 'separator'), r.rows().length], [['Dec 31, 2025', 'Oct 3', 'Yesterday', 'Today'], true, 6]);
+        same('the time of each line is its clock in 12 hours', r.rows().map((x) => one(x, 'gc-t').textContent), ['8:00 AM', '9:00 AM', '11:50 PM', '11:55 PM', '12:10 AM', '9:00 AM']);
+        const old = make([at(12, 31, 8, 0, 2025), at(1, 2, 8, 0)]);
+        same('a date of another year has the year', old.days(), ['Dec 31, 2025', 'Jan 2']);
+        const live = make([at(11, 14, 9, 0)]);
+        live.s().recv(Object.assign(L(5, 'a', 'later'), { at: at(11, 14, 9, 30) })); live.s().recv(Object.assign(L(6, 'a', 'tomorrow'), { at: at(11, 15, 0, 5) }));
+        same('a live line on the same day adds none, one on the next day adds one before it (Tomorrow, for a line of the future)', [live.days(), order(live)], [['Today', 'Tomorrow'], '[Today] a: line 1 a: later [Tomorrow] a: tomorrow']);
+        const gone = make([at(11, 13, 9, 0), at(11, 14, 9, 0), at(11, 14, 10, 0)]);
+        gone.s().recv({ t: 'del', id: 2 });
+        same('a line that is taken off and held the divider leaves the divider with the next line of its day', order(gone), '[Yesterday] a: line 1 [Today] a: line 3');
+        const first = make([at(11, 14, 9, 0), at(11, 14, 10, 0)]); first.s().recv({ t: 'del', id: 1 });
+        same('the first line goes and the next one is first: it has the divider', order(first), '[Today] a: line 2');
+        const cap = rig({ now: () => NOW }); cap.live(W({ you: YOU, history: hist([at(11, 14, 9, 0)]) }));
+        for (let i = 0; i < 150; i++) cap.s().recv(Object.assign(L(100 + i, 'a', 'c' + i), { at: at(11, 14, 9, 1) }));
+        check('at the cap of 100 lines the oldest go, the first line always has its divider, and there is one divider only', cap.rows().length === 100 && cap.days().length === 1 && cap.log().children[1] !== undefined && cls(cap.log().children[1]).indexOf('gc-day') !== -1);
+        const none = make([]);
+        check('no lines, no divider', none.days().length === 0);
+        const again = make([at(11, 13, 9, 0), at(11, 14, 9, 0)]); again.s().recv({ t: 'you', you: asRole('mod') });
+        same('the log made again (a role changes) has the same dividers', again.days(), ['Yesterday', 'Today']);
+    }
+    // two moments of one UTC day that are two days in Tokyo have a divider between them; a moment of the early morning UTC is Yesterday in New York and Today in Berlin
+    const instant = (h, mi) => Date.UTC(2026, 10, 14, h, mi, 0) / 1000;
+    const inZone = (zone, rows, now) => { process.env.TZ = zone; const r = rig({ now: () => now }); r.live(W({ you: YOU, history: hist(rows) })); return r; };
+    const tokyo = inZone('Asia/Tokyo', [instant(14, 0), instant(16, 0)], Date.UTC(2026, 10, 15, 3, 0, 0));
     same('the day is the device\'s own: two times of one UTC day that are two days in Tokyo have a divider between them', order(tokyo).replace(/\[[^\]]*\]/g, '[]'), '[] a: line 1 [] a: line 2');
-    const none = make([]);
-    check('no lines, no divider', none.days().length === 0);
-    const again = make([at(11, 13, 9, 0), at(11, 14, 9, 0)]); again.s().recv({ t: 'you', you: asRole('mod') });
-    same('the log made again (a role changes) has the same dividers', again.days(), ['Yesterday', 'Today']);
+    same('a moment is Yesterday in one zone and Today in another: 02:00 UTC with 15:00 UTC as the time now', [inZone('America/New_York', [instant(2, 0)], Date.UTC(2026, 10, 14, 15, 0, 0)).days(), inZone('Europe/Berlin', [instant(2, 0)], Date.UTC(2026, 10, 14, 15, 0, 0)).days()], [['Yesterday'], ['Today']]);
+    process.env.TZ = 'UTC';
+    globalThis.AntsTime = TIME.quiet;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

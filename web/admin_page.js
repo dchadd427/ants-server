@@ -26,8 +26,6 @@
 
     var BOTS = typeof AntsAdminBots === 'object' && typeof AntsAdminMapPick === 'object' ? AntsAdminBots : null;       // the section "Bot matches" (web/admin_bots.js, with the list of maps of web/admin_map_pick.js, both loaded before this file): without them the page has four sections
     var ANALYTICS = typeof AntsAdminAnalytics === 'object' ? AntsAdminAnalytics : null;           // the section "Analytics" (web/admin_analytics.js, loaded before this file): without it the page has no such section
-    var TIME_ZONE = 'America/Los_Angeles';                 // the maintainer's times are Pacific time
-    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var TABS = [['waiting', 'Waiting'], ['approved', 'Approved'], ['declined', 'Declined'], ['taken_down', 'Taken down']];
     var LEADS = {
         waiting: 'Maps players sent that wait for you. Approve puts a map in the lobby list.',
@@ -73,31 +71,8 @@
         big: ['warn', 'The picture was too big'], shape: ['warn', 'The picture had a shape that the hub refuses'], busy: ['warn', 'Too many at once: some were dropped'], bug: ['bad', 'An error in the hub (its log says which kind)']
     };
 
-    // The date as the pictures write it: "today, 09:41", "yesterday", "16 Oct" (Pacific time)
-    function pacificParts(ms) {
-        var f = new Intl.DateTimeFormat('en-US', { timeZone: TIME_ZONE, year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-        var p = {};
-        f.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
-        return { y: +p.year, m: +p.month, d: +p.day, hh: p.hour, mm: p.minute };
-    }
+    // The dates and times of the page are web/local_time.js's (AntsTime, loaded before this file): the visitor's own time zone and a 12-hour clock
     function isTime(seconds) { return typeof seconds === 'number' && isFinite(seconds); }           // (a row of the server with no time says nothing for it, and the rest is drawn)
-    function when(seconds, nowMs) {
-        if (!isTime(seconds)) return '';
-        var a = pacificParts(seconds * 1000), b = pacificParts(nowMs);
-        var days = Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86400000);
-        if (days === 0) return 'today, ' + a.hh + ':' + a.mm;
-        if (days === 1) return 'yesterday';
-        return a.d + ' ' + MONTHS[a.m - 1];
-    }
-    // The end of a mute: "today, 14:51", "tomorrow, 09:00", "23 Nov, 11:40" (Pacific time), and how long is left of it
-    function untilWords(seconds, nowMs) {
-        if (!isTime(seconds)) return '';
-        var a = pacificParts(seconds * 1000), b = pacificParts(nowMs);
-        var days = Math.round((Date.UTC(a.y, a.m - 1, a.d) - Date.UTC(b.y, b.m - 1, b.d)) / 86400000);
-        if (days <= 0) return 'today, ' + a.hh + ':' + a.mm;
-        if (days === 1) return 'tomorrow, ' + a.hh + ':' + a.mm;
-        return a.d + ' ' + MONTHS[a.m - 1] + ', ' + a.hh + ':' + a.mm;
-    }
     function leftWords(seconds, nowMs) {
         if (!isTime(seconds)) return '';
         var left = Math.max(0, Math.round(seconds - nowMs / 1000));
@@ -476,7 +451,7 @@
         // ---- the section "Bot matches": web/admin_bots.js, given the helpers of this page ----
         function tools() {
             if (!botTools) {
-                botTools = BOTS.make({ doc: doc, env: env, el: el, add: add, button: button, panel: panel, call: call, message: message, typed: typed, when: when, untilWords: untilWords, minutesWords: minutesWords, refused: refused, toast: toast,
+                botTools = BOTS.make({ doc: doc, env: env, el: el, add: add, button: button, panel: panel, call: call, message: message, typed: typed, minutesWords: minutesWords, refused: refused, toast: toast,
                                        questionBox: questionBox, inertOthers: inertOthers, clearInert: clearInert, tick: tick, ASK_DELAY: ASK_DELAY, UNTRUSTED: UNTRUSTED,
                                        setCleanup: function (fn) { cleanup = fn; }, setRunning: function (n) { botRunning = n; if (tabsBox && current) paintTabs(); } });
             }
@@ -551,7 +526,7 @@
             function meta(m) {
                 var stamp = m.state === 'waiting' ? m.sent_at : m.decided_at;
                 var line = el('span');
-                add(line, doc.createTextNode('By '), player('span', 'who', m.maker), doc.createTextNode(' '), ptag(), doc.createTextNode(' · ' + m.width + ' x ' + m.height + ' · ' + VERBS[st.tab] + ' ' + when(stamp, env.now())));
+                add(line, doc.createTextNode('By '), player('span', 'who', m.maker), doc.createTextNode(' '), ptag(), doc.createTextNode(' · ' + m.width + ' x ' + m.height + ' · ' + VERBS[st.tab] + ' ' + AntsTime.whenText(stamp, env.now(), true)));
                 if (st.tab !== 'waiting' && m.decided_by) add(line, doc.createTextNode(' by '), typed('span', 'who', m.decided_by));          // (the admin who decided, by the name of the Discord login, or the words "earlier admin": a name that was typed, so it is marked)
                 return line;
             }
@@ -839,16 +814,16 @@
                     var bans = rs[0].status === 200 ? rs[0].json.bans || [] : null, mutes = rs[1].status === 200 ? rs[1].json.mutes || [] : null, hidden = rs[2].status === 200 ? rs[2].json.hidden || [] : null, imagesOff = rs[3].status === 200 ? rs[3].json.imagesoff || [] : null;
                     var now = env.now();
                     paint(bannedBox, banned.children[0], 'Banned', bans, 'Nobody is banned.', function (rows) {
-                        return personRows(rows, 'Unban', function (x) { return add(el('div', 'ps'), doc.createTextNode('banned ' + when(x.at, now) + ' · by '), byNode(x)); }, function (x) { rowChange('unban', x, 'is unbanned'); });
+                        return personRows(rows, 'Unban', function (x) { return add(el('div', 'ps'), doc.createTextNode('banned ' + AntsTime.whenText(x.at, now, true) + ' · by '), byNode(x)); }, function (x) { rowChange('unban', x, 'is unbanned'); });
                     });
                     paint(mutedBox, muted.children[0], 'Muted', mutes, 'Nobody is muted.', function (rows) {
-                        return personRows(rows, 'Unmute', function (x) { return add(el('div', 'ps'), doc.createTextNode('until ' + untilWords(x.until, now) + ' (' + leftWords(x.until, now) + ') · by '), byNode(x)); }, function (x) { rowChange('unmute', x, 'is unmuted'); });
+                        return personRows(rows, 'Unmute', function (x) { return add(el('div', 'ps'), doc.createTextNode('until ' + AntsTime.whenText(x.until, now, true) + ' (' + leftWords(x.until, now) + ') · by '), byNode(x)); }, function (x) { rowChange('unmute', x, 'is unmuted'); });
                     });
                     paint(hiddenBox, hiddenHead, 'Hidden now', hidden, 'No picture is hidden.', function (rows) {
                         return personRows(rows, 'Show again', function () { return el('div', 'ps', 'picture hidden'); }, function (x) { rowChange('pic', x, 'has the picture shown again'); });
                     });
                     paint(noimgBox, noimgHead, 'Taken away now', imagesOff, 'Nobody has image posting taken away.', function (rows) {
-                        return personRows(rows, 'Give back', function (x) { return add(el('div', 'ps'), doc.createTextNode('taken away by '), byNode(x), doc.createTextNode(' \u00b7 ' + when(x.at, now))); }, function (x) { rowChange('images', x, 'can post images again'); });
+                        return personRows(rows, 'Give back', function (x) { return add(el('div', 'ps'), doc.createTextNode('taken away by '), byNode(x), doc.createTextNode(' \u00b7 ' + AntsTime.whenText(x.at, now, true))); }, function (x) { rowChange('images', x, 'can post images again'); });
                     });
                 }, function () {
                     paint(bannedBox, banned.children[0], 'Banned', null);
@@ -993,7 +968,7 @@
             function botText(r, tagged) {                                                                 // (a line about the matches of computer players: the schedule's name or the map is typed text)
                 var wt = add(el('span', 'wt'), tagged ? el('span', 'src bot', 'Bot') : null);
                 add(wt, doc.createTextNode((BOTS && BOTS.logActions[r.action]) || ''), typed('em', null, r.target));
-                if (r.detail) add(wt, doc.createTextNode(' '), typed('span', 'why', r.detail));
+                if (r.detail) add(wt, doc.createTextNode(' '), typed('span', 'why', BOTS ? BOTS.logDetail(r) : r.detail));
                 if (!(BOTS && BOTS.logActions[r.action])) add(wt, doc.createTextNode(' '), typed('span', null, r.action));
                 return wt;
             }
@@ -1025,7 +1000,7 @@
                 add(hd, el('span', null, 'When'), el('span', null, 'Who'), el('span', null, 'What'));
                 var list = el('div', 'alist2');
                 rows.forEach(function (r) {
-                    add(list, add(el('div', 'arow2'), el('span', 'tm', when(r.at, now)), r.who, r.what));
+                    add(list, add(el('div', 'arow2'), el('span', 'tm', AntsTime.whenText(r.at, now, true)), r.who, r.what));
                 });
                 if (rows.length) add(body, hd, list);
                 else if (st.chat !== null && st.maps !== null && st.bots !== null) add(body, el('p', 'none', 'Nothing was done in this time.'));
@@ -1089,7 +1064,7 @@
                 fill.style.width = Math.min(100, pct) + '%';
                 add(meter, fill);
                 add(p, kv('Database', megabytes(t.bytes) + ' of ' + megabytes(t.limit, true) + ' MB', pct + '%'), meter,
-                    kv('Log file', megabytes(t.log) + ' MB'), kv('Lines kept', String(t.lines), t.oldest ? 'the oldest from ' + when(t.oldest, env.now()) : null),
+                    kv('Log file', megabytes(t.log) + ' MB'), kv('Lines kept', String(t.lines), t.oldest ? 'the oldest from ' + AntsTime.whenText(t.oldest, env.now(), true) : null),
                     kv('Pictures kept', String(t.pictures), megabytes(t.picture_bytes) + ' of ' + megabytes(t.picture_bytes_max, true) + ' MB'));
                 var im = s.images;
                 if (im && im.on) add(p, kv('Chat images', im.files + ' kept', megabytes(im.bytes) + ' of ' + megabytes(im.bytes_max, true) + ' MB'),
@@ -1099,14 +1074,14 @@
             }
             function versions(s) {
                 var p = panel('Versions'), site = stamp();
-                if (site.version) add(p, kv('Site', site.version, site.build ? 'build ' + site.build + (site.built ? ' · built ' + site.built : '') : null, 'stack'));
+                if (site.version) add(p, kv('Site', site.version, site.build ? 'build ' + site.build + (site.built ? ' · built ' + AntsTime.stampText(site.built, env.now()) : '') : null, 'stack'));
                 var v = s.version;
-                if (v) add(p, kv('Chat hub', 'code ' + v.code, 'running since ' + when(v.started, env.now()), 'stack'));
+                if (v) add(p, kv('Chat hub', 'code ' + v.code, 'running since ' + AntsTime.whenText(v.started, env.now(), true), 'stack'));
                 return p;
             }
             function draw(busy, hubStatus) {
                 grid.textContent = '';
-                upd.textContent = 'Checked ' + when(env.now() / 1000, env.now()) + ' (Pacific time)';
+                upd.textContent = 'Checked ' + AntsTime.whenText(env.now() / 1000, env.now(), true);
                 var c1 = el('div', 'cc'), c2 = el('div', 'cc');
                 add(c1, rightNow(busy));
                 if (hubStatus) { add(c1, roles(hubStatus), pictures(hubStatus)); add(c2, store(hubStatus), versions(hubStatus)); }
@@ -1132,8 +1107,8 @@
             }, function () { return showRefusal(0, {}); });
         }
 
-        return { start: start, when: when, state: function () { return { me: me }; }, sections: function () { return SECTIONS.map(function (x) { return x.id; }); } };
+        return { start: start, state: function () { return { me: me }; }, sections: function () { return SECTIONS.map(function (x) { return x.id; }); } };
     }
 
-    return { create: create, when: when, cleanDescription: cleanDescription, untilWords: untilWords, leftWords: leftWords, accountOf: accountOf };
+    return { create: create, cleanDescription: cleanDescription, leftWords: leftWords, accountOf: accountOf };
 });

@@ -2923,15 +2923,15 @@
   {
    "id": "a_time_past_the_range_is_a_day",
    "file": "web/home/chat.js",
-   "old": "at > 4e9",
-   "new": "at > 4e20",
+   "old": "at <= 4e9",
+   "new": "at <= 4e20",
    "test": "python3 tests/scripts/test_web_home_chat.py ThePageAndTheOtherPages TheLoaderInHome TheFolderAndTheScript TheStyle TheWayIntoTheImage TheInvisibleCharactersAreTheHubs TheRoles && node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
    "id": "a_time_before_1970_is_a_day",
    "file": "web/home/chat.js",
-   "old": "at < 0 ||",
-   "new": "at < -1e20 ||",
+   "old": "at >= 0 &&",
+   "new": "at >= -1e20 &&",
    "test": "python3 tests/scripts/test_web_home_chat.py ThePageAndTheOtherPages TheLoaderInHome TheFolderAndTheScript TheStyle TheWayIntoTheImage TheInvisibleCharactersAreTheHubs TheRoles && node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
@@ -3630,8 +3630,8 @@
   {
    "id": "time_made_up_when_the_hub_sends_none",
    "file": "web/home/chat.js",
-   "old": "if (dayOf(m.at) !== '') out.at = m.at;",
-   "new": "out.at = dayOf(m.at) !== '' ? m.at : 1700000000;",
+   "old": "if (validAt(m.at)) out.at = m.at;",
+   "new": "out.at = validAt(m.at) ? m.at : 1700000000;",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
@@ -3644,15 +3644,15 @@
   {
    "id": "time_in_24_hours_always",
    "file": "web/home/chat.js",
-   "old": "{ hour: 'numeric', minute: '2-digit' }, function",
-   "new": "{ hour: 'numeric', minute: '2-digit', hour12: false }, function",
+   "old": "function timeOf(at) { return AntsTime.clockText(new Date(at * 1000)); }",
+   "new": "function timeOf(at) { var d = new Date(at * 1000); return d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2); }",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
-   "id": "time_in_a_fixed_language",
+   "id": "the_tip_of_a_time_is_not_the_shared_words",
    "file": "web/home/chat.js",
-   "old": "new I.DateTimeFormat(undefined, opts)",
-   "new": "new I.DateTimeFormat('en-US', opts)",
+   "old": "function fullOf(at) { return AntsTime.fullText(at); }",
+   "new": "function fullOf(at) { return new Date(at * 1000).toString(); }",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
@@ -3686,22 +3686,22 @@
   {
    "id": "day_in_utc_not_local",
    "file": "web/home/chat.js",
-   "old": "function localDay(d) { return d.getFullYear() * 10000 + d.getMonth() * 100 + d.getDate(); }",
-   "new": "function localDay(d) { return d.getUTCFullYear() * 10000 + d.getUTCMonth() * 100 + d.getUTCDate(); }",
+   "old": "var d = AntsTime.dayKey(e.at), want = d !== last;",
+   "new": "var d = Math.floor(e.at / 86400), want = d !== last;",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
    "id": "day_today_is_yesterday",
    "file": "web/home/chat.js",
-   "old": "if (localDay(d) === localDay(t)) return TEXT.today;",
-   "new": "if (localDay(d) === localDay(t)) return TEXT.yesterday;",
+   "old": "function dayWord(at) { return AntsTime.dayText(at, now()); }",
+   "new": "function dayWord(at) { return AntsTime.dayText(at, now() + 86400000); }",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
    "id": "day_yesterday_is_a_date",
    "file": "web/home/chat.js",
-   "old": "if (localDay(d) === localDay(y)) return TEXT.yesterday;",
-   "new": "",
+   "old": "function dayWord(at) { return AntsTime.dayText(at, now()); }",
+   "new": "function dayWord(at) { return AntsTime.dateText(at, now()); }",
    "test": "node tests/scripts/web_home_chat_check.js web/lobby.html"
   },
   {
