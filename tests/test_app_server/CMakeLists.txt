@@ -141,18 +141,22 @@ endif()
 add_test(NAME test_prediction_link COMMAND test_prediction_link)
 set_tests_properties(test_prediction_link PROPERTIES WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
-# The runtime DLLs of SDL on Windows go next to each program (tests/test_app/ copies them next to its own; these four are built into a folder of their own)
+# The runtime DLLs of SDL on Windows go into this folder once, before any of its programs links (one step, so that parallel builds do not copy the same file at the same time; tests/test_app/ copies them next to its own)
 if(WIN32)
-    foreach(app_server_test test_network_app test_start_menu_app test_rejoin_app test_prediction_link)
-        if(DEFINED SDL2_DLL)
-            add_custom_command(TARGET ${app_server_test} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SDL2_DLL}" "$<TARGET_FILE_DIR:${app_server_test}>"
-            )
-        endif()
-        if(DEFINED SDL2_TTF_DLL)
-            add_custom_command(TARGET ${app_server_test} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SDL2_TTF_DLL}" "$<TARGET_FILE_DIR:${app_server_test}>"
-            )
-        endif()
-    endforeach()
+    set(app_server_dlls "")
+    if(DEFINED SDL2_DLL)
+        list(APPEND app_server_dlls "${SDL2_DLL}")
+    endif()
+    if(DEFINED SDL2_TTF_DLL)
+        list(APPEND app_server_dlls "${SDL2_TTF_DLL}")
+    endif()
+    if(app_server_dlls)
+        add_custom_target(test_app_server_dlls
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${app_server_dlls} "${CMAKE_CURRENT_BINARY_DIR}"
+        )
+        foreach(app_server_test test_network_app test_start_menu_app test_rejoin_app test_prediction_link)
+            add_dependencies(${app_server_test} test_app_server_dlls)
+        endforeach()
+    endif()
 endif()
