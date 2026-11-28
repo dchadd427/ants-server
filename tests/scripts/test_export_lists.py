@@ -179,7 +179,7 @@ class TheRealLists(unittest.TestCase):
             self.assertEqual([f for f in public if f.startswith(prefix)], [], prefix)
         for name in ("docker/nginx.conf", "web/lobby.html", "web/matches.html", "web/admin.html", "web/legal.html", "web/site_nav.js", "AGENTS.md", "README.md", "SECURITY.md"):
             if name in self.files:
-                self.assertNotIn(name, public, name)
+                self.assertNotIn(name, self.pub, name)                                          # (the working copy stays private: the public repository has the overlay's version at AGENTS.md, README.md and SECURITY.md)
 
     def test_the_game_is_public(self):
         public = set(self.pub)
@@ -262,6 +262,76 @@ class TheScanOfWords(unittest.TestCase):
         code, out = run(CHECK, "--repo", REPO)
         self.assertEqual(code, 0, out)
         self.assertIn("public text files", out)
+
+
+class TheLinksOfTheExportedTree(unittest.TestCase):
+    """`check_export.py --links`: the tree that the export makes (the overlay files at their public names, the changelog as export/public_changelog.py makes it) has no relative link to a file or a heading that it does not have."""
+    README = "# Docs\n\n[a](docs/a.md)\n"
+
+    def links(self, files):
+        base = {"README.md": "private readme\n", "export/overlay/README.md": self.README}
+        base.update(files)
+        with Tree(base, ["docs/**", "export/overlay/**"], ["priv/**", "export/**", "!export/overlay/**", "README.md"]) as t:
+            return run(CHECK, *t.args("--links"))
+
+    def test_a_tree_whose_links_all_land_passes(self):
+        code, out = self.links({"docs/a.md": "# A\n\nSee [b](b.md#the-part) and [home](../README.md) and [the folder](../docs).\n", "docs/b.md": "# B\n\n## The part\n\n[a](a.md)\n"})
+        self.assertEqual(code, 0, out)
+        self.assertIn("0 problem(s)", out)
+
+    def test_a_link_to_a_file_that_the_tree_does_not_have_is_a_problem_and_a_private_file_is_one(self):
+        code, out = self.links({"docs/a.md": "# A\n\n[x](SERVER.md) [y](../priv/secret.md)\n", "priv/secret.md": "private\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("docs/a.md:3: the link to docs/SERVER.md names a file that the exported tree does not have", out)
+        self.assertIn("the link to priv/secret.md names a file", out)
+
+    def test_a_link_to_a_heading_that_is_not_there_is_a_problem(self):
+        code, out = self.links({"docs/a.md": "# A\n\n[x](b.md#no-such-part)\n", "docs/b.md": "# B\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("the link to docs/b.md#no-such-part names no heading", out)
+
+    def test_a_document_that_the_readme_does_not_reach_is_a_problem(self):
+        code, out = self.links({"docs/a.md": "# A\n", "docs/lost.md": "# Lost\n"})
+        self.assertEqual(code, 1)
+        self.assertIn("docs/lost.md: not reachable from README.md", out)
+
+    def test_the_overlay_readme_is_the_start_and_a_missing_one_is_a_problem(self):
+        with Tree({"README.md": "private\n", "docs/a.md": "# A\n"}, ["docs/**", "export/overlay/**"], ["README.md", "export/**", "!export/overlay/**"]) as t:
+            code, out = run(CHECK, *t.args("--links"))
+        self.assertEqual(code, 1)
+        self.assertIn("the exported tree has no README.md", out)
+
+    def test_code_and_comments_and_a_word_in_brackets_are_not_links(self):
+        text = "# A\n\n`[x](nothing.md)` and [esp+0x14](arg)\n\n```\n[y](nope.md)\n```\n\n<!-- [z](gone.md) -->\n"
+        code, out = self.links({"docs/a.md": text})
+        self.assertEqual(code, 0, out)
+
+    def changelog(self, text, version="1.2.3"):
+        files = {"README.md": "private readme\n", "export/overlay/README.md": "# Docs\n\n[a](docs/a.md)\n", "docs/a.md": "# A\n", "VERSION": version + "\n", "CHANGELOG.md": text, "priv/secret.md": "private\n"}
+        with Tree(files, ["docs/**", "export/overlay/**", "CHANGELOG.md", "VERSION"], ["priv/**", "export/**", "!export/overlay/**", "README.md"]) as t:
+            return run(CHECK, *t.args("--links"))
+
+    def test_the_changelog_is_read_as_export_public_changelog_makes_it(self):
+        entry = "## v1.2.3 - 2026-01-01 - T\n\n**For players:**\n- A [doc](docs/a.md).\n\n**For operators:**\n- B [secret](priv/secret.md).\n\n**Details:** [commits](https://example.org/compare/a...b)\n"
+        code, out = self.changelog("# What's new\n\n" + entry)
+        self.assertEqual(code, 0, out)                                         # (a link of a paragraph for operators does not count: the paragraph is not exported)
+        code, out = self.changelog("# What's new\n\n" + entry.replace("- A [doc](docs/a.md).", "- A [secret](priv/secret.md)."))
+        self.assertEqual(code, 1)
+        self.assertIn("CHANGELOG.md:6: the link to priv/secret.md names a file that the exported tree does not have", out)
+
+    def test_a_newest_release_that_has_only_lines_for_operators_is_a_problem_because_it_is_left_out_of_the_exported_changelog(self):
+        old = "## v1.2.2 - 2026-01-01 - Old\n\n**For players:**\n- A.\n"
+        new = "## v1.2.3 - 2026-01-02 - New\n\n**For operators:**\n- B.\n\n"
+        code, out = self.changelog("# What's new\n\n" + new + old)
+        self.assertEqual(code, 1)
+        self.assertIn("the newest release of the exported changelog is v1.2.2, not the file VERSION (1.2.3)", out)
+        code, out = self.changelog("# What's new\n\n" + new.replace("**For operators:**", "**For players:**") + old)
+        self.assertEqual(code, 0, out)
+
+    def test_the_real_repository_has_no_problem(self):
+        code, out = run(CHECK, "--repo", REPO, "--links")
+        self.assertEqual(code, 0, "\n".join(line for line in out.splitlines() if not line.startswith(("words", "  by"))))
+        self.assertIn("links of the exported tree: 0 problem(s)", out)
 
 
 if __name__ == "__main__":

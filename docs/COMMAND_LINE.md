@@ -1,6 +1,6 @@
 # Command-line options
 
-Every option of the game program `ants`, and the environment variables that it and its start scripts read. The dedicated server, `ants_server`, has its own options: see [`SERVER.md`](SERVER.md).
+Every option of the game program `ants`, and the environment variables that it and its start scripts read. The dedicated game server has its own options, described in its own documentation.
 
 - `ants` means the game executable, `./build/src/ants_app/ants` after a build ([`BUILD_AND_RUN.md`](BUILD_AND_RUN.md)). `./start_game.sh` (Windows: `start_game.bat`) builds the game and starts it, and hands it every option that is not its own. The script's own options (`--players`, `--single`, `--dry-run`) are in [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md).
 - Run the game in the repository folder. It reads `Original-Ants/ants.chd` and `Original-Ants/Maps` relative to the current folder, and from another folder it stops with "Failed to load CHD archive".
@@ -166,7 +166,7 @@ These two print their answer and exit. They need no window and no assets (native
 
 | Option | Argument | Default | Meaning |
 |---|---|---|---|
-| `--version` | none | none | Print the version, the build id and the network protocol, for example `ants vX.Y.Z build abc1234 (network protocol N)`, and exit. Run the executable itself: `./build/src/ants_app/ants --version`. The build id is the short git commit of the build, or `unknown` outside a git checkout; `-DANTS_BUILD_ID=TEXT` sets it by hand when CMake configures the build. The full rule, with the Docker images' own: [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md), "Versioning and the Build Id". `ants_server --version` prints the same line for the server, starting with `ants_server`. |
+| `--version` | none | none | Print the version, the build id and the network protocol, for example `ants vX.Y.Z build abc1234 (network protocol N)`, and exit. Run the executable itself: `./build/src/ants_app/ants --version`. The build id is the short git commit of the build, or `unknown` outside a git checkout; `-DANTS_BUILD_ID=TEXT` sets it by hand when CMake configures the build. The full rule, with the Docker images' own: [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md), "Versioning and the Build Id". The game server's own `--version` prints the same line, starting with its own name. |
 | `--lan-list` | `[SECONDS]` | `3 s` | Do not start the game: listen for the rooms that the local network announces, print them and exit. The time is in whole seconds. `--lan-port N` picks the UDP port (4001 unless given); no other option is read. A room that has started its match is no longer announced ([`NETWORK_PORT.md`](NETWORK_PORT.md#lan-discovery-lanhpp-native-builds-v0078)). Exit status 0 when a room was heard, 1 when none was (a script can wait for a room), 2 when the port cannot be used. |
 
 `--lan-list` prints a header, one line per room (`address:port  "host"  map  players/seats players  version`, the version being the host's own game) and a count:
@@ -192,8 +192,8 @@ The game reads no `ANTS_*` variable. The start scripts read these:
 Other variables:
 
 - `USER`, else `USERNAME`: the game reads it for the default name of a local game, `user@machine`. The machine name is cut at its first dot, and the whole name at 32 printable characters. `Player` stands for the user when neither variable is set. See `--name`.
-- `ants_server` reads `ANTS_SERVER_SECRET`: [`SERVER.md`](SERVER.md).
-- The Docker compose files read variables of their own. `ANTS_PORT` there is the host port of the web page (`19980` by default), not the room's port. See [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md) and [`SERVER.md`](SERVER.md).
+- The dedicated game server reads `ANTS_SERVER_SECRET` (its own documentation).
+- The compose files of the images read variables of their own. `ANTS_PORT` there is the host port of the web page (`19980` by default), not the room's port. See [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md) and the game server's documentation.
 - The `ANTS_*` names that CMake knows (`ANTS_BUILD_ID`, `ANTS_WERROR`, `ANTS_USE_CCACHE`, `ANTS_BUILD_APP`) are CMake options, set with `-D` when the build is configured, not environment variables of the game or the start scripts (`ANTS_BUILD_ID` is also read from the environment by `build_web.sh` and the compose files, which pass it to the Docker build as a build argument): [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md).
 - The test programs and scripts have variables of their own (for example `ANTS_TEST_FILTER`): [`TESTING.md`](TESTING.md).
 

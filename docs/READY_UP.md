@@ -1,6 +1,6 @@
 # Ready up: the people of a room say that they are ready, and the host starts
 
-A room of the front page ([Play in the browser](private/PLAY_IN_BROWSER_HOME.md#your-room)) does not start until every person in it who is not the host has said that they are ready. It is the lobby's rule (network protocol 27, [`NETWORK_PORT.md`](NETWORK_PORT.md#protocol-27-ready_upmd)), kept by the server: the page only shows it, and a START that the page sent too early is refused by the server all the same.
+A room of the front page (Play in the browser) does not start until every person in it who is not the host has said that they are ready. It is the lobby's rule (network protocol 27, [`NETWORK_PORT.md`](NETWORK_PORT.md#protocol-27-ready_upmd)), kept by the server: the page only shows it, and a START that the page sent too early is refused by the server all the same.
 
 ## The rules
 
@@ -25,8 +25,8 @@ A room of the front page ([Play in the browser](private/PLAY_IN_BROWSER_HOME.md#
 
 ## Where it lives
 
-`HostLobby::everyone_ready`, `must_ready`, `apply_ready` and `ClientLobby::request_ready` (`src/ants_net/lobby.cpp`); the message and the mask in `include/ants_net/protocol.hpp` and `src/ants_net/protocol.cpp`; the page's codec and `LobbyClient.setReady` (`web/front/lobby_net.js`); the cards, the chips and the line under START (`web/front/lobby_rules.js`, `web/lobby.html`, `web/home/room.css`).
+`HostLobby::everyone_ready`, `must_ready`, `apply_ready` and `ClientLobby::request_ready` (`src/ants_net/lobby.cpp`); the message and the mask in `include/ants_net/protocol.hpp` and `src/ants_net/protocol.cpp`; the page's codec and `LobbyClient.setReady` (`web/front/lobby_net.js`); the cards, the chips and the line under START (the front page's rules script and styles).
 
 ## Tests
 
-`tests/test_net/test_lobby_ready.cpp` (the rules in a lobby room: who is heard, the START that waits, the host, the marks that stay and the ones that go, bots and games, the budget), `test_lockstep` N2.114 and N2.111 (the message and the Room's last byte, the golden bytes of `tests/data/lobby_messages.txt`), `tests/scripts/web_lobby_net_check.js` and `web_lobby_client_check.js` (the page's codec and pace), `tests/scripts/web_lobby_rules_check.js` (the cards and the line under START) and, in a real browser (opt-in), `tests/scripts/web_room_in_home_browser.js` (two pages and a real server: Ready up, START, the marks after a change). The rules are mutation-checked with `tests/data/ready_up_mutants.json`.
+`tests/test_net/test_lobby_ready.cpp` (the rules in a lobby room: who is heard, the START that waits, the host, the marks that stay and the ones that go, bots and games, the budget), `test_lockstep` N2.114 and N2.111 (the message and the Room's last byte, the golden bytes of `tests/data/lobby_messages.txt`), the front page's codec and pace checks, the front page's rules check (the cards and the line under START) and, in a real browser (opt-in), `tests/scripts/web_room_in_home_browser.js` (two pages and a real server: Ready up, START, the marks after a change). The rules are mutation-checked with `tests/data/ready_up_mutants.json`.

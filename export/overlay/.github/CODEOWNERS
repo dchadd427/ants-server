@@ -1,0 +1,6 @@
+# Review requests for pull requests go to the maintainer.
+*                      @dchadd427
+
+# The automation files are named on their own, so that they keep a reviewer whatever happens to the default line above.
+/.github/              @dchadd427
+/tools/                @dchadd427

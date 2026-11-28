@@ -15,13 +15,13 @@ The game runs in a modern web browser, as WebAssembly, with nothing to install: 
 | [32-Channel Spatial Sound & Soundtrack](PLAY_PICTURE.md#32-channel-spatial-sound--soundtrack) | [The browser's data, picture and sound](PLAY_PICTURE.md) |
 | [Interactive Asset Catalog](PLAY_PICTURE.md#interactive-asset-catalog) | [The browser's data, picture and sound](PLAY_PICTURE.md) |
 
-The front page (Home and the Room), the game page's addresses and the Legal page are described in [their own page](private/PLAY_IN_BROWSER_HOME.md).
+The front page (Home and the Room), the game page's addresses and the Legal page are described in the documentation of the front page.
 
 ## Every page in one look
 
 The changelog page (`/changelog`), the Legal page (`/legal`) and Sprites and sounds (`/asset_catalog/`) are in the Classic look of the front page, with the site's bar at the top (no logo; Home leads back to the front page). They link one stylesheet, `web/front/classic.css` (served at `/front/classic.css`: the colors, the green frame, the teal buttons, the black boxes, the footer bar of the front page; the font is beside it in `web/front/`), and add only their own rules. The front page and the game page keep inline copies of their colors. `tests/scripts/test_web_pages_classic.py` finds every page that the site serves and fails, naming the page, when one is not in the look.
 
-**The game page** (`web/shell.html`) has the front page's look too: the clay, the thin green frame, the teal buttons, the black boxes, the game's font and the logo from `web/front/`. The loading screen shows the logo and a teal bar, and the picture sits in the same frame as the front page's pictures. The bar at the top is the site's ([`SITE_NAV.md`](SITE_NAV.md#the-game-page)) and the page has no footer; under the picture there is only the rematch strip, and the picture's shape and the fullscreen mouse are rows of the settings menu. Up to 700 px the bar is one row from the left edge, with no logo: **Home**, the Settings gear, **Fullscreen** and the **Menu**, whose last small link, **Reload page**, is what the Reset button was.
+**The game page** (`web/shell.html`) has the front page's look too: the clay, the thin green frame, the teal buttons, the black boxes, the game's font and the logo from `web/front/`. The loading screen shows the logo and a teal bar, and the picture sits in the same frame as the front page's pictures. The bar at the top is the site's (the documentation of the site's top bar) and the page has no footer; under the picture there is only the rematch strip, and the picture's shape and the fullscreen mouse are rows of the settings menu. Up to 700 px the bar is one row from the left edge, with no logo: **Home**, the Settings gear, **Fullscreen** and the **Menu**, whose last small link, **Reload page**, is what the Reset button was.
 
 ## Starts at once, and the sound follows your first click or key
 
@@ -62,4 +62,4 @@ The game page (`web/shell.html`), the Map Maker (`web/mapmaker.html`) and the sp
 
 The map core (reader, checker, writer) also runs in the browser as a module of its own, for the map maker: [`MAP_FORMAT.md`](MAP_FORMAT.md#in-the-browser). No page loads it yet.
 
-[`INSTALL_AS_APP.md`](INSTALL_AS_APP.md) (the site as an installed app: manifest, icons, no service worker), [`MULTIPLAYER.md`](MULTIPLAYER.md) (network play), [`SERVER.md`](SERVER.md) (the dedicated server), [`CONTROLS.md`](CONTROLS.md) (menus, mouse, keyboard), [`TOUCH.md`](TOUCH.md) (touch), [`VIEW_AND_HUD.md`](VIEW_AND_HUD.md) (the picture and the audio), [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md), [`NETWORK_PORT.md`](NETWORK_PORT.md) (design and measurements), and the short front page of the repository, [`../README.md`](../README.md).
+[`INSTALL_AS_APP.md`](INSTALL_AS_APP.md) (the site as an installed app: manifest, icons, no service worker), [`MULTIPLAYER.md`](MULTIPLAYER.md) (network play), the game server's documentation (the dedicated server), [`CONTROLS.md`](CONTROLS.md) (menus, mouse, keyboard), [`TOUCH.md`](TOUCH.md) (touch), [`VIEW_AND_HUD.md`](VIEW_AND_HUD.md) (the picture and the audio), [`BUILD_AND_RUN.md`](BUILD_AND_RUN.md), [`NETWORK_PORT.md`](NETWORK_PORT.md) (design and measurements), and the short front page of the repository, [`../README.md`](../README.md).

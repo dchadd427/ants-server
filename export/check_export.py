@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Lists the PUBLIC text files (export/allowlist.txt, minus export/private.txt) that name something private: the check of the words that must not read in the public tree.
 
-    export/check_export.py [--repo DIR] [--list] [--tsv FILE] [--strict]
+    export/check_export.py [--repo DIR] [--list] [--tsv FILE] [--strict] [--links]
 
-REPORT ONLY: it prints a summary and exits 0, however many files it finds, until the changes that cut the crossings have brought the count to zero (export/README.md, "The scan of
-words"); then --strict, which exits 1 when anything is found, becomes the gate of the export.
+The scan of words is REPORT ONLY: it prints a summary and exits 0, however many files it finds, until the changes that cut the crossings have brought the count to zero (export/README.md,
+"The scan of words"); then --strict, which exits 1 when anything is found, becomes the gate of the export. With --links it also runs the check of the links, and that one is not report only: it reads every markdown file of the tree that the export
+makes (the overlay files at their public names, and CHANGELOG.md as public_changelog.py makes it) and exits 1 when a relative link names a file or a heading that this tree does not have, when
+README.md does not reach a document of docs/, or when the changelog's newest release is not the file VERSION. The scan of words reads that text too.
 For every tracked text file that classify.py puts on the public list it counts the mentions of private headers and targets, private paths, private documents, private web files,
 private tools, the site's half of the seam (its folder, the Map Maker's part of it and the tests that read them), the program ants_server, nginx and the stack, and private test targets (KINDS). --list prints one row for every file (area, file, hits, kinds, examples); --tsv writes the
 same rows to a file. Extend KINDS when a new private name appears.
@@ -14,11 +16,14 @@ import collections
 import os
 import re
 import sys
+import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import classify as C  # noqa: E402
+import public_changelog as PC  # noqa: E402
 
+DERIVED = {'CHANGELOG.md': PC.public_text}      # the files that the export writes from the working copy (a script of this folder), not copies: what the checks read is what it makes
 TEXT = ('.cpp', '.hpp', '.h', '.inc', '.in', '.txt', '.md', '.py', '.js', '.sh', '.bat', '.html', '.css', '.yml', '.yaml', '.json', '.cmake', '.tsv', '.csv', '.webmanifest', '')
 SKIP_PREFIX = ('Community-Maps/', 'asset_catalog/sprites', 'asset_catalog/sounds', 'third_party/mbedtls', 'tests/data/lvl_core')
 KINDS = collections.OrderedDict([
@@ -57,6 +62,81 @@ def area(f):
     return 'root/build/ci'
 
 
+def exported_text(repo, tracked):
+    """The text that the export puts at the public name of a tracked file: the file's own, or what the script of DERIVED makes from it."""
+    with open(os.path.join(repo, tracked), encoding='utf-8', errors='replace') as fh:
+        text = fh.read()
+    return DERIVED[tracked](text) if tracked in DERIVED else text
+
+
+def public_names(repo, allow, private):
+    """{public name: the tracked file that the export copies there} (an overlay file stands at its name without its folder)."""
+    pub = C.classify(C.tracked_files(repo), allow, private)[0]
+    return {C.public_name(f): f for f in pub}
+
+
+def check_links(repo, allow, private):
+    """The findings of the links of the exported tree: [(file, line, text)]. A relative link in a markdown file must name a file of that tree (a folder: one with files in it, or a
+    README.md), a link with a heading must name a real heading of a markdown file, and README.md must reach every document of docs/ by relative links."""
+    sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
+    import check_hygiene as H  # noqa: E402  (the tool that the exported tree runs too: one reading of links and headings)
+    names = public_names(repo, allow, private)
+    folders = {name.rsplit('/', 1)[0] for name in names if '/' in name}
+    texts, anchors, edges, out = {}, {}, {}, []
+
+    def text_of(name):
+        if name not in texts:
+            texts[name] = exported_text(repo, names[name])
+        return texts[name]
+
+    def anchors_of(name):
+        if name not in anchors:
+            anchors[name] = H.headings_of(text_of(name))
+        return anchors[name]
+
+    for name in sorted(n for n in names if n.endswith('.md')):
+        here = os.path.dirname(name)
+        edges[name] = set()
+        for n, line in H.prose_lines(text_of(name)):
+            line = H.INLINE_CODE.sub('', line)
+            for target in H.LINK.findall(line) + H.REFDEF.findall(line):
+                if re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target) or target.startswith('?'):
+                    continue
+                file_part, _, anchor = target.partition('#')
+                file_part = file_part.split('?')[0]
+                if file_part and '.' not in file_part and '/' not in file_part:
+                    continue          # (not a path: `[esp+0x14](arg)` in a table of the reverse engineering)
+                path = name if not file_part else os.path.normpath(os.path.join(here, urllib.parse.unquote(file_part))).replace(os.sep, '/')
+                anchor = urllib.parse.unquote(anchor.split('?')[0]).lower()
+                if path in names:
+                    edges[name].add(path)
+                elif path + '/README.md' in names:
+                    edges[name].add(path + '/README.md')
+                elif path not in folders and path != '.':
+                    out.append((name, n, 'the link to %s names a file that the exported tree does not have' % path))
+                    continue
+                if anchor and path in names and path.endswith('.md') and anchor not in anchors_of(path):
+                    out.append((name, n, 'the link to %s#%s names no heading of the exported page' % (path, anchor)))
+    if 'CHANGELOG.md' in names and 'CHANGELOG.md' in DERIVED and os.path.isfile(os.path.join(repo, 'VERSION')):
+        top = re.search(r'^## v(\d+\.\d+\.\d+)\b', text_of('CHANGELOG.md'), re.M)
+        with open(os.path.join(repo, 'VERSION'), encoding='utf-8') as fh:
+            version = fh.read().strip()
+        if not top or top.group(1) != version:
+            out.append(('CHANGELOG.md', 0, 'the newest release of the exported changelog is %s, not the file VERSION (%s): a release that has only lines for operators is left out there, so it needs a line for players' % ('v' + top.group(1) if top else 'none', version)))
+    seen, todo = {'README.md'}, ['README.md']
+    while todo:
+        for nxt in sorted(edges.get(todo.pop(), ())):
+            if nxt not in seen:
+                seen.add(nxt)
+                todo.append(nxt)
+    if 'README.md' not in names:
+        out.append(('README.md', 0, 'the exported tree has no README.md (an overlay file)'))
+    for name in sorted(names):
+        if name.startswith('docs/') and name.endswith('.md') and name not in seen:
+            out.append((name, 0, 'not reachable from README.md by relative links in the exported tree'))
+    return out
+
+
 def scan(repo, allow, private):
     """(public text file count, rows): a row for every public text file that names something private: (area, file, hits, 'kind=n;kind=n', examples)."""
     pub = C.classify(C.tracked_files(repo), allow, private)[0]
@@ -67,8 +147,7 @@ def scan(repo, allow, private):
         if f.startswith(SKIP_PREFIX) or not (os.path.splitext(f)[1].lower() in TEXT or base in ('LICENSE', 'VERSION', 'CMakeLists.txt', 'CODEOWNERS')):
             continue
         try:
-            with open(os.path.join(repo, f), encoding='utf-8', errors='replace') as fh:
-                text = fh.read()
+            text = exported_text(repo, f)
         except OSError:
             continue
         scanned += 1
@@ -92,9 +171,16 @@ def main(argv=None):
     ap.add_argument('--private', default=os.path.join(HERE, 'private.txt'))
     ap.add_argument('--list', action='store_true', help='print one row for every file that names something private')
     ap.add_argument('--tsv', help='write the rows to this file')
+    ap.add_argument('--links', action='store_true', help='also check the links of the exported tree (exit 1 on a problem: this one is not report only)')
     ap.add_argument('--strict', action='store_true', help='exit 1 when any public text file names something private (the gate of the export; off until the count is zero)')
     args = ap.parse_args(argv)
     allow, private = C.read_list(args.allow), C.read_list(args.private)
+    broken = []
+    if args.links:
+        broken = check_links(args.repo, allow, private)
+        for f, n, why in broken:
+            print('%s%s: %s' % (f, ':%d' % n if n else '', why))
+        print('links of the exported tree: %d problem(s)' % len(broken))
     scanned, rows = scan(args.repo, allow, private)
     by_kind = collections.Counter()
     files_of_kind = collections.Counter()
@@ -117,7 +203,7 @@ def main(argv=None):
             o.write('area\tfile\thits\tkinds\texamples\n')
             for r in rows:
                 o.write('\t'.join(map(str, r)) + '\n')
-    return 1 if args.strict and rows else 0
+    return 1 if broken or (args.strict and rows) else 0
 
 
 if __name__ == '__main__':

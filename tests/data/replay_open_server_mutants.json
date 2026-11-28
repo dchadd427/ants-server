@@ -24,6 +24,14 @@
    "new": "go: function (url) { window.open(url); }",
    "test": "python3 tests/scripts/test_web_replay_open.py TheStrip ThePlayer",
    "why": "a popup that a browser blocks"
+  },
+  {
+   "id": "the_fuzz_script_is_not_in_the_tree",
+   "file": "docs/ARCHITECTURE.md",
+   "old": "│   │   ├── web_replay_open_fuzz.sh     # Changed maps and heads of a recording through the native readers (no crash, no hang)\n",
+   "new": "",
+   "test": "python3 tests/scripts/test_web_replay_open.py TheDocument",
+   "why": "a script that nobody can find from the tree of the sources"
   }
  ]
 }

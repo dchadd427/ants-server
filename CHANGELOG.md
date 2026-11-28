@@ -63,7 +63,7 @@ Work that is not released yet is written in the same template under a heading th
 
 **For players:**
 - Other players' ants no longer rubber-band in network matches: those of other people and of computer players are drawn from the confirmed game, a moment behind your own and never corrected. Your own ants still answer a click at once. `?others=predicted` on the game page's address brings the old picture back, to compare, until v0.22.3 at the latest.
-- The Legal page has a new part, "Counting visits": no cookie and no address kept, and a browser that asks not to be tracked is counted as one visit and its country ([`docs/ANALYTICS.md`](docs/ANALYTICS.md)).
+- The Legal page has a new part, "Counting visits": no cookie and no address kept, and a browser that asks not to be tracked is counted as one visit and its country.
 
 **For operators:**
 - The admin page has a new tab, **Analytics**; the hub has a door for it, `POST /hub/a`, and a file, `analytics.db`; `ANTS_HUB_ANALYTICS=off` switches it off. The hub's image fetches a DB-IP country list when built: pass `ANTS_GEO_MONTH` once a month. The counter keeps no time finer than the hour and names a referrer only by its registered name (and in the permanent totals only when 3 visitors came from it); a day keeps at most 30,000 events, one address range makes at most 50 new visitors a day, and `analytics.db` is limited to 64 MiB as `hub.db` is ([`docs/ANALYTICS.md`](docs/ANALYTICS.md)).
@@ -74,7 +74,7 @@ Work that is not released yet is written in the same template under a heading th
 
 **For players:**
 - **Show ping.** A new setting in the Video tab of the settings menu, off by default: switched on, the corner of a network game shows "ping NN ms" above the frame rate, and a click on it opens the list of connections as before. Off, the corner is the frame rate and the version only. The corner no longer shows "delay". On the desktop it is `show_ping=on` in the settings file or `--show-ping on` for one run.
-- **Tags keep your capitals.** A tag is now shown the way you type it ("[Ant] Zoe", "[aNt] Zoe"), no longer turned into capitals. The checks still read it in capitals (reserved, staff and rude words), tags that are already set stay as they are, and changing only the capitals counts as a tag change, so it waits a day like any other ([`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md)).
+- **Tags keep your capitals.** A tag is now shown the way you type it ("[Ant] Zoe", "[aNt] Zoe"), no longer turned into capitals. The checks still read it in capitals (reserved, staff and rude words), tags that are already set stay as they are, and changing only the capitals counts as a tag change, so it waits a day like any other.
 - Smoother ants in network matches: a corrected ant moves at a walk's pace at most.
 
 **Fixes:**
@@ -94,7 +94,7 @@ Work that is not released yet is written in the same template under a heading th
 - **Nicknames, tags and guest names.** Log in and choose a nickname (3 to 16 letters and digits, yours alone) and, if you like, a tag ("[ANTS] Zoe") on one sheet, Your name, from the name in the chat menu. The chat, the Players list, the rooms, the results and the match history show it; finished matches keep the names they were played with. A guest can type a name too: it shows as "Wren (Guest)" and stays in this browser. Latin (with Vietnamese) and Cyrillic letters work. **A welcome for guests.** The first time you open Ants & Uncles without logging in, a card offers Sign in with Discord to chat, Set a display name if you do not want to chat, or Not now. It does not come back once you answer it, set a name or log in. **Long names fit.** The results show an alliance on two lines when its names are long, and a long name ends in dots in a room and on the countdown card.
 - **The Games list fills itself with Open lobby cards.** As many as the window has room for with nothing to scroll (more on a tall window, none when real games fill the list), and the dashed plus on a card hosts a game, the same as Host here.
 
-**Rules / network:** network protocol 29 (a name is UTF-8, and a name that is not a guest's carries the hub's signature, [`docs/HUB_NICKNAMES.md`](docs/HUB_NICKNAMES.md)): an older page or game cannot join a room of this version, so reload the page. The rules and the recordings are unchanged.
+**Rules / network:** network protocol 29 (a name is UTF-8, and a name that is not a guest's carries a signature of the chat service): an older page or game cannot join a room of this version, so reload the page. The rules and the recordings are unchanged.
 
 **Fixes:**
 - The live match cards of the Games list and their scoreboard name a computer player "Kit (bot)", never with its level. A connected AI's `put_ants` puts the ant type that it names, and `get_region` names the types right (they were mixed up: asking for a combat ant gave a bomber, and a swimmer gave a combat ant).

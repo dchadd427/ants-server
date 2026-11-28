@@ -70,7 +70,8 @@ The script builds the game each time it starts (quick when nothing changed) and 
 - [The python tests of the site and the server](docs/private/TESTING_PYTHON_SITE.md): the groups of suite 5.2 for the front page, the site's pages, the hub, nginx and the server's scripts
 - [Workflow](docs/WORKFLOW.md): the test tiers, branches, pull requests, releases, the version policy and the changelog; the rules for contributors are in [`AGENTS.md`](AGENTS.md)
 - [Deploy and light checks](docs/private/WORKFLOW_DEPLOY.md): the light checks of a pull request, the deploy, base images and the browser checks without Docker
-- [The export lists](export/README.md): which files go to the public repository and which stay private, the check that every file is on exactly one list (suite 5.3), and which list a new file goes on
+- [The export lists](export/README.md): which files go to the public repository and which stay private, the check that every file is on exactly one list and that the public documents link only each other (suite 5.3), which list a new file goes on, and the files that read differently in the public repository (README, AGENTS, SECURITY, the ignore and attribute files, the owners, the architecture page)
+- [Third-party notices of the server](THIRD_PARTY_NOTICES_SERVER.md): SQLite and the country list of the visit counter; the rest is in `THIRD_PARTY_NOTICES.md`
 
 **How it works**
 

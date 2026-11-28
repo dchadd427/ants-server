@@ -7,8 +7,10 @@ export/**
 !export/overlay/**
 export/overlay/.gitkeep
 
-# .: root files
+# .: root files (AGENTS.md, README.md, SECURITY.md, .gitattributes, .gitignore, .github/CODEOWNERS and .github/dependabot.yml read differently in the public repository: their public versions are in export/overlay/)
 .dockerignore
+.gitattributes
+.gitignore
 AGENTS.md
 Dockerfile
 Dockerfile.*
@@ -33,10 +35,11 @@ docker/turn-entrypoint.sh
 docker/turnserver.conf
 docker/web-log.sh
 
-# docs: documents of the running service
+# docs: documents of the running service (ARCHITECTURE.md lists the server's folders in the one block of its tree: its public version is export/overlay/docs/ARCHITECTURE.md)
 docs/ADDRESS_LIMITS.md
 docs/ANALYTICS.md
 docs/ANT_3D_MODELS.md
+docs/ARCHITECTURE.md
 docs/HISTORY_SERVICE.md
 docs/HOME_*
 docs/HUB.md
@@ -314,7 +317,6 @@ tests/private/**
 docs/private/**
 web/site/**
 THIRD_PARTY_NOTICES_SERVER.md
-CHANGELOG_SERVER.md
 tests/data/*_server_mutants.json
 tests/scripts/costs_private.py
 tests/scripts/test_runners_private.py

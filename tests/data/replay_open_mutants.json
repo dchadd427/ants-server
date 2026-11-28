@@ -522,14 +522,6 @@
    "why": "the name of a map in a card makes the page scroll sideways on a phone"
   },
   {
-   "id": "the_fuzz_script_is_not_in_the_tree",
-   "file": "docs/ARCHITECTURE.md",
-   "old": "│   │   ├── web_replay_open_fuzz.sh     # Changed maps and heads of a recording through the native readers (no crash, no hang)\n",
-   "new": "",
-   "test": "python3 tests/scripts/test_web_replay_open.py TheDocument",
-   "why": "a script that nobody can find from the tree of the sources"
-  },
-  {
    "id": "a_file_of_exactly_the_limit_is_too_big",
    "file": "web/replay_page.js",
    "old": "size > 0 && size <= LOCAL_MAX_BYTES; }",

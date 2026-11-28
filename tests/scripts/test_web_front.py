@@ -410,7 +410,7 @@ class TheFolder(unittest.TestCase):
 
     def test_the_notices_name_the_copy(self):
         notices = read("THIRD_PARTY_NOTICES.md")
-        for needle in ("web/front/", "LibreFranklin-Medium.ttf", "LibreFranklin-OFL.txt", "tools/front_page_art/make_art.py"):
+        for needle in ("web/front/", "LibreFranklin-Medium.ttf", "LibreFranklin-OFL.txt"):
             self.assertIn(needle, notices, needle)
 
 

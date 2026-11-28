@@ -13,8 +13,6 @@ export/overlay/**
 
 # .: root files and small shared files
 .editorconfig
-.gitattributes
-.gitignore
 CHANGELOG.md
 CMakeLists.txt
 LICENSE
@@ -46,7 +44,6 @@ cmake/ants_*
 docker/resolve_build_id.sh
 
 # docs: game docs (several are mixed today: see crossings.md section 6)
-docs/ARCHITECTURE.md
 docs/BOTS.md
 docs/BOT_*
 docs/BUILD_AND_RUN.md
