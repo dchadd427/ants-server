@@ -386,7 +386,7 @@ class TheWiring(unittest.TestCase):
         self.assertNotIn("docs/", run)
 
     def test_the_local_web_build_makes_them_too_and_the_context_does_not_hide_them(self):
-        self.assertIn('python3 "${SCRIPT_DIR}/tools/make_ai_skills.py" --build "${DIST_DIR}"', read("build_web.sh"))
+        self.assertIn('python3 "${SCRIPT_DIR}/tools/make_ai_skills.py" --build "${DIST_DIR}"', read("build_site.sh"))
         for line in read(".dockerignore").splitlines():
             line = line.strip()
             self.assertFalse(line.startswith("ai_skills") or line in ("tools", "tools/*") or line.startswith("tools/make_ai"), ".dockerignore hides " + line)

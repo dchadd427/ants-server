@@ -267,12 +267,14 @@ tests/scripts/test_quick_http.py
 tests/scripts/test_release_tool.py
 tests/scripts/test_repair_maps.py
 tests/scripts/test_run_*
+tests/scripts/test_serve_web.py
 tests/scripts/test_source_portability.py
 tests/scripts/test_start_game.sh
 tests/scripts/test_version_tools.py
 tests/scripts/test_web_app_manifest.py
 tests/scripts/test_web_aspect.sh
 tests/scripts/test_web_aspect_default.py
+tests/scripts/test_web_build.py
 tests/scripts/test_web_buttons.py
 tests/scripts/test_web_camera.sh
 tests/scripts/test_web_catalog.py
@@ -308,6 +310,7 @@ tests/scripts/web_camera_check.py
 tests/scripts/web_chat_*
 tests/scripts/web_copy_link_check.js
 tests/scripts/web_countdown_check.js
+tests/scripts/web_dist_check.py
 tests/scripts/web_edge_*
 tests/scripts/web_game_bar_check.js
 tests/scripts/web_game_menu_*
@@ -441,6 +444,7 @@ tools/mutate.py
 tools/release.py
 tools/repair_maps.py
 tools/replay_tool.cpp
+tools/serve_web.py
 tools/size_limits.py
 
 # web: the game page, the Map Maker page and their shared scripts
@@ -504,6 +508,3 @@ web/site_hooks.js
 web/touch_*
 web/update_*
 web/wake_lock.js
-
-# planned new files of the split (steps.md): a public static server for the web checks
-tools/serve_web.py

@@ -9,7 +9,7 @@ Which files go to the public repository, and the checks that keep every file on 
 | `classify.py` | the check: every tracked file is on exactly one of the two lists. It also prints the two path lists (`--list public`, `--list private`) and the allow-list as `git filter-repo` path regexes (`--filter-repo-paths`) |
 | `check_export.py` | the scan of words: which public text files still name something private. **Report only** for now |
 | `split_mutants.py` | the split of a list of mutants into a public half and a private half (below); with no argument it checks every list and changes nothing |
-| `overlay/` | public versions of files that must read differently in the public repository (`AGENTS.md`, `README.md`, `SECURITY.md`, the CI workflow): `overlay/<path>` is exported as `<path>`. It is empty today; `overlay/.gitkeep` only keeps the folder and is never exported |
+| `overlay/` | public versions of files that must read differently in the public repository (`AGENTS.md`, `README.md`, `SECURITY.md`, the CI workflow), and files that only the public repository has (`ci/web_check.sh`, below): `overlay/<path>` is exported as `<path>`. `overlay/.gitkeep` only keeps the folder and is never exported |
 
 `export/` itself is private (`private.txt`): the public repository does not describe this one. The lists are the one place that says what is public; no other file repeats them.
 
@@ -44,6 +44,12 @@ A mutant is public when everything it touches is public: the file it changes, ev
 | `tests/data/NAME_server_mutants.json` | the private mutants, byte for byte as they were, and the whole of the old note | private, by the one pattern `tests/data/*_server_mutants.json` |
 
 A list with no public mutant stays whole, as `NAME_mutants.json`, on `private.txt`. `tools/mutate.py` reads `NAME_mutants.json` together with `NAME_server_mutants.json` when it is there (so does `tests/scripts/mutant_specs.py` for the tests that run some mutants themselves), and a tree that has only the first half runs that. `tests/scripts/test_mutant_specs.py` checks that every mutant of both halves applies; `tests/scripts/test_export_split_mutants.py` fails when a list is mixed or on the wrong list, which is how a new list with a private mutant in it is found.
+
+## The web build, and the Web check of the public repository
+
+`build_web.sh` is public and builds the game page, the Map Maker, the sprite and sound catalog and the map core into `dist/`; the pages load the stub `web/site_hooks.js` and nothing of a site. `build_site.sh` (private) is the site's build: it runs `build_web.sh`, reads the stamps that it left in `build_web/stamps.sh` and adds the site's files, with `web/site/` in the stub's place. `tools/serve_web.py` (public) serves a `dist/` of either with the headers and page addresses of the site.
+
+`overlay/ci/web_check.sh` is the Web check that the public repository's CI runs, as `ci/web_check.sh`, in the pinned Emscripten image: a fresh `build_web.sh`, then `tests/scripts/web_dist_check.py` on the files and on what `tools/serve_web.py` answers, then the map core's module run in node with the Map Maker's checks. It is an overlay file because nothing under `export/` is exported (the check of the lists says so) and the public CI must have the script. `tests/scripts/test_web_build.py` runs it, and the public `build_web.sh`, on a tree of the public files alone with Emscripten stood in for; to run it on the exported tree for real, copy the files that `classify.py --list public` names to a folder (each from `overlay/<name>` when that file is there, else from `<name>`) and run `ci/web_check.sh` there (`ANTS_TREE=DIR` names the tree).
 
 ## The hooks: private files that the public files read when they are there
 

@@ -57,7 +57,7 @@ class ThePageAndTheImage(unittest.TestCase):
 
     def test_it_is_in_the_image_the_local_build_and_the_ci_list(self):
         self.assertIn("COPY web/hub_here.js /usr/share/nginx/html/hub_here.js\n", read("Dockerfile"))
-        self.assertIn('cp -f "${SCRIPT_DIR}/web/hub_here.js" "${DIST_DIR}/"', read("build_web.sh"))
+        self.assertIn('cp -f "${SCRIPT_DIR}/web/hub_here.js" "${DIST_DIR}/"', read("build_site.sh"))
         self.assertIn(" rejoin_key.js hub_here.js death_map.js", read(".github", "workflows", "ci.yml"))
 
     def test_it_is_small_and_plain_es5(self):
@@ -87,7 +87,7 @@ class TheCodeRuns(unittest.TestCase):
 class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/hub_here_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make the checks fail, and the copy with
     nothing changed must pass"""
-    FILES = ["web/hub_here.js", "web/shell.html", "web/lobby.html", "web/matches.html", "web/match.html", "web/mapmaker.html", "asset_catalog/index.html", "web/admin.html", "web/legal.html", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "web/site/site_hooks.js", "tests/scripts/site_pages.py", "tests/scripts/test_web_hub_here.py", "tests/scripts/web_hub_here_check.js"]
+    FILES = ["web/hub_here.js", "web/shell.html", "web/lobby.html", "web/matches.html", "web/match.html", "web/mapmaker.html", "asset_catalog/index.html", "web/admin.html", "web/legal.html", "Dockerfile", "build_site.sh", ".github/workflows/ci.yml", "web/site/site_hooks.js", "tests/scripts/site_pages.py", "tests/scripts/test_web_hub_here.py", "tests/scripts/web_hub_here_check.js"]
 
     @classmethod
     def setUpClass(cls):

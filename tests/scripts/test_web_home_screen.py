@@ -316,8 +316,8 @@ class TheWayIntoTheImage(unittest.TestCase):
         self.assertIn("COPY web/home/ /usr/share/nginx/html/home/\n", read("Dockerfile"))
 
     def test_the_local_web_build_packs_it_too(self):
-        script = read("build_web.sh")
-        self.assertIn('mkdir -p "${DIST_DIR}/front" "${DIST_DIR}/home"', script)
+        script = read("build_site.sh")
+        self.assertIn('mkdir -p "${DIST_DIR}/home"', script)
         self.assertIn('cp -f "${SCRIPT_DIR}/web/home"/* "${DIST_DIR}/home/"', script)
 
     def test_the_ci_looks_for_the_script_and_the_style_in_the_image(self):
@@ -336,7 +336,7 @@ class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/home_screen_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make the checks fail, and the
     copy with nothing changed must pass"""
     FILES = ["tools/size_limits.py", "web/lobby.html", "web/front/name_letters.js", "web/home/names.js", "web/home/names.css", "web/rejoin_key.js", "web/alert_core.js", "web/front/player_name.js", "web/home/home.js", "web/home/home.css", "web/home/room.css", "web/home/roomchat.js", "web/home/roomchat.css", "web/home/chat.js", "web/home/chat.css", "web/home/games.js", "web/home/alerts.js", "web/home/alerts.css", "web/home/messages.js", "web/home/messages.css", "web/home/games.css", "web/home/players.js", "web/home/players.css", "web/home/talk.js", "web/home/talk.css", "web/home/mod.js", "web/home/mod.css", "web/home/split.js", "web/home/split.css", "web/home/cmds.js", "web/home/cmds.css", "web/home/pics.js", "web/home/pics.css", "web/home/post.js", "web/home/post.css", "web/home/vp.js", "web/shapes.js", "tests/scripts/test_web_home_screen.py", "tests/scripts/web_home_screen_check.js", "tests/scripts/web_page_harness.js",
-             "tests/scripts/web_home_check.py", "tests/scripts/fake_media.js", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "docker/nginx.conf", "docs/PLAY_IN_BROWSER.md", "docs/private/PLAY_IN_BROWSER_HOME.md"] + ["web/front/" + n for n in ("lobby_rules.js", "lobby_net.js", "lobby_chat.js", "rematch.js", "game_modes.js", "game_type.js", "room_fog.js", "room_sheet.js", "seat_menu.js", "map_picker.js", "map_maker_link.js")]
+             "tests/scripts/web_home_check.py", "tests/scripts/fake_media.js", "Dockerfile", "build_site.sh", ".github/workflows/ci.yml", "docker/nginx.conf", "docs/PLAY_IN_BROWSER.md", "docs/private/PLAY_IN_BROWSER_HOME.md"] + ["web/front/" + n for n in ("lobby_rules.js", "lobby_net.js", "lobby_chat.js", "rematch.js", "game_modes.js", "game_type.js", "room_fog.js", "room_sheet.js", "seat_menu.js", "map_picker.js", "map_maker_link.js")]
 
     SPEC = "home_screen_mutants.json"
 

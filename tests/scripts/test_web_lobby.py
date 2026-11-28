@@ -548,8 +548,8 @@ class TheImageAndTheCi(PageCase):
         self.assertIn("python3 tests/scripts/web_routes_check.py --web http://127.0.0.1:18080/", ci)
 
     def test_the_local_build_packs_the_lobby_and_the_game_page_s_own_path(self):
-        script = read("build_web.sh")
-        self.assertIn('"${DIST_DIR}/play.html"', script)
+        self.assertIn('"${DIST_DIR}/play.html"', read("build_web.sh"))
+        script = read("build_site.sh")
         self.assertIn('"${SCRIPT_DIR}/web/lobby.html"', script)
         self.assertIn('> "${DIST_DIR}/lobby.html"', script)
 
