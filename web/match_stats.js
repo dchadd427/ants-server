@@ -1,4 +1,4 @@
-/* The stats sections of the match page (docs/REPLAYS.md "The match pages"): a band of highlights, "Special ants", "Over time" and "Activity". They read what the server's replay pass keeps under a record's `details`
+/* The stats sections of the match page (docs/private/REPLAYS_SERVER.md "The match pages"): a band of highlights, "Special ants", "Over time" and "Activity". They read what the server's replay pass keeps under a record's `details`
    (`AntsHistory.detailsOf`: a plain object or nothing) and build a panel from the keys they know, or nothing when the keys are not there, so a match without them looks as it did before. `details` is data
    that came from a server: every number is read as a number (anything else is 0), every list as a list, a seat as 0 to 3, and a name is put in as text, never as markup. The charts are inline SVG, with
    no library: each seat has its color and its own shape (circle, square, triangle, diamond), so that no chart depends on the color alone.
@@ -30,7 +30,7 @@
     function turnsOf(x, fallback) { var n = num(x); return Math.min(MAX_TURNS, Math.max(1, n > 0 ? n : fallback)); }
     function px(v) { return v < -100000 ? -100000 : v > 100000 ? 100000 : v; }      // a coordinate of a chart: finite and short, so that a path never has an exponent in it
 
-    // ---- special ants: what each type of ant did, a card for each type and a row for each seat (docs/REPLAYS.md "The match pages", "Special ants") ----
+    // ---- special ants: what each type of ant did, a card for each type and a row for each seat (docs/private/REPLAYS_SERVER.md "The match pages", "Special ants") ----
     // The numbers come from four places, and a record may lack any of them: the seats' rows (bombs set and defused, fires lit), `details.economy` (the ants of each type that took a power-up, the bombs that went off, the food
     // trips), `details.combat` (the damage) and `details.special` (bridges, fires put out, the raids: only a record counted by a build that has them). A column is shown only when every seat has its number, so an older
     // record shows what it has and hides what it lacks; a type that nobody used is left out, with one line that says so.

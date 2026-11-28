@@ -167,7 +167,7 @@ RUN ORIGIN="$(head -n 1 /src/web/SITE_ORIGIN | tr -d '[:space:]')" && \
     ! grep -rlE '@@(TITLE|DESCRIPTION|CANONICAL|IMAGE|BODY|SCRIPTS|GAME_VERSION|BUILD_ID|BUILD_DATE)@@' /src/map_site/html
 
 # The address that the pages name themselves by (web/SITE_ORIGIN, one line): the canonical link, the share card's address and picture and the structured data of a page carry @@SITE_ORIGIN@@, which becomes that address here, in the finished pages
-# (after the stamps and the changelog above, so that none of them depends on it; docs/BUILD_AND_RUN.md "Search engines and share cards"), and tools/seo_files.py makes robots.txt and sitemap.xml with the same address, and sitemap-library.xml for the map pages
+# (after the stamps and the changelog above, so that none of them depends on it; docs/private/BUILD_AND_RUN_DOCKER.md "Search engines and share cards"), and tools/seo_files.py makes robots.txt and sitemap.xml with the same address, and sitemap-library.xml for the map pages
 # (the addresses that the layer above wrote). It refuses an address that is not an origin before anything uses it. The build stops if a placeholder is left or a file is empty.
 RUN ORIGIN="$(head -n 1 /src/web/SITE_ORIGIN | tr -d '[:space:]')" && \
     python3 tools/seo_files.py "${ORIGIN}" /src --pages /src/map_site/addresses.txt && \
@@ -241,7 +241,7 @@ COPY Community-Maps/previews/ /srv/community-maps/previews/
 COPY Community-Maps/*.lvl Community-Maps/*.LVL /srv/community-maps/files/
 COPY Original-Ants/Maps/*.LVL /srv/community-maps/files/
 
-# The match history and the replays (docs/REPLAYS.md "The match pages", "Watching a replay"): the list of every match (matches.html) and one match (match.html), linked from
+# The match history and the replays (docs/private/REPLAYS_SERVER.md "The match pages", "Watching a replay"): the list of every match (matches.html) and one match (match.html), linked from
 # the header of the front page and the footers (with the site label, the version and the build put in), their stylesheet (matches.css), the stats sections of the match page (match_stats.js and match_stats.css), the map of deaths (death_map.js and death_map.css, also on the game page in replay mode), the activity curve of the game page's timeline (replay_activity.js and replay_activity.css), the play counter of the game page's replay mode (replay_plays.js, fetched by it for a kept recording only), the plays and hearts of the two pages (replay_likes.js) and the helpers
 # that they share with the game page (replay_page.js, history_page.js, and replay_stats.css for the stats and the frame mode of the game page). The game page plays a recording as play?replay=<file> (and in the frame of match.html as play?replay=<file>&embed=1).
 COPY --from=builder /src/matches.html /usr/share/nginx/html/matches.html
@@ -314,14 +314,14 @@ COPY --from=builder /src/mapmaker_atlas/ /usr/share/nginx/html/mapmaker_atlas/
 # The skills for a person's AI (made in the builder stage): served at /ai/skills/ (docker/nginx.conf)
 COPY --from=builder /src/ai_site/ai/ /usr/share/nginx/html/ai/
 
-# The Legal page (docs/PLAY_IN_BROWSER.md "The Legal page"): a page of its own in the changelog page's look, linked from the Menu of every page and from the footers; the builder stage stamped the version and the build into its bar
+# The Legal page (docs/private/PLAY_IN_BROWSER_HOME.md "The Legal page"): a page of its own in the changelog page's look, linked from the Menu of every page and from the footers; the builder stage stamped the version and the build into its bar
 COPY --from=builder /src/legal.html /usr/share/nginx/html/legal.html
 
 # The changelog page (built from CHANGELOG.md, linked from the game page); it is in the Classic look of the front page: it links
 # /front/classic.css, which the web/front/ copy above puts in the image
 COPY --from=builder /src/changelog/changelog.html /src/changelog/whats_new.json /usr/share/nginx/html/
 
-# The two files for search engines (docs/BUILD_AND_RUN.md "Search engines and share cards"): what a crawler may read, and the pages that it should list, made in the builder stage from the site's address; two exact locations of docker/nginx.conf serve them
+# The two files for search engines (docs/private/BUILD_AND_RUN_DOCKER.md "Search engines and share cards"): what a crawler may read, and the pages that it should list, made in the builder stage from the site's address; two exact locations of docker/nginx.conf serve them
 COPY --from=builder /src/robots.txt /src/sitemap.xml /usr/share/nginx/html/
 # The map pages have a sitemap of their own (robots.txt names it beside sitemap.xml: tools/seo_files.py), so that the two files above are what they were
 COPY --from=builder /src/sitemap-library.xml /usr/share/nginx/html/

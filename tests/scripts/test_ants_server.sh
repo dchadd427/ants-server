@@ -324,7 +324,7 @@ check "the edges of the other side start it too" "$([ "$(exit_of --no-reconnect 
 check "the new options' edges start it: 10 and 0" "$([ "$(exit_of --reconnect --max-catch-up-seconds 10 --resume-countdown-seconds 0)" = "142" ]; echo $?)"
 check "the new options' edges start it: 3600 and 60" "$([ "$(exit_of --reconnect --max-catch-up-seconds 3600 --resume-countdown-seconds 60)" = "142" ]; echo $?)"
 check "--help names the reconnect options and their ranges" "$("$SERVER" --help 2>&1 | grep -q -- '--reconnect | --no-reconnect' && "$SERVER" --help 2>&1 | grep -q -- '--hold-vote-seconds 5-3600' && "$SERVER" --help 2>&1 | grep -q -- '--max-pause-seconds 60-86400' && "$SERVER" --help 2>&1 | grep -q -- '--max-catch-up-seconds 10-3600' && "$SERVER" --help 2>&1 | grep -q -- '--resume-countdown-seconds 0-60' && "$SERVER" --help 2>&1 | grep -q -- '--start-countdown-seconds 0-60' && "$SERVER" --help 2>&1 | grep -q -- '--log-mb 1-256'; echo $?)"
-# the restart records (docs/NETWORK_PORT.md "Restart records"): the options and their edges
+# the restart records (docs/private/NETWORK_PORT_SERVER.md "Restart records"): the options and their edges
 check "--restart-vote-seconds below 30 is refused" "$([ "$(exit_of --restart-vote-seconds 29)" = "2" ]; echo $?)"
 check "--restart-vote-seconds above 3600 is refused" "$([ "$(exit_of --restart-vote-seconds 3601)" = "2" ]; echo $?)"
 check "--restart-vote-seconds that is no number is refused" "$([ "$(exit_of --restart-vote-seconds soon)" = "2" ]; echo $?)"
@@ -455,7 +455,7 @@ sys.exit(0 if ok else 1)' "$ROOT"; echo $?)"
 check "... and the same door refuses what is not the plain list (a query and a name below /maps: 404, a POST: 405)" "$([ "$(code_of "http://127.0.0.1:$CM_PORT/maps?x=1")" = "404" ] && [ "$(code_of -X POST "http://127.0.0.1:$CM_PORT/maps")" = "405" ] && [ "$(code_of "http://127.0.0.1:$CM_PORT/maps/TINY.LVL")" = "404" ]; echo $?)"
 check "... and the log says how many maps are listed" "$(grep -q '^\[ants_server [0-9]*\] 540 maps listed (maps folder and community folder' "$WORK/cm.log"; echo $?)"
 stop_pids "ants_server of the community maps (stopped with SIGTERM)" "$CM_PID"
-# the match history lives in the database (docs/REPLAYS.md "The match history"): no folder of its own, --no-history turns it off, --no-db leaves it nothing to live in
+# the match history lives in the database (docs/private/REPLAYS_SERVER.md "The match history"): no folder of its own, --no-history turns it off, --no-db leaves it nothing to live in
 check "--help names --no-history, and there is no --history-dir (the history is in the database: a leftover option is refused, status 2)" "$("$SERVER" --help 2>&1 | grep -q -- '--no-history'; [ "$(exit_of --history-dir "$WORK/hi_none")" = "2" ]; echo $?)"
 check "with a database the server keeps the match history, and the log says where it counts from" "$([ "$(db_start "$WORK/hist_on.log" --results-dir "$WORK/hist_on")" = "0" ] && grep -q 'match history kept for good in the database; a match that has just ended is counted at once, the older recordings while no match with people runs' "$WORK/hist_on.log"; echo $?)"
 check "--no-history keeps no history, and the log says so (the database is still made)" "$([ "$(db_start "$WORK/hist_off.log" --results-dir "$WORK/hist_off" --no-history)" = "0" ] && grep -q 'the match history is off (--no-history)' "$WORK/hist_off.log" && ! grep -q 'match history kept for good' "$WORK/hist_off.log" && [ -s "$WORK/hist_off/ants.db" ]; echo $?)"
@@ -1606,7 +1606,7 @@ PROXY_PID=""
 check "the result file of the room that held a seat keeps the counters (drops_by_cap 1, log) and no secret or key" "$([ -s "$WORK/rc_results/$RC_CODE.json" ] && grep -q '"drops_by_cap":1' "$WORK/rc_results/$RC_CODE.json" && grep -q '"log":{' "$WORK/rc_results/$RC_CODE.json" && ! grep -q "$SECRET" "$WORK/rc_results/$RC_CODE.json"; echo $?)"
 check "the server's log names the rooms' ends with what the pause came to, and never the secret" "$(grep -q "room $RC_CODE" "$WORK/rc_server.log" && grep -q 'by the cap' "$WORK/rc_server.log" && ! grep -q "$SECRET" "$WORK/rc_server.log"; echo $?)"
 
-# ---- restart records (docs/NETWORK_PORT.md "Restart records"): a match survives a restart of the server ---------------------------------------------------------------
+# ---- restart records (docs/private/NETWORK_PORT_SERVER.md "Restart records"): a match survives a restart of the server ---------------------------------------------------------------
 # The real program with real game clients. The server keeps a record of the running room (mode 600 in a folder of mode 700), is stopped with SIGTERM in the middle of the match
 # (it exits at once and leaves the record), is started again over the same folder (the room is back, paused, every seat held), is killed with SIGKILL and started once more (the record that the
 # restored room went on writing restores again), and when the owner closes the room its record goes. The two games are stopped (kill -STOP) the moment the server is gone, so that they do not
@@ -1720,7 +1720,7 @@ SERVER_PID=""
 check "no key is in the server's log (no run of 32 hex digits in it: a key is 16 bytes), and neither is the secret" "$(! grep -qE '[0-9a-f]{32}' "$WORK/rr_server.log" && ! grep -q "$SECRET" "$WORK/rr_server.log"; echo $?)"
 check "the result file of the closed room has no key either" "$([ -s "$RR_RESULTS/$RR_CODE.json" ] && ! grep -qE '[0-9a-f]{32}' "$RR_RESULTS/$RR_CODE.json"; echo $?)"
 
-# ---- the restore never blocks the server (docs/NETWORK_PORT.md "Restart records", "The server serves while it restores") ---------------------------------------------------------
+# ---- the restore never blocks the server (docs/private/NETWORK_PORT_SERVER.md "Restart records", "The server serves while it restores") ---------------------------------------------------------
 # A thousand records of one long match (the match of this section, made as long as TINY allows with turns that nobody played) are on disk when the server starts again: replaying all of them takes
 # seconds (about ten here), and a server that did it before its first answer would be silent that long. This one answers GET /busy within 2 s of its launch, counting the matches that wait, and takes
 # the Hello of a new room's player at once, while it restores (the clock of the measure starts at the launch, not when the control interface answers).
@@ -1841,7 +1841,7 @@ echo "  [restart e2e] SIGTERM $RR_STOPPED_AFTER s to exit with the record kept; 
 echo "  [restore e2e] $RR_CLONES records of a long match were replayed in $RR_RESTORE_S s of the server's launch; meanwhile /busy answered after $RR_BUSY_S s (${RR_BUSY_MATCHES:-?} matches waited) and a new room's player had its Welcome $RR_WELCOME_S s after the launch"
 fi
 
-# ---- part replays: the matches that the server keeps (docs/REPLAYS.md "On the game server", docs/SERVER_REPLAYS.md "Replays") ---------------------------------------------
+# ---- part replays: the matches that the server keeps (docs/private/REPLAYS_SERVER.md "On the game server", docs/SERVER_REPLAYS.md "Replays") ---------------------------------------------
 # Two real games play a match on a room of the control interface; after 32 seconds of play (640 ticks: the server keeps a match from 600 turns, 30 seconds, however it ended) the owner closes the room. The match is kept
 # as a file in the results folder, and the control interface (with the secret) and the public replay door (without) list it and give it out; the names that the two games typed ("Typed1", "Typed2") are in
 # the list and in the file, the room's code and the address are not; replay_tool plays the downloaded file out to the same hashes and shows the names; the file is still there after a restart of the server; the

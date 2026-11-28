@@ -1,4 +1,4 @@
-// The Rules sheet of the front page's Room (web/lobby.html; docs/PLAY_IN_BROWSER.md "Your room"): the room's rules (who can join, Fog of War, Direct connection, the note about recordings) are behind one button, "Rules", in
+// The Rules sheet of the front page's Room (web/lobby.html; docs/private/PLAY_IN_BROWSER_HOME.md "Your room"): the room's rules (who can join, Fog of War, Direct connection, the note about recordings) are behind one button, "Rules", in
 // the room's header, and open in a card over the page (a sheet from the bottom on a phone: front/room_sheet.css). The rules themselves are the controls of web/home/games.js (who can join), front/room_fog.js and
 // front/lobby_direct.js, which stand in the card's rows; this part only opens and closes the card and looks after the focus. It knows nothing of the room.
 //   * Open: a press on the button. Close: Done, the cross, Escape, a press on the dark ground outside the card (a press that starts inside the card and ends outside does not close it) or the page (close()).

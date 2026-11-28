@@ -853,7 +853,7 @@ void run_persist_review_process_tests_2() {
 }
 #endif
 // ---------------------------------------------------------------------------------------------------------------------------------
-// The restore that never blocks the server (docs/NETWORK_PORT.md "Restart records", "Restoring"): S3.113 and on
+// The restore that never blocks the server (docs/private/NETWORK_PORT_SERVER.md "Restart records", "Restoring"): S3.113 and on
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 namespace {

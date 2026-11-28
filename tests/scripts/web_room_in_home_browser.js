@@ -1,5 +1,5 @@
 // The ROOM INSIDE HOME in a REAL browser (Chrome, driven over its DevTools protocol with no package) against a REAL ants_server, behind a small stand-in for the site: the files of web/, /ws to the server's WebSocket door, a fake chat
-// hub at /hub/ws (tests/scripts/fake_hub.js) and the small answers of the page (docs/HOME_SCREEN.md "The Room", docs/PLAY_IN_BROWSER.md "Your room", docs/READY_UP.md). Opt-in, like the other browser checks: it needs a Chrome that it can start
+// hub at /hub/ws (tests/scripts/fake_hub.js) and the small answers of the page (docs/HOME_SCREEN.md "The Room", docs/private/PLAY_IN_BROWSER_HOME.md "Your room", docs/READY_UP.md). Opt-in, like the other browser checks: it needs a Chrome that it can start
 // (CHROME=/path/to/chrome, or the one of a Mac) and a built ants_server; without them it says so and exits 0 (nothing was checked). It starts its own browser with a profile of its own and closes it, the server and the stand-in before it ends,
 // also after a failure.
 //   1. at 1920 x 1080, 1600 x 900, 1366 x 768 and 1280 x 800: a host makes a room (Quick host, Invite only), a guest joins by the link, a Medium bot sits in the third color: the page does not scroll (the document is no taller or wider than
@@ -372,7 +372,7 @@ async function main() {
         check('the room, ' + at + ': the chat box has two tabs, Ants & Uncles and Room', JSON.stringify(tabs) === JSON.stringify(['Ants & Uncles', 'Room']), JSON.stringify(tabs));
         await hostPage.shot('room_' + at + '_host');
         await guestPage.shot('room_' + at + '_guest');
-        // The Rules sheet (docs/PLAY_IN_BROWSER.md "Your room"): a card over the page that holds who can join, Fog of War and Direct connection. The host's controls work; a guest reads them, and Direct connection is theirs.
+        // The Rules sheet (docs/private/PLAY_IN_BROWSER_HOME.md "Your room"): a card over the page that holds who can join, Fog of War and Direct connection. The host's controls work; a guest reads them, and Direct connection is theirs.
         await hostPage.press('#rules-open');
         await hostPage.waitFor('the sheet opens', '!document.getElementById("rules").hidden', 3000);
         const hs = await hostPage.eval(SHEET);

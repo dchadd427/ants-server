@@ -96,7 +96,7 @@
     }
 
     // ---- the sections of the page: each builds a panel (or nothing) from the record, in this order. The stats of the replay pass (web/match_stats.js: the band of highlights, over time, activity) read
-    // what a record keeps under `details` (H.detailsOf) and build nothing when its keys are not there, so a match without them looks as it did before; see docs/REPLAYS.md "The match pages". ----
+    // what a record keeps under `details` (H.detailsOf) and build nothing when its keys are not there, so a match without them looks as it did before; see docs/private/REPLAYS_SERVER.md "The match pages". ----
     function resultSection(rec, ctx) {
         var s = panel('result', 'h1'); s.className = 'panel hero';
         var tv = pics.node(rec.map, 'page'); s.appendChild(tv);

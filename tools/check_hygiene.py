@@ -436,7 +436,7 @@ SPELLING_SKIPPED = (
     "third_party/",            # other people's code
 )
 _NOTICE = re.escape("This map cannot be played with these %ss." % BRITISH)    # the server's notice, which the web lobby matches word for word (protocol 21)
-# The British forms that still exist, each by place so that `x = q.<word>` anywhere else is found: the older spelling is accepted and written for one release (docs/REPLAYS.md, "The match history")
+# The British forms that still exist, each by place so that `x = q.<word>` anywhere else is found: the older spelling is accepted and written for one release (docs/private/REPLAYS_SERVER.md, "The match history")
 _QUOTED = r"""["'`]%s["'`]""" % BRITISH      # the key "<word>" of a seat in a match record (written next to color, read by the pages when color is missing), and the older parameter's name in code and prose
 _PARAM = r"\b%s=" % BRITISH                  # the query parameter <word>= of GET /history (still accepted), in the server, its tests and the notes
 _PROP = r"\.%s\b" % BRITISH                 # the same key read as a property
@@ -447,7 +447,7 @@ SPELLING_KEPT = {              # file -> patterns that may keep the British word
     "tests/scripts/web_lobby_rules_check.js": [_NOTICE], "tests/test_net/test_lockstep_protocols.cpp": [_NOTICE],
     # the older spelling of the history's color: the alias in the query, the deprecated key of a record, the pages' fallback, the note, and the tests of each
     "src/ants_server/control_history.cpp": [_QUOTED, _PARAM], "src/ants_server/history_record.cpp": [_QUOTED], "include/ants_server/control.hpp": [_PARAM],
-    "docker/nginx.conf": [_PARAM], "web/history_page.js": [_QUOTED, _PARAM, _PROP], "docs/REPLAYS.md": [_QUOTED, _PARAM],
+    "docker/nginx.conf": [_PARAM], "web/history_page.js": [_QUOTED, _PARAM, _PROP], "docs/private/REPLAYS_SERVER.md": [_QUOTED, _PARAM],
     "tests/test_server/test_history_record.cpp": [_QUOTED], "tests/test_server/test_history_store.cpp": [_QUOTED, _PARAM],
     "tests/test_server/test_history_service.cpp": [_QUOTED, _PARAM],
     "tests/scripts/test_nginx_history.py": [_QUOTED, _PARAM], "tests/scripts/web_history_check.js": [_PARAM, _OBJKEY],

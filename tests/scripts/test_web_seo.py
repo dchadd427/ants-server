@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Search engines and share cards (docs/BUILD_AND_RUN.md, "Search engines and share cards"): the head of every page, robots.txt and sitemap.xml (run by ./run_tests.sh --fast and by the CI;
+"""Search engines and share cards (docs/private/BUILD_AND_RUN_DOCKER.md, "Search engines and share cards"): the head of every page, robots.txt and sitemap.xml (run by ./run_tests.sh --fast and by the CI;
 tests/data/web_seo_mutants.json breaks one rule at a time, for tools/mutate.py).
 
 The pages are read as a browser reads them (an HTML parser, never a line of text): the pages of web/ that docker/nginx.conf serves (every exact location that rewrites to a file, the front page and the

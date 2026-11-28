@@ -65,7 +65,7 @@
 //                      and the players open channels that carry their orders to each other ahead of their turns; without either of them, nobody opens a channel and the match is what it always was
 //                      The relay's port is 3478 (TURN's own) unless the :PORT of the name or the environment variable ANTS_TURN_PORT says another (when both are given they must be the same number: else no relay).
 //   --log-mb N         the limit of one room's turn log, which a returning player is given the match from, in MiB (1 - 256, default 16); the logs of all the rooms together may take 256 MiB
-//   --restart-dir DIR  where the rooms that hold seats keep their RESTART RECORDS (restart_record.hpp, docs/NETWORK_PORT.md "Restart records"): from the start of its match to its end a room
+//   --restart-dir DIR  where the rooms that hold seats keep their RESTART RECORDS (restart_record.hpp, docs/private/NETWORK_PORT_SERVER.md "Restart records"): from the start of its match to its end a room
 //                      writes every sealed turn to a file here (mode 600: it holds the keys of the seats) BEFORE the turn is sent to anybody, so that a server that is stopped, crashes or is
 //                      redeployed does not end the matches that run: the server that starts again finds the records, replays them (checked against stored state hashes), holds every seat
 //                      and the players come back with their keys. Default: the folder "restart" in --results-dir; without a results folder the server keeps none. A record of another network
@@ -78,7 +78,7 @@
 //   --restart-budget-mb N
 //                      the disk that all the restart records together may take (1 - 4096, default 256); one record is at most 48 MiB (3 times the turn log's limit); a record that the disk or
 //                      the budget refuses is deleted and its room plays on without one (its status says why)
-//   --replays-dir DIR  where the server keeps the REPLAYS of the matches that are played in its rooms (replay_store.hpp, docs/REPLAYS.md "On the game server"): when a match that ran 30 seconds or more is over, its .antsrep file is kept
+//   --replays-dir DIR  where the server keeps the REPLAYS of the matches that are played in its rooms (replay_store.hpp, docs/private/REPLAYS_SERVER.md "On the game server"): when a match that ran 30 seconds or more is over, its .antsrep file is kept
 //                      here (the names that the players typed are in it, with no address or room code). Default: the folder "replays" in --results-dir; without a results folder the server keeps none
 //   --no-replays       keep no replays, whatever --results-dir says
 //   --bot-match-every-min N
@@ -90,7 +90,7 @@
 //   --db FILE          the database file (SQLite, docs/SERVER.md "The database"). Default: ants.db in --results-dir; without a results folder the server keeps none. A file that cannot be opened (not a database,
 //                      damaged, not writable) or that a newer program made stops the server; the file is never changed or deleted by that
 //   --no-db            keep no database, whatever --results-dir says
-//   --no-history       keep no match history (docs/REPLAYS.md "The match history": what every match came to, in the database, for good). Without this option the history is kept whenever there is a database; there is
+//   --no-history       keep no match history (docs/private/REPLAYS_SERVER.md "The match history": what every match came to, in the database, for good). Without this option the history is kept whenever there is a database; there is
 //                      no folder of its own (it lives in the database), and --no-db keeps none either. It counts the matches from the replays (a match that has just ended at once, the older recordings while no match with people runs), so it needs those to add to it
 //   --replay-demo      keep the matches of the demo rooms too (the games of the front page, bots only included); off by default, so that only the rooms of the control interface are kept
 //   --replays-days N   a replay is deleted N days after its match ended (1 - 3650, default 30)

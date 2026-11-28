@@ -1,6 +1,6 @@
 #pragma once
 
-// The match history of the game server (docs/REPLAYS.md "The match history"): what every match came to, kept for good in the server's SQLite database (docs/SERVER.md "The database"). The recording itself (the
+// The match history of the game server (docs/private/REPLAYS_SERVER.md "The match history"): what every match came to, kept for good in the server's SQLite database (docs/SERVER.md "The database"). The recording itself (the
 // .antsrep file of replay_store.hpp) is deleted after 30 days; the record (history_record.hpp: who won, the scores or kills, who killed and lost how many, the ants hatched, the bombs and fires, the names that
 // were typed) stays.
 //

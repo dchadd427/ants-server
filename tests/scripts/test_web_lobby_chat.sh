@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OPT-IN, not part of ./run_tests.sh: the chat of the front page in REAL browsers (docs/PLAY_IN_BROWSER.md, "Chat in the lobby"): three people in one room (the lines they type, the colors, a name or a
+# OPT-IN, not part of ./run_tests.sh: the chat of the front page in REAL browsers (docs/private/PLAY_IN_BROWSER_HOME.md, "Chat in the lobby"): three people in one room (the lines they type, the colors, a name or a
 # line that is markup, what the game cannot show, the pace, a line of 100 characters, the toast, START), and a phone (the box after the colors, a field that a finger reaches, the START bar that
 # does not cover it when the keyboard is up, the same sideways). --shots DIR saves the pictures that the check looks at.
 #

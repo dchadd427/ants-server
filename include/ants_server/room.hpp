@@ -33,7 +33,7 @@
 // server's budget (net::LogBudget), and is freed when the match is over. A room without `reconnect` is exactly what it was before: keys are zero, a Hello for a running match is
 // MatchRunning, a lost connection is a drop at once. No key is ever in a status, a result file or a log line.
 //
-// Restart records (restart_record.hpp, docs/NETWORK_PORT.md "Restart records"). A room that holds seats keeps a RESTART RECORD on the server's results volume from the moment its match is being
+// Restart records (restart_record.hpp, docs/private/NETWORK_PORT_SERVER.md "Restart records"). A room that holds seats keeps a RESTART RECORD on the server's results volume from the moment its match is being
 // started (the start message and the keys are known) until the room is over: every sealed turn is written to it BEFORE the turn is sent to anybody, the referee's state hash every 20th turn, so
 // that a server that is stopped, crashes or is redeployed does not end the match. A server that starts again brings the room back from the record in two halves (RoomManager queues the records and
 // replays them in slices from update(), so that it serves meanwhile): Room::begin_replay and Room::replay_step, then Room::begin_restored: the engine is made from the start message, every sealed turn is replayed and
@@ -51,7 +51,7 @@
 // The rematch (docs/SERVER.md "Lobby rooms"): when the rules end that match, the room gives its match's plan and persons once (take_rematch: not a person whom the match dropped) and the manager opens a lobby
 // room with the same code from them (reopen: the persons' seats are reserved for their keys, net::HostLobby (7)); a match that ended otherwise (everybody left, a failure, the owner) gives none.
 //
-// Replays (replay_store.hpp, docs/REPLAYS.md "On the game server"). A room of a server that keeps replays records its match: ants_replay's Recorder watches every turn that the referee's own runner
+// Replays (replay_store.hpp, docs/private/REPLAYS_SERVER.md "On the game server"). A room of a server that keeps replays records its match: ants_replay's Recorder watches every turn that the referee's own runner
 // executes (LockstepRunner::set_on_executed), from the first, and when the match is over, or the room fails or is closed while it runs, the recording is written as a .antsrep file and handed to the
 // server's ReplayStore. A match is kept when it ran 600 turns (30 seconds), however it ended; a seat has the name that the room showed everybody (what the person typed: replay_person_name; a seat that has no name
 // of its own is the color in the readers) or, for a computer player, its display name. A room that was brought back from a restart record does not record (the part of its match before the restart is not seen).
@@ -393,7 +393,7 @@ public:
     /// a file or is dropped (and in its destructor). Null (the default): the match is not shown live. Set it right after the room is made, before its match is started.
     void set_live_board(LiveBoard* board) noexcept { live_board_ = board; }
     /// Where a match goes whose recording could not be made (it ran long enough to be kept, and the file could not be written: too large, a turn missing): the numbers that the referee's own engine has for it, so that the
-    /// history can still say who won (docs/REPLAYS.md "The match history"). The sink is called once, from the end of the match; without one such a match is not counted.
+    /// history can still say who won (docs/private/REPLAYS_SERVER.md "The match history"). The sink is called once, from the end of the match; without one such a match is not counted.
     using UnrecordedSink = std::function<void(UnrecordedMatch&&)>;
     void set_unrecorded_sink(UnrecordedSink sink) { unrecorded_sink_ = std::move(sink); }
     /// What a lobby room asks of its server (see LobbyServices): set it right after the room is made. A room that is no lobby room never asks.

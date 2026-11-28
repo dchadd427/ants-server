@@ -547,7 +547,7 @@ class Spelling(Tree):
         page_forms = ['"%s": "Green"' % uk, "seat['%s']" % uk, "`%s` (`all`)" % uk, "/history?%s=blue" % uk, "seat.%s" % uk]
         self.put("web/history_page.js", "\n".join(page_forms) + "\n")                    # the pages' fallback: the key, the parameter, the property
         self.put("src/ants_server/history_record.cpp", 'o.set("%s", x);\n' % uk)           # the deprecated key, written
-        self.put("docs/REPLAYS.md", "`%s=black` and `\"%s\"`\n" % (uk, uk))
+        self.put("docs/private/REPLAYS_SERVER.md", "`%s=black` and `\"%s\"`\n" % (uk, uk))
         self.assertEqual(ch.check_spelling(self.root, self.files()), [])
         self.put("src/ants_server/control_history.cpp", "bool x = q.%s == 1;\n" % uk)       # a property is not kept here (only the quoted name and the parameter)
         self.put("src/ants_server/history_record.cpp", 'o.set("%s", x);\n// and %s=blue\n' % (uk, uk))   # nor is the parameter in the record's writer

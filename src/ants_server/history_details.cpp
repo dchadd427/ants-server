@@ -326,7 +326,7 @@ JsonValue economy(const MatchStats& st) {
     return e;
 }
 
-// What the special ants did, by seat (docs/REPLAYS.md "The match pages", "Special ants"): bridges built and dug away, fires put out, and the raids of the Thieves as [begun, home, loot that got home]
+// What the special ants did, by seat (docs/private/REPLAYS_SERVER.md "The match pages", "Special ants"): bridges built and dug away, fires put out, and the raids of the Thieves as [begun, home, loot that got home]
 JsonValue special(const MatchStats& st) {
     JsonValue o = JsonValue::make_object();
     o.set("built", ints(st.bridges_built));

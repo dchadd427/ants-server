@@ -1,5 +1,5 @@
 {
- "note": "Mutants of the special ants' counts (docs/REPLAYS.md 'The match pages', 'Special ants'): bridges built and dug away, fires put out, raids that got home, and the key `special` of a match's details, for tools/mutate.py (docs/TESTING.md 'Mutation checks'). Run from the checkout with a configured build folder: python3 tools/mutate.py tests/data/special_ants_mutants.json --keep-going --jobs 1 --timeout 600. Every mutant must be caught by test_history_details (HD1.5, HD1.5b, HD1.7, HD2.8, HD3.1, HD3.5); the page's own rules are the broken copies of tests/scripts/test_web_match_stats.py.",
+ "note": "Mutants of the special ants' counts (docs/private/REPLAYS_SERVER.md 'The match pages', 'Special ants'): bridges built and dug away, fires put out, raids that got home, and the key `special` of a match's details, for tools/mutate.py (docs/TESTING.md 'Mutation checks'). Run from the checkout with a configured build folder: python3 tools/mutate.py tests/data/special_ants_mutants.json --keep-going --jobs 1 --timeout 600. Every mutant must be caught by test_history_details (HD1.5, HD1.5b, HD1.7, HD2.8, HD3.1, HD3.5); the page's own rules are the broken copies of tests/scripts/test_web_match_stats.py.",
  "defaults": {},
  "mutants": [
   {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The stats sections of the match page (run by ./run_tests.sh --fast and by the CI): web/match_stats.js and web/match_stats.css, and how web/match.html uses them. docs/REPLAYS.md "The match pages" says what
+"""The stats sections of the match page (run by ./run_tests.sh --fast and by the CI): web/match_stats.js and web/match_stats.css, and how web/match.html uses them. docs/private/REPLAYS_SERVER.md "The match pages" says what
 they show and where `details` comes from (the replay pass, ants_replay/match_stats.hpp and ants_server/history_details.hpp).
 
   - the code is RUN (node, when it is installed): the band of highlights, "Over time" and "Activity" built from a record's `details` on a small fake of the DOM, the plain functions on tables, a record
@@ -169,7 +169,7 @@ class TheFiles(unittest.TestCase):
 
 class TheDocument(unittest.TestCase):
     def test_the_replays_page_describes_the_stats_the_details_and_the_pass(self):
-        text = read("docs", "REPLAYS.md")
+        text = read("docs", "private", "REPLAYS_SERVER.md")
         for needle in ("web/match_stats.js", "details", "ants_replay/match_stats", "ants_server/history_details", "Over time", "Activity", "kDetailsMaxBytes", "after_tick"):
             self.assertIn(needle, text, needle)
         server = read("docs", "SERVER.md") + read("docs", "SERVER_REPLAYS.md")

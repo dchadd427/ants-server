@@ -2,7 +2,7 @@
 """Tests of tools/web_without_docker.py, the web image without Docker (run by ./run_tests.sh --fast and by the CI).
 
 The tool replays the Dockerfile on this machine and serves the result with nginx, so that a session that has no Docker daemon (a cloud session) can run the browser checks of the web page
-(docs/WORKFLOW.md, "Browser checks without Docker"). Groups of tests:
+(docs/private/WORKFLOW_DEPLOY.md, "Browser checks without Docker"). Groups of tests:
 
   - the reading of the Dockerfile: the repository's own file is read to the end, the Emscripten version is the one of its FROM, and a form that the tool cannot play is an error, never a
     step that is left out
@@ -1063,7 +1063,7 @@ class TheCommandLine(Scratch):
         self.assertIn("docker build", err)
 
     def test_the_documents_name_the_tool(self):
-        for document in (("docs", "WORKFLOW.md"), ("AGENTS.md",)):
+        for document in (("docs", "private", "WORKFLOW_DEPLOY.md"), ("AGENTS.md",)):
             self.assertTrue("tools/web_without_docker.py" in read(*document), "%s does not name tools/web_without_docker.py" % os.path.join(*document))
 
 

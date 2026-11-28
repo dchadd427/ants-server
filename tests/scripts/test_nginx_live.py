@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """docker/nginx.conf routes the matches that run now: GET /live and GET /live/<id> (run by ./run_tests.sh --fast and by the CI where docker works).
 
-ants_server lists the matches of its rooms that run now and hands out the snapshot of one (docs/REPLAYS.md "On the game server", "Live") on the same read-only port as the recorded matches
+ants_server lists the matches of its rooms that run now and hands out the snapshot of one (docs/private/REPLAYS_SERVER.md "On the game server", "Live") on the same read-only port as the recorded matches
 (--replay-port: no secret; the list holds the names that the players typed, and no address, room code or chat). The stack file starts it that way, so both are PUBLIC; the page's nginx forwards
 the two addresses like /replays (tests/scripts/test_nginx_replays.py), as the one request each takes and nothing else:
 

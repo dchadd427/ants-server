@@ -53,7 +53,7 @@ target_link_libraries(ants_server_core PUBLIC
     ants_assets
     ants_ctl
     ants_db          # the server's database (docs/SERVER.md "The database"): SQLite behind a thin wrapper, the schema migrations
-    ants_replay      # the recorder of a room's match and the files that the server keeps (docs/REPLAYS.md "On the game server")
+    ants_replay      # the recorder of a room's match and the files that the server keeps (docs/private/REPLAYS_SERVER.md "On the game server")
 )
 if(WIN32)
     target_link_libraries(ants_server_core PRIVATE bcrypt)      # the random number generator that makes the control secret

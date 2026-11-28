@@ -39,7 +39,7 @@ def read(*parts):
 
 def network_document():
     """docs/NETWORK_PORT.md: the rules, the texts that these checks pin."""
-    return read("docs", "NETWORK_PORT.md")
+    return read("docs", "NETWORK_PORT.md") + read("docs", "private", "NETWORK_PORT_SERVER.md")
 
 
 class TheMarkupAndTheStyle(unittest.TestCase):
@@ -307,7 +307,7 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
     """What the documents say about the switch, the button and the check is what the files do."""
 
     def test_the_two_texts_of_the_strip_are_the_pages_own_in_the_network_document(self):
-        doc = read("docs", "NETWORK_PORT.md")
+        doc = network_document()
         lobby = read("web", "lobby.html")
         self.assertIn("**\"Rejoin it\"**", doc)
         self.assertIn("**\"Your match in room CODE is still running: go back to your seat.\"**", doc)
@@ -316,7 +316,7 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
         self.assertNotIn("Rejoin your match", paragraph)                                                                 # (the older button, which named the room; the start menu of the native game still has that one)
 
     def test_the_documents_say_where_the_strip_sits_and_how_start_hands_the_seat_over(self):
-        doc = read("docs", "NETWORK_PORT.md")
+        doc = network_document()
         lobby = read("web", "lobby.html")
         self.assertIn("a strip sits at the top of the page (below the notice banner, above the header;", doc)
         self.assertLess(lobby.index('id="banner"'), lobby.index('id="rejoin"'))
@@ -324,7 +324,7 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
         for needle in ("`ants.rejoin.<room>.<seat>` = `{\"k\", \"s\", \"t\"}` (`rejoinEntry` of the client)", "The lobby never calls `leave()` at START (it sends no Leave and does not close its socket)",
                        "a page that comes back from the browser's memory (Back) is loaded again, so it looks again by itself", "`web/lobby.html` loads it."):
             self.assertIn(needle, doc, needle)
-        self.assertIn("a strip stands at the top of the front page, above its header", read("docs", "PLAY_IN_BROWSER.md"))
+        self.assertIn("a strip stands at the top of the front page, above its header", read("docs", "private", "PLAY_IN_BROWSER_HOME.md"))
         self.assertNotIn("No page loads it yet", doc)
 
     def test_no_document_says_that_the_switch_is_off_or_that_the_front_pages_button_is_still_to_come(self):
@@ -336,8 +336,8 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
 
     def test_the_documents_say_what_the_review_of_phase_2_changed(self):
         """The fixes of the independent review: what is said in the network document, the browser page and the server page is what the code does."""
-        doc = read("docs", "NETWORK_PORT.md")
-        pages = read("docs", "PLAY_IN_BROWSER.md") + read("docs", "SERVER.md")
+        doc = network_document()
+        pages = read("docs", "private", "PLAY_IN_BROWSER_HOME.md") + read("docs", "SERVER.md")
         for needle in ("kDemoMaxPauseMs", "kDemoAbandonedMs", "`ants_leave_match()`", "`kRejoinMaxAgeMs`", "never makes a room and never replaces an ended one", "`window.antsSeatKnown(seat)`",
                        "none older than three hours", "`--no-reconnect` has no keys", "`ANTS_PAGE.cancelsBrowserKey`", "`resolve_host`", "**The crash-loop guard**", "`record_sync_ms`", "**The native door is not encrypted**", "**The review of phase 2**", "L8 and L9 in the known limits"):
             self.assertIn(needle, doc, needle)
@@ -373,7 +373,7 @@ class TheDocumentsSayWhatIsBuilt(unittest.TestCase):
             self.assertIn('"%s"' % part, self.check_source, part)               # (the parts of the check are named in the check itself)
         for needle in ("tests/scripts/web_rejoin_check.py", "tests/scripts/test_web_rejoin.sh", "`holdsThisSeat`", "`REJOINKEY`", "`--no-reconnect`", "Known limits"):
             self.assertIn(needle, section, needle)
-        self.assertIn("web_rejoin_check.py", read("docs", "TESTING_PYTHON.md"))
+        self.assertIn("web_rejoin_check.py", read("docs", "private", "TESTING_PYTHON_SITE.md"))
 
 
 @unittest.skipUnless(shutil.which("node"), "node is not installed: the Rejoin block's rules were NOT run (tests/scripts/web_rejoin_block_check.js)")

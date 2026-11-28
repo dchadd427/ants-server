@@ -1,4 +1,4 @@
-/* The plays and the likes of a replay on the pages of the match history (docs/REPLAYS.md "The match pages"; the door, the numbers and the privacy note are in docs/REPLAY_COUNTS.md): the count of plays and the heart with
+/* The plays and the likes of a replay on the pages of the match history (docs/private/REPLAYS_SERVER.md "The match pages"; the door, the numbers and the privacy note are in docs/REPLAY_COUNTS.md): the count of plays and the heart with
    its count on a card of the list (web/matches.html) and on the match page (web/match.html). The counts come from the record's `plays` and `likes` (a whole number from 0 up; anything else is 0).
    * The heart: a button, lit when this visitor likes the replay. One look at the door tells who is logged in and which of the shown replays they like (GET /counts/mine?ids=..., once for the cards of a page, once
      on the match page; the door says 503 when likes are off, and the hearts are plain counts). A tap changes the heart at once and asks the door (POST /counts/like/<id> or /counts/unlike/<id>, with the token that the look

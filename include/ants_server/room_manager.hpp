@@ -194,14 +194,14 @@ public:
     bool enable_restart_records(RestartConfig config, std::string& why);
     /// The server's restart records (null when it keeps none)
     const RestartStore* restart_store() const noexcept { return restart_.get(); }
-    /// Starts to keep the matches of the rooms as replays (replay_store.hpp, docs/REPLAYS.md "On the game server"): every match that is played in a room is recorded and, when it is over, kept in the folder for
+    /// Starts to keep the matches of the rooms as replays (replay_store.hpp, docs/private/REPLAYS_SERVER.md "On the game server"): every match that is played in a room is recorded and, when it is over, kept in the folder for
     /// `config.keep_days`. `include_demo`: the rooms that a visitor's create block makes (RoomSpec::public_room: the games of the front page) are recorded too; off, only the rooms of the control interface are. Call it before any room is made.
     /// False, with the reason, when the folder cannot be used (the server then keeps none). An empty `config.dir` keeps none and is true.
     bool enable_replays(ReplayConfig config, bool include_demo, std::string& why);
     /// The server's replays (null when it keeps none)
     ReplayStore* replay_store() noexcept { return replays_.get(); }
     const ReplayStore* replay_store() const noexcept { return replays_.get(); }
-    /// Starts to keep the match history (history_store.hpp, docs/REPLAYS.md "The match history") in the server's database: every match that the replay store keeps is counted from its recording, one at a time, while no
+    /// Starts to keep the match history (history_store.hpp, docs/private/REPLAYS_SERVER.md "The match history") in the server's database: every match that the replay store keeps is counted from its recording, one at a time, while no
     /// room runs or restores a match (the matches that are in the replay store now are counted too, the newest first). The history needs the replays to count from: without them what the database holds is listed
     /// and nothing is added. Call it after enable_replays(). `database` must be open, have the schema of the server (db_migrations) and outlive the manager or be released with disable_history(). False, with the
     /// reason, when the tables cannot be read (the server then keeps none).

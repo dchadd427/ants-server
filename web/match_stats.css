@@ -1,4 +1,4 @@
-/* The stats sections of the match page (web/match_stats.js, docs/REPLAYS.md "The match pages"): the band of highlights, "Special ants", "Over time" and "Activity". They use the tokens and the boxes of matches.css (the panel, the table,
+/* The stats sections of the match page (web/match_stats.js, docs/private/REPLAYS_SERVER.md "The match pages"): the band of highlights, "Special ants", "Over time" and "Activity". They use the tokens and the boxes of matches.css (the panel, the table,
    the seat cards, the meters, the seat colors); the cells of the heat strip are painted by the script (the seat's color mixed into the dark box, with the ink that reads on it). */
 .stat .head .count { white-space: normal; text-align: right; }
 .stat h3.ct { margin: 22px 0 8px; font-weight: 500; }

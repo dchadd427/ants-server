@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """docker/nginx.conf routes the recorded matches of the game server: GET /replays and GET /replays/<file> (run by ./run_tests.sh --fast and by the CI where docker works).
 
-ants_server keeps the matches that its rooms play (docs/REPLAYS.md "On the game server") and, when it is started with --replay-port, answers the list and the files on a port of its own: read
+ants_server keeps the matches that its rooms play (docs/private/REPLAYS_SERVER.md "On the game server") and, when it is started with --replay-port, answers the list and the files on a port of its own: read
 only, no secret; the files and the list hold the names that the players typed, and no address, room code or chat. The stack file starts it that way, so the list and the files of the site are PUBLIC; the page's nginx forwards the two addresses like /busy,
 as the one request each takes and nothing else:
 
@@ -224,7 +224,7 @@ class TheLocations(unittest.TestCase):
         main = read("src", "ants_server", "main.cpp")
         for option in ("--replay-port", "--replay-any-interface", "--replay-demo", "--replays-days", "--replays-max-mb", "--replays-dir", "--no-replays"):
             self.assertIn('"%s"' % option, main, option)
-        for document, needles in (("REPLAYS.md", ("public", "90 days", "/replays")), ("SERVER.md", ("ANTS_REPLAY_PORT", "90 days", "--replay-port")), ("NETWORK_PORT.md", ("/replays", "replay-port"))):
+        for document, needles in (("private/REPLAYS_SERVER.md", ("public", "90 days", "/replays")), ("SERVER.md", ("ANTS_REPLAY_PORT", "90 days", "--replay-port")), ("private/NETWORK_PORT_SERVER.md", ("/replays", "replay-port"))):
             for needle in needles:
                 self.assertIn(needle, read("docs", document), document + ": " + needle)           # (each document says its own part, not all of them together)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The rematch of a lobby room in REAL browsers (opt-in; see tests/scripts/test_web_rematch.sh and docs/PLAY_IN_BROWSER.md "After a match").
+"""The rematch of a lobby room in REAL browsers (opt-in; see tests/scripts/test_web_rematch.sh and docs/private/PLAY_IN_BROWSER_HOME.md "After a match").
 
 Needs the web image of this tree served by nginx (tools/web_without_docker.py builds and serves it without Docker), the native `ants_server` of this tree, a Chromium-based browser and Python 3. The
 check starts the server (with the options of docker-compose.stack.yml and a start countdown of 0 s, so that the match does not wait half a minute), puts a front door before the site (/ws goes to the

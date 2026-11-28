@@ -1,4 +1,4 @@
-// The match history in front of real rooms (docs/REPLAYS.md "The match history"): rooms of computer players play whole matches on the shipped TINY map, in both game modes ("highest-score" and "187"), on a
+// The match history in front of real rooms (docs/private/REPLAYS_SERVER.md "The match history"): rooms of computer players play whole matches on the shipped TINY map, in both game modes ("highest-score" and "187"), on a
 // room manager with a replay store and a database; the history counts each match from its recording when no room runs a match, the record is the match (mode, names, format, rows, the rule that picks the
 // winner), both doors list it. The store's own rules are test_history_store.cpp, the rule of the winner test_history_record.cpp.
 #include "ants_ai/bot_names.hpp"

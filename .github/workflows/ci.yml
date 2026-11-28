@@ -24,7 +24,7 @@
 # tests of tests/scripts). The web legs also build the game server's image and the hub's. There is no sanitizer job (AddressSanitizer and UBSan: ./run_tests.sh
 # --asan, locally) and the browser-based checks are opt-in (docs/TESTING.md).
 #
-# CI does not deploy: the site follows main through the host's own automatic update (docs/WORKFLOW.md, "Deploy").
+# CI does not deploy: the site follows main through the host's own automatic update (docs/private/WORKFLOW_DEPLOY.md, "Deploy").
 name: CI
 
 on:

@@ -149,7 +149,7 @@ class TheText(unittest.TestCase):
         pages = {"/legal": stats.read("web", "legal.html"), "/matches": stats.read("web", "matches.html"),
                  "/changelog": changelog_to_html.convert(stats.read("CHANGELOG.md"), changelog_to_html.DEFAULT_REPO_BLOB, version="v0.0.0", build_id="0000000")}
         for clean, text in pages.items():
-            self.assertEqual(re.findall(r'<link rel="canonical"[^>]*>', text), ['<link rel="canonical" href="@@SITE_ORIGIN@@%s">' % clean], clean)         # (the site's address is put in when the image is built: docs/BUILD_AND_RUN.md "Search engines and share cards")
+            self.assertEqual(re.findall(r'<link rel="canonical"[^>]*>', text), ['<link rel="canonical" href="@@SITE_ORIGIN@@%s">' % clean], clean)         # (the site's address is put in when the image is built: docs/private/BUILD_AND_RUN_DOCKER.md "Search engines and share cards")
             self.assertLess(text.index('rel="canonical"'), text.index("</head>"), clean)
         for name in ("match", "404", "50x", "admin"):
             self.assertNotIn('rel="canonical"', stats.read("web", name + ".html"), name)                  # (a match asks not to be listed and its one file has no address of its own, the pages of an error and the admin page are no address; the game page names /play, tests/scripts/test_web_seo.py)

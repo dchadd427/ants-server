@@ -1,4 +1,4 @@
-// The chat box of the front page's lobby (web/lobby.html, docs/PLAY_IN_BROWSER.md "Chat in the lobby"): the people in a room talk before START, in the box under the colors. The room's own chat is the game's
+// The chat box of the front page's lobby (web/lobby.html, docs/private/PLAY_IN_BROWSER_HOME.md "Chat in the lobby"): the people in a room talk before START, in the box under the colors. The room's own chat is the game's
 // (docs/NETWORK_PORT.md "Chat in the waiting room": a line of 100 printable ASCII characters, relayed by the room to everybody in it, the sender too, with the seat of the connection stamped); a lobby page
 // already hears those lines (web/front/lobby_net.js, the 'chat' event) and now says them (LobbyClient.say, at the server's pace). Nothing of the server or of the protocol changed.
 //   * ES5 and no module system, as the site's other scripts: a page gets the global AntsLobbyChat, node gets module.exports (tests/scripts/web_lobby_chat_check.js runs it with a small fake of the DOM).

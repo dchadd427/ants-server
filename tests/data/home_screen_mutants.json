@@ -717,7 +717,7 @@
   },
   {
    "id": "stale_heading_of_the_docs",
-   "file": "docs/PLAY_IN_BROWSER.md",
+   "file": "docs/private/PLAY_IN_BROWSER_HOME.md",
    "old": "## The front page: Home, and a room one press away",
    "new": "## The front page: a room that is ready when the page opens",
    "test": "node tests/scripts/web_home_screen_check.js web/lobby.html && python3 tests/scripts/test_web_home_screen.py ThePage TheFolder TheStyle TheWayIntoTheImage"

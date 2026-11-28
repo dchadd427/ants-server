@@ -556,7 +556,7 @@ class TheImageAndTheCi(PageCase):
 
 class TheDocuments(unittest.TestCase):
     def test_the_browser_page_and_the_notes_say_where_the_lobby_is_and_what_it_does(self):
-        page = read("docs", "PLAY_IN_BROWSER.md")
+        page = read("docs", "private", "PLAY_IN_BROWSER_HOME.md")
         for needle in ("`/play?map=", "## The front page: Home, and a room one press away", "### Your room", "### START!", "### The notices", "### The old addresses", "**Host**", "**You**", "**Open**", "**Nobody**", "**Teams**", "**Team 1**", "**Team 2**",
                        "**Remove**", "**Keep**", "**Copy link**", "**Share**", "**START!**", "**Join by code**", "**Rejoin it**", "**Start a room of my own instead**", "/four.html", "`--start-when`", "**Menu**",
                        "`/stats`", "`web/front/`", "`tools/front_page_art/`", "`ants.lobby`", "`k7m 2xq`"):
@@ -578,7 +578,7 @@ class TheDocuments(unittest.TestCase):
 
     def test_the_browser_page_says_what_a_code_is_and_what_the_create_block_and_its_parameters_are(self):
         # protocol 15: a code is only a name (six characters, shown in two groups of three) and the room's choices are the create block that every link carries
-        page = read("docs", "PLAY_IN_BROWSER.md")
+        page = read("docs", "private", "PLAY_IN_BROWSER_HOME.md")
         for needle in ("### The room's code and its create block", "(#the-rooms-code-and-its-create-block)", "is **only a name**", "`abcdefghjkmnpqrstuvwxyz23456789`", "`k7m 2xq`", "`k7m2xq`",
                        "There is no such room on this server.", "a code that was made some other way", "A typed or pasted code ignores blanks and capital letters",
                        "`&roomteams=A%2BB`", "`&roomleaderstart=1`", "`&platform=`", "`0%2B1`"):

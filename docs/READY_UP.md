@@ -1,6 +1,6 @@
 # Ready up: the people of a room say that they are ready, and the host starts
 
-A room of the front page ([Play in the browser](PLAY_IN_BROWSER.md#your-room)) does not start until every person in it who is not the host has said that they are ready. It is the lobby's rule (network protocol 27, [`NETWORK_PORT.md`](NETWORK_PORT.md#protocol-27-ready_upmd)), kept by the server: the page only shows it, and a START that the page sent too early is refused by the server all the same.
+A room of the front page ([Play in the browser](private/PLAY_IN_BROWSER_HOME.md#your-room)) does not start until every person in it who is not the host has said that they are ready. It is the lobby's rule (network protocol 27, [`NETWORK_PORT.md`](NETWORK_PORT.md#protocol-27-ready_upmd)), kept by the server: the page only shows it, and a START that the page sent too early is refused by the server all the same.
 
 ## The rules
 

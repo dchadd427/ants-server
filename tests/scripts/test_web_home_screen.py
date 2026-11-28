@@ -123,7 +123,7 @@ class ThePage(unittest.TestCase):
         self.assertNotIn("Back finds a room again", page)
         self.assertNotIn("A plain visit makes a room", page)
         self.assertNotIn("ready when the page opens", read("docker", "nginx.conf"))
-        self.assertNotIn("ready when the page opens", read("docs", "PLAY_IN_BROWSER.md"))
+        self.assertNotIn("ready when the page opens", read("docs", "PLAY_IN_BROWSER.md") + read("docs", "private", "PLAY_IN_BROWSER_HOME.md"))
 
     def test_how_it_works_says_where_the_room_comes_from_because_the_room_shows_it_too(self):
         card = read("web", "home", "games.js")             # the question that Quick host asks: the help names its two answers as the card says them
@@ -336,7 +336,7 @@ class TheChecksAreNotVacuous(unittest.TestCase):
     """the mutants of tests/data/home_screen_mutants.json (the list that tools/mutate.py runs too, with `--keep-going --jobs 1`) on a COPY of the files, one at a time: each must make the checks fail, and the
     copy with nothing changed must pass"""
     FILES = ["tools/size_limits.py", "web/lobby.html", "web/front/name_letters.js", "web/home/names.js", "web/home/names.css", "web/rejoin_key.js", "web/alert_core.js", "web/front/player_name.js", "web/home/home.js", "web/home/home.css", "web/home/room.css", "web/home/roomchat.js", "web/home/roomchat.css", "web/home/chat.js", "web/home/chat.css", "web/home/games.js", "web/home/alerts.js", "web/home/alerts.css", "web/home/messages.js", "web/home/messages.css", "web/home/games.css", "web/home/players.js", "web/home/players.css", "web/home/talk.js", "web/home/talk.css", "web/home/mod.js", "web/home/mod.css", "web/home/split.js", "web/home/split.css", "web/home/cmds.js", "web/home/cmds.css", "web/home/pics.js", "web/home/pics.css", "web/home/post.js", "web/home/post.css", "web/home/vp.js", "web/shapes.js", "tests/scripts/test_web_home_screen.py", "tests/scripts/web_home_screen_check.js", "tests/scripts/web_page_harness.js",
-             "tests/scripts/web_home_check.py", "tests/scripts/fake_media.js", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "docker/nginx.conf", "docs/PLAY_IN_BROWSER.md"] + ["web/front/" + n for n in ("lobby_rules.js", "lobby_net.js", "lobby_chat.js", "rematch.js", "game_modes.js", "game_type.js", "room_fog.js", "room_sheet.js", "seat_menu.js", "map_picker.js", "map_maker_link.js")]
+             "tests/scripts/web_home_check.py", "tests/scripts/fake_media.js", "Dockerfile", "build_web.sh", ".github/workflows/ci.yml", "docker/nginx.conf", "docs/PLAY_IN_BROWSER.md", "docs/private/PLAY_IN_BROWSER_HOME.md"] + ["web/front/" + n for n in ("lobby_rules.js", "lobby_net.js", "lobby_chat.js", "rematch.js", "game_modes.js", "game_type.js", "room_fog.js", "room_sheet.js", "seat_menu.js", "map_picker.js", "map_maker_link.js")]
 
     SPEC = "home_screen_mutants.json"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The pages of the match history (run by ./run_tests.sh --fast and by the CI): the list of every match (web/matches.html), one match with its stats and replay (web/match.html), the code that they share (web/history_page.js), their stylesheet (web/matches.css), and the stats and the frame mode of the game page (web/shell.html, web/replay_stats.css).
-docs/REPLAYS.md "The match pages" says what they do; the way to them from the other pages is tests/scripts/test_web_replay.py.
+docs/private/REPLAYS_SERVER.md "The match pages" says what they do; the way to them from the other pages is tests/scripts/test_web_replay.py.
 
   - the shared code is RUN (node, when it is installed): the ids, the names of the seats, the sides of a record, the numbers of a seat, the state of the list and the words that it asks the server for (every
     one is one that docker/nginx.conf lets through), the pages, the texts of a failed look, the pictures of the maps (tests/scripts/web_history_check.js, web_history_pictures_check.js), and again on
@@ -365,7 +365,7 @@ class ThePictures(unittest.TestCase):
 
 class TheDocument(unittest.TestCase):
     def test_the_replays_page_describes_the_pages_the_stats_and_what_a_later_section_reads(self):
-        text = read("docs", "REPLAYS.md")
+        text = read("docs", "private", "REPLAYS_SERVER.md")
         self.assertIn("## The match pages", text)
         for needle in ("web/matches.html", "web/match.html", "web/history_page.js", "embed=1", "details", "Show replay", "/matches"):
             self.assertIn(needle, text, needle)

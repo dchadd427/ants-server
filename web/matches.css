@@ -1,4 +1,4 @@
-/* The pages of the match history (docs/REPLAYS.md "The match pages"): the list of every match (web/matches.html) and one match with its stats and replay (web/match.html). The look of the front page (web/lobby.html): the orange clay, the thin green frame, teal bevelled buttons with a red shadow, black inset boxes, and the game's own font, all
+/* The pages of the match history (docs/private/REPLAYS_SERVER.md "The match pages"): the list of every match (web/matches.html) and one match with its stats and replay (web/match.html). The look of the front page (web/lobby.html): the orange clay, the thin green frame, teal bevelled buttons with a red shadow, black inset boxes, and the game's own font, all
    from web/front/. Nothing is loaded from another site. The colors of the front page (clay, ink, teal ... bad-edge) are the first lines of each page's own <style>, as the front page
    and the game page carry them (tests/scripts/test_web_pages_classic.py keeps them the same as web/front/classic.css); the rest of the tokens are here. */
 @font-face { font-family: "Libre Franklin"; src: url("front/LibreFranklin-Medium.ttf") format("truetype"); font-weight: 400 700; font-style: normal; font-display: swap; }
@@ -168,7 +168,7 @@ button { font: inherit; color: inherit; }
 .pager .gap { color: var(--muted); padding: 0 4px; }
 .pager .of { display: none; color: var(--muted); font-size: 15px; }
 
-/* ---- plays and hearts (docs/REPLAYS.md "The match pages"; web/replay_likes.js): on a card the count of plays and the heart sit left of "Replay" (a phone: a line of its own under the tags, the heart at the right for the thumb),
+/* ---- plays and hearts (docs/private/REPLAYS_SERVER.md "The match pages"; web/replay_likes.js): on a card the count of plays and the heart sit left of "Replay" (a phone: a line of its own under the tags, the heart at the right for the thumb),
    on the match page the plays end the line under the title and the heart is a button beside Show replay. A zero is dim. The card is one link (.m h3 a::after): the group lies above it, as "Stats & replay" does ---- */
 .pl { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; position: relative; z-index: 2; }
 .pl .pv { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
