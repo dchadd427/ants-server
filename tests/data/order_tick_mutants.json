@@ -251,7 +251,7 @@
    "build": [
     "test_prediction_link"
    ],
-   "test": "ANTS_TEST_FILTER=LK18 timeout 1500 ./build/tests/test_app/test_prediction_link",
+   "test": "ANTS_TEST_FILTER=LK18 timeout 1500 ./build/tests/test_app_server/test_prediction_link",
    "expect": "late * 10u <= orders"
   },
   {
