@@ -11,8 +11,10 @@
     function el(tag, cls, text) { var n = doc.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
 
     var opening = 0;
-    var core = null, limits = null, mine = null, sent = null, sentStore = null, sentWaiting = null, dialogs = null, canvas = null, tools = null, store = null, map = null, sprites = null, checkTimer = 0, summed = null;
+    var core = null, limits = null, mine = null, mineEnvironment = null, dialogs = null, canvas = null, tools = null, store = null, map = null, sprites = null, checkTimer = 0, summed = null;
     var keepTimer = 0, keepReady = false, keepPending = false, keepEdits = 0;      // the unsaved work kept in the browser: a rest of 1.5 s after a change, and not before the work of the last visit was dealt with
+    var siteChanges = [], siteMenu = [];                       // what a site's own part (AntsSite.mapMaker, web/site_hooks.js) asked for: to be told of every change of the map, and lines of the phone's File menu
+    function siteChanged() { siteChanges.forEach(function (f) { f(); }); }
 
     // The page cannot go on (a script did not load, or the module is of another version): say so in the canvas's place, with a way out
     var OUT_OF_DATE = 'The map code is out of date (a copy of one of its files is old in this browser). Reload the page.';
@@ -149,7 +151,7 @@
 
     // The map has changed (a stroke, an undo, a name written in the dictionary): the numbers, and the check again soon
     function edited() {
-        if (aiPart) aiPart.touch();                                              // (the AI part counts every change of the map, whoever made it: a call that names an old version is refused)
+        siteChanged();                                                           // (a site's part counts every change of the map, whoever made it)
         keepSoon();
         showFacts();
         $('check-dot').className = 'dot wait'; $('check-line').textContent = 'Checking\u2026';          // (not the old answer for the moment it takes)
@@ -177,7 +179,7 @@
         tools.setMap(file);
         keepSoon();
         if (mine) mine.hide();                               // (the list of My maps gives way to the map that took the screen)
-        if (aiPart) aiPart.touch();
+        siteChanged();
         return '';
     }
 
@@ -280,7 +282,7 @@
         });
     }
 
-    // A library map named in the address, /mapmaker?mapfile=<file name> (the "Open in Map maker" button of the map pages, docs/MAP_PAGES.md): it is fetched as "Start from a game map" fetches one and opens as a copy under a free name, after the
+    // A library map named in the address, /mapmaker?mapfile=<file name> (the "Open in Map maker" button of the library's map pages): it is fetched as "Start from a game map" fetches one and opens as a copy under a free name, after the
     // question about unsaved drawing (leave); the address loses that one word of its query, so that a reload does not open it again. A name that is no map is the same message as a map that the site does not have.
     function addressMap() {
         var file = '';
@@ -383,7 +385,7 @@
     function mineEnv() {
         function read(rec) { var bytes = new win.Uint8Array(rec.bytes), r = core.checkMap(bytes, 'extended'), file = win.MapFile.parse(bytes); return { name: rec.name, bytes: bytes, file: file, kind: file.kind, report: r.status === 0 ? r.json : null }; }
         return {
-            doc: doc, $: $, store: store, sent: sentProxy(), dialogs: dialogs, tags: fillTags, later: function (f, ms) { win.setTimeout(f, ms); },
+            doc: doc, $: $, store: store, dialogs: dialogs, tags: fillTags, later: function (f, ms) { win.setTimeout(f, ms); },
             parse: function (bytes) { try { var f = win.MapFile.parse(bytes); return f.ok ? f : null; } catch (e) { return null; } },
             check: function (bytes) { var r = core.checkMap(bytes, 'extended'); return r.status === 0 ? MapChecks.summary(r.json) : null; },
             thumb: function (file) { return MapView.miniBase(file, 84, 84, canvasOf); },
@@ -393,59 +395,6 @@
             onBack: function () { if (dialogs.isOpen()) return; mine.hide(); var b = doc.querySelector('[data-act="mine"]'); (b && b.offsetParent ? b : doc.querySelector('[data-act="menu"]')).focus(); },
             onShow: function () { $('top').hidden = $('body').hidden = true; doc.title = 'My maps - Map maker - Ants (1998)'; },
             onHide: function () { $('top').hidden = $('body').hidden = false; doc.title = map.name + ' - Map maker - Ants (1998)'; }
-        };
-    }
-
-    // The screens for sending a map are a script of their own (mapmaker_submit.js), loaded the first time they are needed, so a player who never sends a map never downloads it: then(true) when it is there
-    function withSubmit(then) {
-        if (sent) return then(true);
-        if (sentWaiting) return sentWaiting.push(then);
-        sentWaiting = [then];
-        var tag = el('script');
-        function end(ok) {
-            var waiting = sentWaiting;
-            function done() { sentWaiting = null; waiting.forEach(function (f) { f(ok); }); if (ok) { if (mine) mine.tabs(); linkOpened(); } }
-            if (ok && win.MapSubmit) { var made = win.MapSubmit.create(submitEnv(sentStore)); made.load(function () { sent = made; done(); }); } else { ok = false; done(); }
-        }
-        tag.src = 'front/mapmaker_submit.js'; tag.onload = function () { end(true); }; tag.onerror = function () { end(false); };
-        doc.head.appendChild(tag);
-    }
-    function submitOr(then) {
-        withSubmit(function (ok) { if (ok) then(); else dialogs.message('This part did not load', 'The part of the page that sends maps did not load. Check your connection and try again.'); });
-    }
-    // A status link: its tokens join this browser's, the address loses its fragment, and the list opens
-    function linkOpened() {
-        sent.fromAddress(win.location.hash, function () { try { win.history.replaceState(null, '', win.location.pathname + win.location.search); } catch (e) {} }, function () { mine.show('sent'); });
-    }
-    // What My maps is given in place of the player's submissions: the real thing once the script is there
-    function sentProxy() {
-        return { count: function () { return sent ? sent.count() : null; }, hide: function () { if (sent) sent.hide(); }, show: function (ui) { submitOr(function () { sent.show(ui); }); }, preload: function () { withSubmit(function () {}); } };
-    }
-
-    // Send a map for approval (mapmaker_submit.js): the bytes that are sent are the bytes the checker has just judged (the open file, as Download hands it over); the player's own copy is never touched
-    function submitEnv(sentStore) {
-        return {
-            doc: doc, dialogs: dialogs, store: store, sent: sentStore, fetch: win.fetch ? win.fetch.bind(win) : null, Abort: win.AbortController || null, tags: fillTags, thumb: function (file) { return MapView.miniBase(file, 56, 56, canvasOf); },
-            later: function (f, ms) { win.setTimeout(f, ms); }, now: function () { return Date.now(); }, clipboard: win.navigator && win.navigator.clipboard,
-            parse: function (bytes) { try { var f = win.MapFile.parse(bytes); return f.ok ? f : null; } catch (e) { return null; } },
-            link: function () { return win.location.origin + win.location.pathname; },
-            current: function () {
-                var made = fileBytes();
-                if (made.error) return { error: made.error };
-                var r = core.checkMap(made.bytes, 'extended'), file = r.status === 0 && win.MapFile.parse(made.bytes);
-                if (!file || !file.ok) { alive(); return { error: r.status === 0 ? 'This map cannot be read.' : MapChecks.capital(r.error) + '.' }; }
-                return { name: map.name, bytes: made.bytes, file: file, report: r.json };
-            },
-            showFinding: function (f) { if (typeof f.row === 'number' && f.row >= 0) { canvas.showCell(f.row, f.column); $('map').focus(); } else showChecks(); },
-            onSee: function () { mine.show('sent'); },
-            onOpenCopy: function (rec, again) {
-                if (dialogs.isOpen()) return;
-                leave(function () {
-                    var error = setMap(new win.Uint8Array(rec.bytes), String(rec.name).slice(0, 40));
-                    if (error) dialogs.message('This copy cannot be opened', error);
-                    else if (again) dialogs.message('Change your map, then send it again', 'Make your changes, then choose \u201cSubmit for approval...\u201d. It goes to the owner as a new submission.');
-                });
-            }
         };
     }
 
@@ -507,56 +456,13 @@
         add('script', 'script', 'src', 'front/mapmaker_pickup.js');
         if (!left) done(win.MapPickup || null);
     }
-    // Connect an AI (mapmaker_ai.js, mapmaker_ai_tools.js and the style): loaded the first time the button is pressed, then kept. then(part), or then(null) when a file did not load.
-    var aiPart = null, aiWaiting = null;
     function freeName(wanted) { return store.has(wanted) || MapStore.key(wanted) === MapStore.key(map.name) ? MapStore.numbered(wanted, function (n) { return MapStore.key(n) === MapStore.key(map.name) || store.has(n); }) : wanted; }
-    function aiEnv() {
-        return {
-            doc: doc, win: win, dialogs: dialogs, fetch: win.fetch ? win.fetch.bind(win) : null, host: $('top'), entry: doc.querySelector('[data-act="ai"]'), announce: function (t) { $('announce').textContent = t; },
-            view: function () { return canvas.state(); }, toScreen: MapView.toScreen, wrap: $('cv'), canvasNode: $('map'),
-            tools: {
-                core: core, limits: limits, pictureMax: 409600, file: function () { return map.file; }, name: function () { return map.name; }, editor: function () { return tools.editor(); }, changed: function (d) { tools.changed(d); },
-                rebase: rebase, stroking: function () { return canvas.isStroking(); }, later: function (f, ms) { win.setTimeout(f, ms); }, isSaved: function () { return tools.isSaved(); }, numbered: freeName,
-                keep: function (name, done) { keepAs(name, function (error) { done(error); }); },
-                keepBefore: function (done) { keepAs(freeName(Array.from(map.name).slice(0, 28).join('') + ' (before AI)'), function (error) { done(error); }); },
-                newMap: function (kind, rows, columns, name) {
-                    var made = kind === 'classic' ? core.blank(rows, columns, GROUND, EGGS, MINUTES, 'new_map') : core.blankExtended(rows, columns, GROUND, EGGS, MINUTES);
-                    if (made.status === 2) alive();
-                    return made.status !== 0 ? MapSizes.refusal(made.error).text : (setMap(withLongOrders(made.bytes), name) || '');
-                },
-                mini: function (file, w, h) { return MapView.miniBase(file, w, h, canvasOf); }, makeCanvas: canvasOf,
-                library: function () { return store.libraryList(); }, fetchMap: function (file, done) { store.fetchMap(file, done); },
-                edges: function () { return win.MapEdges && win.MapGround ? { MapEdges: win.MapEdges, MapGround: win.MapGround } : null; },
-                loadFill: loadFill
-            }
-        };
-    }
-    function withAi(then) {
-        if (aiPart) return then(aiPart);
-        if (aiWaiting) return aiWaiting.push(then);
-        aiWaiting = [then];
-        var left = 2, bad = false, c = el('link'), t = el('script'), p = el('script');
-        function one(ok) {
-            bad = bad || !ok;
-            if (--left) return;
-            var waiting = aiWaiting; aiWaiting = null;
-            if (!bad && win.MapAi && !aiPart) aiPart = win.MapAi.create(aiEnv());
-            waiting.forEach(function (f) { f(bad ? null : aiPart); });
-        }
-        c.rel = 'stylesheet'; c.href = 'front/mapmaker_ai.css'; c.onload = function () { one(true); }; c.onerror = function () { one(false); };
-        t.src = 'front/mapmaker_ai_tools.js';
-        t.onload = function () { p.src = 'front/mapmaker_ai.js'; p.onload = function () { one(true); }; p.onerror = function () { one(false); }; doc.head.appendChild(p); };
-        t.onerror = function () { one(false); };
-        doc.head.appendChild(c); doc.head.appendChild(t);
-    }
     function antsAbout() { showSummary(); var p = summed && summed.props; return p && !p.error ? { ant: win.MapProps.summary(p).ant, eggs: p.eggs } : null; }
 
     var ACTIONS = {
         play: playMap,
-        ai: function () { if (dialogs.isOpen() || canvas.isStroking()) return; withAi(function (part) { if (part) part.open(); else dialogs.message('This part did not load', 'The part of the page that connects an AI did not load. Check your connection and try again.'); }); },
-        submit: function () { if (!dialogs.isOpen() && !canvas.isStroking()) submitOr(function () { sent.open(); }); }, subs: function () { if (!dialogs.isOpen() && !canvas.isStroking()) mine.show('sent'); },
         'new': function () { leave(newMap); }, open: function () { leave(openMap); }, download: download, check: showChecks, props: openProps, resize: openResize, mine: function () { if (!dialogs.isOpen() && !canvas.isStroking()) mine.show(); }, copy: convertWith('copy'), save: convertWith('save'), convert: convertWith('convert'),
-        menu: function () { dialogs.menu([{ text: 'New', onClick: ACTIONS['new'] }, { text: 'Open', onClick: ACTIONS.open }, { text: 'My maps', onClick: ACTIONS.mine }, { text: 'Copy...', onClick: ACTIONS.copy }, { text: 'Save as new...', onClick: ACTIONS.save }, { text: 'Properties...', onClick: ACTIONS.props }, { text: 'Resize...', onClick: ACTIONS.resize }, { text: 'Download', onClick: download }, { text: 'Connect an AI...', onClick: ACTIONS.ai }, { text: 'Submit for approval...', onClick: ACTIONS.submit }, { text: 'My submissions', onClick: ACTIONS.subs }, { text: '\u25b6 Play this map', cls: 'gold', hint: 'Play this map: a test game against bots. You come back here with the map as you left it.', onClick: ACTIONS.play }, { head: 'Settings for this browser' }, { text: 'Auto edges: ' + (tools.state().autoEdges ? 'On' : 'Off'), cls: 'tog' + (tools.state().autoEdges ? ' on' : ''), role: 'switch', checked: tools.state().autoEdges, disabled: !win.MapEdges || !win.MapGround, keepOpen: true, hint: 'Painting ground also sets the edge pieces. Remembered in this browser.', onClick: function (b) { tools.setAutoEdges(!tools.state().autoEdges); var on = tools.state().autoEdges, lbl = 'Auto edges: ' + (on ? 'On' : 'Off'); if (b.children && b.children.length >= 2) b.children[1].textContent = lbl; else b.textContent = lbl; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); } }]); }
+        menu: function () { dialogs.menu([{ text: 'New', onClick: ACTIONS['new'] }, { text: 'Open', onClick: ACTIONS.open }, { text: 'My maps', onClick: ACTIONS.mine }, { text: 'Copy...', onClick: ACTIONS.copy }, { text: 'Save as new...', onClick: ACTIONS.save }, { text: 'Properties...', onClick: ACTIONS.props }, { text: 'Resize...', onClick: ACTIONS.resize }, { text: 'Download', onClick: download }].concat(siteMenu, [{ text: '\u25b6 Play this map', cls: 'gold', hint: 'Play this map: a test game against bots. You come back here with the map as you left it.', onClick: ACTIONS.play }, { head: 'Settings for this browser' }, { text: 'Auto edges: ' + (tools.state().autoEdges ? 'On' : 'Off'), cls: 'tog' + (tools.state().autoEdges ? ' on' : ''), role: 'switch', checked: tools.state().autoEdges, disabled: !win.MapEdges || !win.MapGround, keepOpen: true, hint: 'Painting ground also sets the edge pieces. Remembered in this browser.', onClick: function (b) { tools.setAutoEdges(!tools.state().autoEdges); var on = tools.state().autoEdges, lbl = 'Auto edges: ' + (on ? 'On' : 'Off'); if (b.children && b.children.length >= 2) b.children[1].textContent = lbl; else b.textContent = lbl; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); } }])); }
     };
 
     function start(module) {
@@ -567,9 +473,8 @@
         if (small.status !== 0 || big.status !== 0) return fatal('The map code did not answer. Reload the page.');
         limits = MapSizes.limitsOf(small.json, big.json);
         dialogs = MapDialog.create(doc, $('dialogs'), [$('top'), $('body'), $('mine')]);
-        var idb = (function () { try { return win.indexedDB || null; } catch (e) { return null; } })();
-        sentStore = MapStore.createSent({ idb: idb });
-        mine = MapMine.create(mineEnv());
+        mineEnvironment = mineEnv();
+        mine = MapMine.create(mineEnvironment);
         canvas = MapCanvas.create({
             doc: doc, win: win, canvas: $('map'), minimap: $('minimap'), mini: $('mini'), miniCap: $('mini-cap'), grip: $('mini-grip'), lock: $('mini-lock'), hide: $('mini-hide'), show: $('mini-show'), where: $('where'),
             zoomIn: doc.querySelector('[data-act="zoom-in"]'), zoomOut: doc.querySelector('[data-act="zoom-out"]'), gapNote: $('gap-note'),
@@ -603,7 +508,20 @@
         store.loadLibrary();
         store.open(restoreWork);
         loadParts();
-        if (/^#sent=/.test(win.location.hash)) withSubmit(function () {});
+        if (win.AntsSite && win.AntsSite.mapMaker) win.AntsSite.mapMaker(sitePage());
+    }
+
+    // What a site's own part of the page works with (AntsSite.mapMaker, web/site_hooks.js), given once, when the page is up. The parts are the ones that this page has made by then; map() is the map that is open now.
+    // actions: the page's actions by their data-act (a site adds its own, and the buttons that it put in the markup name them); menu: lines for the phone's File menu, after Download; onChange(f): f is called
+    // after every change of the map and every new map; sent(x): x takes the place of the player's submissions in My maps (its second tab), or null.
+    function sitePage() {
+        return {
+            doc: doc, win: win, $: $, core: core, limits: limits, dialogs: dialogs, store: store, canvas: canvas, tools: tools, mine: mine,
+            map: function () { return map; }, actions: ACTIONS, menu: siteMenu, onChange: function (f) { siteChanges.push(f); },
+            sent: function (x) { mineEnvironment.sent = x || null; mine.tabs(); },
+            alive: alive, fileBytes: fileBytes, showChecks: showChecks, leave: leave, setMap: setMap, rebase: rebase, keepAs: keepAs, freeName: freeName, withLongOrders: withLongOrders,
+            loadFill: loadFill, canvasOf: canvasOf, fillTags: fillTags, blank: { ground: GROUND, eggs: EGGS, minutes: MINUTES }
+        };
     }
 
     // The parts that load after the page is up (docs/MAP_EDITOR.md, "Sprites"): the sheets of the kinds of ground and the game's pictures (the atlas). Without them the page works as before, in flat colors.

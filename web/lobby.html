@@ -296,8 +296,8 @@
         function vouchName(win, name) { try { win.sessionStorage.setItem('ants.joinas', String(name)); } catch (e) { /* no storage: the game page asks for the name */ } }
         // VOUCH_END
         // SHAPES_END
-        // NAME_BEGIN (tests/scripts/web_name_check.js runs this block; web/lobby.html and web/shell.html carry the same text)
-        // THE PLAYER'S NAME is not typed in the game: a person who is logged in with Discord plays under the name that the hub says (the nickname and its tag, or the name of the login: front/player_name.js, docs/HUB_NICKNAMES.md),
+        // NAME_BEGIN (a test runs this block; the front page and web/shell.html carry the same text)
+        // THE PLAYER'S NAME is not typed in the game: a person who is logged in with Discord plays under the name that the hub says (the nickname and its tag, or the name of the login: front/player_name.js),
         // anybody else under the name that this browser keeps as a guest ("Wren (Guest)") or a number. The game takes UTF-8 of printable ASCII and the letters of a name (front/name_letters.js: the Latin and Cyrillic letters that the
         // game's font draws), the blanks at both ends cut off, at most 32 characters, and nothing that reads as a computer player's label: "Bot (...)", "Pip (bot)", "Pip (bot, Hard)" (blanks, signs between the letters and case
         // ignored: a computer player is always shown as one, and a person never): the rules of the desktop game's start menu (check_player_name in src/ants_app/start_menu.cpp). nameCheck(text) is { ok: true, name } or

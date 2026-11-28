@@ -1,7 +1,7 @@
-// The letters of a name, and names as UTF-8 (docs/HUB_NICKNAMES.md, "The letters"; tests/scripts/test_name_letters.py). The table is hub/name_letters.py: the generated block below is made from it by
+// The letters of a name, and names as UTF-8 (tests/scripts/test_name_letters.py). The table is the hub's: the generated block below is made from it by
 // tools/gen_name_letters.py (a test fails when it differs). A name goes over the wire as UTF-8: printable ASCII and the letters of the table, at most 32 characters and 96 bytes, which is what
 // the game's decoders accept (src/ants_net/name_rules.cpp is the twin of this file; tests/scripts/web_name_letters_check.js holds both to the same cases). It also takes a shown name apart (split) and draws it (paint):
-// the game has one plain string, "[TAG] Nickname" or "Name (Guest)", and every page shows the tag and the "(Guest)" dimmer than the name (docs/HUB_NICKNAMES.md, "Where a name shows").
+// the game has one plain string, "[TAG] Nickname" or "Name (Guest)", and every page shows the tag and the "(Guest)" dimmer than the name (wherever a name shows).
 //   * ES5, no module system: a page gets the global AntsNameLetters, node gets module.exports. A text from strangers is read one code point at a time; a lone surrogate is never a letter.
 (function (root, factory) {
     var api = factory();

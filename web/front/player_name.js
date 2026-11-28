@@ -1,11 +1,11 @@
-// The name that a person plays under on the front page and on the game page (web/lobby.html, web/shell.html): nobody types a name in the game; the name comes from the site (tests/scripts/web_player_name_check.js).
-//   * A person who is logged in with Discord (docs/HUB_LOGIN.md "Login") plays under the name that the hub says (docs/HUB_NICKNAMES.md): "[TAG] Nickname", the nickname, or, for a person who chose none, the name of the
+// The name that a person plays under on the front page and on the game page (the front page, web/shell.html): nobody types a name in the game; the name comes from the site (tests/scripts/web_player_name_check.js).
+//   * A person who is logged in with Discord plays under the name that the hub says: "[TAG] Nickname", the nickname, or, for a person who chose none, the name of the
 //     login that fits the game. The page asks the site's own `GET /hub/me` (same origin; the cookie is HttpOnly) when it opens, and again at every seat (a login, a guest of a site that has a login, a failed answer), so
 //     that a log in or a log out in the chat is known at the next room. `play` is the name and its PASS, which a server that has the hub's key asks for (docs/NETWORK_PORT.md "Protocol 29"): the page tells the pass in its Hello.
 //     A hub that does not say `play` is read the old way: `you.name`, then `you.next` and `you.other`, as far as the game's font draws them; the username always fits.
 //   * Everybody else (not logged in, no hub or no login, an answer that is late or wrong) plays as a guest: the name that this browser keeps and "(Guest)" after it, or, when none was typed, "Guest" and six digits, made
 //     once and kept in this browser (localStorage, GUEST_KEY and NAME_KEY; a browser that refuses its storage keeps them for the page). A login and a log out never change them. A guest's name has no pass: the server makes
-//     every name that has none a guest's, "Name (Guest)" (a typed name is checked by the hub's `name` frame before it is kept: docs/HUB_NICKNAMES.md).
+//     every name that has none a guest's, "Name (Guest)" (a typed name is checked by the hub's `name` frame before it is kept).
 //   * ready(fn) calls fn(name, kind, canSwitch, how, pass) once: at once when the answer cannot change (a site with no login), else when the question is answered, failed or given up (ASK_MS). how: 'other' (the
 //     shown name did not fit: the other one is used), 'nick' (the person has a nickname), 'login' (a guest whom the hub could log in) or ''. A question on its way is shared by all who wait; a failed one is asked again at the next ready().
 //   * ES5, no module system: a page gets the global AntsPlayerName, node gets module.exports. A name from the hub is text from strangers: cut before any work, and only the letters of a name are kept (name_letters.js).
@@ -19,8 +19,8 @@
     var NL = (typeof self !== 'undefined' && self.AntsNameLetters) || (typeof globalThis !== 'undefined' && globalThis.AntsNameLetters) || null;       // (front/name_letters.js: a script tag before this one; the node checks set the global first)
     var ME = '/hub/me';                  // the hub's page for "who am I" (it answers only the site's own page)
     var GUEST_KEY = 'ants.guest';        // localStorage: the six digits of this browser's guest name
-    var NAME_KEY = 'ants.guestname';     // localStorage: the name that a guest typed (docs/HUB_NICKNAMES.md); none: the guest name is the six digits
-    var GUEST_MIN = 3, GUEST_MAX = 16;   // the length of a typed guest's name (hub/nickrules.py)
+    var NAME_KEY = 'ants.guestname';     // localStorage: the name that a guest typed; none: the guest name is the six digits
+    var GUEST_MIN = 3, GUEST_MAX = 16;   // the length of a typed guest's name (the hub's rule)
     var SUFFIX = ' (Guest)';             // what follows a typed guest's name wherever it is shown, and in the game
     var ASK_MS = 2000;                   // the longest that a seat waits: then the person goes on as a guest
     var CUT = 256;                       // a name from the hub is cut to this many characters before any work
@@ -67,7 +67,7 @@
     }
     function validDigits(text) { return typeof text === 'string' && /^[1-9][0-9]{5}$/.test(text); }
     function guestName(digits) { return 'Guest ' + digits; }
-    // A name that a guest typed and the hub took (hub/nicknames.py guest_check): 3 to 16 characters of what the wire takes
+    // A name that a guest typed and the hub took (the hub's guest check): 3 to 16 characters of what the wire takes
     function validTyped(text) { return typeof text === 'string' && text.length >= GUEST_MIN && text === text.replace(/^ +| +$/g, '') && NL.isWireName(text, GUEST_MAX); }
 
     // ---- the person ----

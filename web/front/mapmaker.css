@@ -31,7 +31,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; }
 /* the screen: top bar, then tools - map - side */
 .screen.ed { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
 .screen::after { z-index: 5; }
-.screen.ed > .sb { padding: 12px 24px 0; margin: 0; }                /* the site bar (web/site_nav.css) above the editor's own row */
+.screen.ed > .sb { padding: 12px 24px 0; margin: 0; }                /* the site bar above the editor's own row */
 .screen.ed > .upd-strip { margin: 8px 24px 4px; }                      /* the update notice's strip (web/update_notice.js) under the bar, as wide as the bar's buttons */
 .edtop { display: flex; align-items: center; gap: 14px; padding: 6px 24px 8px; }
 .edname { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
@@ -444,7 +444,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; }
     .mrow .t1 { font-size: 16px; } .mrow .t2, .mrow .t3 { font-size: 13px; } .macts { grid-column: 1 / -1; justify-content: flex-start; }
 }
 
-/* send a map for approval and My submissions (mapmaker_submit.js) */
+/* send a map for approval and My submissions (the parts of a site) */
 .mtabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; } .mtabs[hidden], #mine-new[hidden], #mine-link[hidden] { display: none; }
 .dot.warn { background: var(--warn); } .st-warn { color: var(--warn); } .st-bad { color: var(--bad); } .st-wait { color: var(--note); }
 .note.warn { border-left-color: var(--warn); background: #2a2208; } .note div { min-width: 0; overflow-wrap: anywhere; }

@@ -55,8 +55,9 @@ The exported tree has no server, so the build and the test runners of the public
 | `cmake/private.cmake` | `CMakeLists.txt` (`include(cmake/private.cmake OPTIONAL)`, at its end) | the game server's libraries, programs and tests: SQLite, the database layer, the control interface, the server, the history service, the picture maker, `tests/test_db`, `test_ctl`, `test_server`, and `test_app_server` (the application tests that run a real room manager) |
 | `tests/suites_server.sh` | `run_tests.sh` (`define_suites`, before the E2E suite) | the `suite` lines of the server's tests and scripts; `--fast` and the tier options select them like any other |
 | `tests/scripts/costs_private.py` | `tests/scripts/run_python_tests.py` (at import) | the `COSTS`, `SHARDS` and `LINUX_ONLY` entries of the python tests that the exported tree does not have |
+| `web/site/site_hooks.js`, `web/site/mapmaker_site.js` | the pages: `web/shell.html`, `web/mapmaker.html` and `asset_catalog/index.html` load `/site_hooks.js` twice (the public file `web/site_hooks.js` is a stub that does nothing; the image's two `COPY web/site/...` lines and `build_web.sh` serve the folder's files at the root, so the site's file takes the stub's place) | the site's half of the seam ([`PLAY_IN_BROWSER.md`](../docs/PLAY_IN_BROWSER.md#the-seam-to-a-site)): the styles and scripts of the bar, the counter, the hub's socket, the match history and the Map Maker's AI and sending of maps; the hooks of the game page; the Map Maker's buttons |
 
-`tests/scripts/test_runners_private.py` holds the checks of these two runners that name private suites or tests; `test_run_tests.py` and `test_run_python_tests.py` check the rest and the hooks themselves.
+`tests/scripts/test_runners_private.py` holds the checks of these two runners that name private suites or tests; `test_run_tests.py` and `test_run_python_tests.py` check the rest and the hooks themselves. `tests/scripts/test_web_site_hooks.py` holds the checks of the site's half of the seam (the other tests of the site's scripts read the pages with its tags written in, through `tests/scripts/site_pages.py`); `tests/scripts/test_web_seam.py` is public: it runs the pages with the stub alone and checks that every file that they name is in the public tree.
 
 ## The scan of words
 
@@ -80,3 +81,14 @@ A file that is the same in both is written so that it names nothing private: `CH
 ## What is not here yet
 
 The scripts that make the export itself (the first export with history, the export of a release, the full check of the exported tree) and the overlay file of the CI workflow are added by later changes.
+
+## Left over from the site seam (step 6)
+
+What the seam left in the public files, for steps 7 to 9 of the split:
+
+- `build_web.sh` copies private files (the bar's and the counter's among them, and the folder of the site's half) without asking whether they are there; a tree without them cannot build the web folder. Step 7 guards each copy.
+- `web/front/player_name.js` asks the hub (`/hub/me`) for the name of a person who is logged in; step 8 or 9 moves that ask behind a hook or out of the public file. Nothing changed in its behavior here.
+- With the stub alone the bar's markup (Home, Matches, Map maker, Discord) stays in the pages and has no style, because the bar's CSS is the site's: a public bar is a decision for later.
+- The CSS of the AI button and of the screens for sending a map is still in `web/front/mapmaker.css`, `MapStore.createSent` is still in `mapmaker_store.js`, the page's description names "submit it for approval", and the name step's markup of the game page still has the link to the login.
+- The pages tell the scan of words (`check_export.py`, kind `site-seam`) nothing of the seam's files any more; a public file that names the site's half again is counted there.
+- The browser checks that serve the pages themselves (`web_site_nav_browser.js`, `web_replay_open_browser.js`, `web_live_check.py`) serve the site's folder at the root, as the image does; a tree without the folder runs them with the stub, and the hooks' checks then hold trivially.

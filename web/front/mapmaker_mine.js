@@ -11,7 +11,7 @@
     var NONE = 'You have no saved maps yet. Use “Save as new...” in the editor to keep a map here.';
     var OFF = 'This browser keeps no saved maps (a private window, or site data is blocked), so the list is empty. The map maker still works: use Download to keep a map on your device.';
 
-    // env: {doc, $ (an element of the page by id), store, sent (the player's submissions: mapmaker_submit.js, or null), dialogs, parse(bytes) -> file or null, check(bytes) -> {works, text} or null, thumb(file) -> canvas, tags(host, kind), later(fn, ms),
+    // env: {doc, $ (an element of the page by id), store, sent (the player's submissions, given by a site's part of the page, or null), dialogs, parse(bytes) -> file or null, check(bytes) -> {works, text} or null, thumb(file) -> canvas, tags(host, kind), later(fn, ms),
     //       onOpen(rec), onCopy(rec), onNew(), onBack(), onShow(), onHide()}
     function create(env) {
         var doc = env.doc, $ = env.$, host = $('mine'), list = $('mine-list'), status = $('mine-status'), note = $('mine-note'), chips = $('mine-chips');

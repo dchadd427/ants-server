@@ -1,6 +1,6 @@
 // The map maker's "Fill a box" (docs/MAP_EDITOR.md, "Fill a box"): with the switch on, the placing tools (Objects, with the plants and flowers, Food and Ants) take a dragged box instead of a tap, and put
 // their thing on the cells of a pattern (every cell, every other cell, every Nth row or column, or random). The first half of this script is arithmetic on the bytes of the open file, shared with the
-// AI's `fill_area` (mapmaker_ai_tools.js): which cells of the box are in the pattern, why a cell cannot take the thing (water, a bridge piece on dry land, solid ground, something already there), the
+// a site's AI tool `fill_area`: which cells of the box are in the pattern, why a cell cannot take the thing (water, a bridge piece on dry land, solid ground, something already there), the
 // cap of one fill, and the CHANGE that puts the whole fill into the history as one step (mapmaker_blocks.js has the lists, mapmaker_edit.js the history). Nothing here writes a byte itself. The second
 // half is the box in the page: the switch's settings in the right-hand column (a sheet on a phone), the dragged box with its live preview and count drawn over the map, and the painter that the Objects,
 // Food and Ants tools hand the canvas to while the switch is on (mapmaker_tools.js). A lazily loaded script (the page loads it, with mapmaker_fill.css, the first time the switch is turned on, and

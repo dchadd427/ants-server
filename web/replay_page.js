@@ -1,21 +1,21 @@
-/* The small helpers that the pages of the replays share (docs/REPLAYS.md "Watching a replay"): the pages of the match history (matches.html, match.html) and the game page in replay mode (play?replay=<file>, web/shell.html),
+/* The small helpers that the pages of the replays share (docs/REPLAYS.md "Watching a replay"): the pages of the match history (the list of matches and one match) and the game page in replay mode (play?replay=<file>, web/shell.html),
    which also watches a match that is still being played (play?live=<id>). Plain functions with no page in them, so that tests/scripts/web_replay_check.js runs them on a table.
    Everything that comes from a recording or from the server's list of live matches (a name that a player typed, a map, an id) is TEXT: the pages put it in with textContent and never as markup. */
 (function (root) {
     'use strict';
 
-    // The file name of a replay, as the server's store makes it (ants-<MAP>-<YYYYMMDD>-<HHMMSS>Z[-N].antsrep) and as docker/nginx.conf lets it through; nothing else is ever fetched.
+    // The file name of a replay, as the server's store makes it (ants-<MAP>-<YYYYMMDD>-<HHMMSS>Z[-N].antsrep) and as the site's web server lets it through; nothing else is ever fetched.
     var FILE_RE = /^ants-[A-Za-z0-9_]{1,24}-[0-9]{8}-[0-9]{6}Z(-[0-9]{1,4})?\.antsrep$/;
     var SEATS = ['Green', 'Red', 'Blue', 'Black'];                       // the colors of seats 0 - 3
     var MAPS = { TINY: 'Tiny', SMALL: 'Small', MEDIUM: 'Medium', GAUNTLET: 'Gauntlet', TREASURE: 'Treasure', ISLANDS: 'Islands' };     // the original's six, which the pages have a picture of
-    // The id of a match that is being played, as the server makes it (<MAP>-<YYYYMMDD>-<HHMMSS>Z[-N]: the map's stem and the UTC time the match began) and as docker/nginx.conf lets it through; nothing else is ever fetched.
+    // The id of a match that is being played, as the server makes it (<MAP>-<YYYYMMDD>-<HHMMSS>Z[-N]: the map's stem and the UTC time the match began) and as the site's web server lets it through; nothing else is ever fetched.
     var LIVE_RE = /^[A-Za-z0-9_]{1,24}-[0-9]{8}-[0-9]{6}Z(-[0-9]{1,4})?$/;
     var LIVE_LAG = 10;          // seconds: what the picture of a live match is behind the players when the server does not say (no X-Ants-Live header: the age of the snapshot that the page holds, and the 2 s that the game holds back)
     var TPS = 20;               // turns in a second of the match
     var HOLD_TURNS = 40;        // the turns that the game keeps back from the end of what it holds while it follows a match (kLiveHoldTurns in include/ants_app/replay_view.hpp)
     var KEEP_TURNS = 600;       // a match that ran less than this (30 seconds) is never kept as a replay
     var FEED_MS = 2000;         // the page asks for the match again this often: the game keeps two seconds back from the end of what it holds, so a look every two seconds is what lets the picture play on without a stop
-    var STALL_MS = 3500;        // a playhead that has stood at the end of what it holds this long, with the match not over, is waiting for the next part (the parts come every 2 s, a second of the server's cache and a second of nginx's make it 3: a shorter wait is the usual gap between two parts)
+    var STALL_MS = 3500;        // a playhead that has stood at the end of what it holds this long, with the match not over, is waiting for the next part (the parts come every 2 s, a second of the server's cache and a second of the web server's make it 3: a shorter wait is the usual gap between two parts)
     var AT_LIVE = 1.5;          // a playhead that is less than this many seconds behind the game's Limit is at the present
     var FOLLOW_SLACK = 8;       // ... and one that follows the match stays there while it is less than this behind: the snapshots come in steps (a poll brings up to 7 s of the match at once)
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -608,7 +608,7 @@
         }, function () { return no('bad'); });
     }
 
-    // ---- the strip "Got a replay file?" of the Matches page (web/matches.html) ----
+    // ---- the strip "Got a replay file?" of the Matches page ----
     // A button that opens the browser's file chooser, a drop of a file anywhere on the page (a computer; a veil shows while a file is dragged over the page, and the strip lights up), and under the strip a
     // card for a file that is refused. A file that passes goes to the player at once, in this tab. Nothing is sent: the file goes from the chooser or the drop into the browser's storage (ownOpen) and
     // to the player. The words of the cards are the ones of the approved pictures.

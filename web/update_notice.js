@@ -1,4 +1,4 @@
-/* The update notice and the "What's new" window (docs/SITE_NAV.md "The update notice"; update_notice.css has the look). One script for every page that is stamped with the site's version: it learns the version that is
+/* The update notice and the "What's new" window (update_notice.css has the look). One script for every page that is stamped with the site's version: it learns the version that is
    live from /whats_new.json (made when the site is built, from CHANGELOG.md: only the lines written for players), and
      - the strip: when that version is newer than this page's, a strip at the top says so, with Reload and Later; Later hides it in this tab until a newer version comes;
      - the window: on a page that is loaded again on a newer version than the one this browser last saw, a window lists what changed since then (newest five; the newest open, the others folded; All changes opens

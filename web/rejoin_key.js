@@ -1,4 +1,4 @@
-// The keys of the seats that this browser holds, read in one place: the front page's Rejoin strip and the game page's name step both ask it (web/lobby.html, web/shell.html).
+// The keys of the seats that this browser holds, read in one place: the front page's Rejoin strip and the game page's name step both ask it.
 // ES5, no module system: a page gets the global AntsRejoinKey, node gets module.exports (tests/scripts/web_rejoin_block_check.js runs the block below, as it stands).
 // { PREFIX, MAX_AGE_MS, FUTURE_MS, parse(name, text), offer(storage, now, server, room, seat) }. THE KEY IS A SECRET: nothing here returns it, writes it, logs it or puts it in an address.
 (function (root, factory) {

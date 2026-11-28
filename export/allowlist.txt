@@ -212,6 +212,7 @@ tests/data/replay_tmap.hex
 tests/data/room_fog_mutants.json
 tests/data/rules_*
 tests/data/scorecard_new_mutants.json
+tests/data/seam_stub_mutants.json
 tests/data/server_room_no_addresses_mutants.json
 tests/data/shape_picker_mutants.json
 tests/data/shape_table_mutants.json
@@ -291,6 +292,7 @@ tests/scripts/test_web_player_name.py
 tests/scripts/test_web_quiet_dialog.py
 tests/scripts/test_web_replay.py
 tests/scripts/test_web_replay_*
+tests/scripts/test_web_seam.py
 tests/scripts/test_web_shapes.py
 tests/scripts/test_web_touch.*
 tests/scripts/test_web_touch_*
@@ -344,6 +346,7 @@ tests/scripts/web_picture_*
 tests/scripts/web_player_name_check.js
 tests/scripts/web_quiet_dialog_check.js
 tests/scripts/web_replay_*
+tests/scripts/web_seam_check.js
 tests/scripts/web_shape_picker_check.js
 tests/scripts/web_touch_*
 tests/scripts/web_update_*
@@ -494,10 +497,10 @@ web/replay_page.js
 web/shape_picker.js
 web/shapes.js
 web/shell.html
+web/site_hooks.js
 web/touch_*
 web/update_*
 web/wake_lock.js
 
-# planned new files of the split (steps.md): a public stub and a public static server for the web checks
+# planned new files of the split (steps.md): a public static server for the web checks
 tools/serve_web.py
-web/site_hooks.js
